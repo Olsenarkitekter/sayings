@@ -186,19 +186,12 @@ export default function App() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
       <View style={styles.container}>
-        <Text style={styles.adText}>ADVERTISEMENT</Text>
-
-        <View style={styles.topRow}>
-          <View style={styles.languageRow}>
-            {languages.map((item) => (
-              <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={styles.flatButton}>
-                <Text style={[styles.langText, language === item.key && styles.activeText]}>{item.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <Pressable onPress={toggleFavorite} hitSlop={14} style={styles.iconTap}>
-            <Ionicons name={isFavorite ? 'star' : 'star-outline'} size={32} color={isFavorite ? '#ffd166' : '#ffffff'} />
+        <View style={styles.header}>
+          <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
+            <Ionicons name="settings-outline" size={30} color="#ffffff" />
           </Pressable>
+          <Text style={styles.adText}>ADVERTISEMENT</Text>
+          <View style={styles.headerSpacer} />
         </View>
 
         <View style={styles.content}>
@@ -213,8 +206,8 @@ export default function App() {
           <Pressable accessibilityLabel="Refresh proverb" onPress={refresh} style={styles.refreshButton}>
             <Ionicons name="refresh" size={38} color="#000000" />
           </Pressable>
-          <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} style={styles.controlButton}>
-            <Ionicons name="settings-outline" size={32} color="#ffffff" />
+          <Pressable accessibilityLabel="Save proverb" onPress={toggleFavorite} style={styles.controlButton}>
+            <Ionicons name={isFavorite ? 'star' : 'star-outline'} size={34} color={isFavorite ? '#ffd166' : '#ffffff'} />
           </Pressable>
         </View>
 
@@ -225,6 +218,15 @@ export default function App() {
               <Pressable onPress={() => setSettingsOpen(false)} hitSlop={12}>
                 <Ionicons name="close" size={28} color="#ffffff" />
               </Pressable>
+            </View>
+
+            <Text style={styles.sectionTitle}>Language</Text>
+            <View style={styles.languageRow}>
+              {languages.map((item) => (
+                <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={styles.symbolButton}>
+                  <Text style={[styles.langText, language === item.key && styles.activeText]}>{item.label}</Text>
+                </Pressable>
+              ))}
             </View>
 
             <View style={styles.settingRow}>
@@ -268,10 +270,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 26 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
-  adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center', marginBottom: 28 },
-  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  languageRow: { flexDirection: 'row', gap: 18 },
-  flatButton: { paddingVertical: 8, paddingRight: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
+  headerSpacer: { width: 42 },
+  adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
+  languageRow: { flexDirection: 'row', gap: 18, marginBottom: 22 },
+  symbolButton: { paddingVertical: 8, paddingRight: 4 },
   langText: { color: '#777777', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
   activeText: { color: '#ffffff' },
   iconTap: { padding: 6 },
