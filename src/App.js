@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, SafeAreaView, StatusBar, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Switch, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,8 +10,11 @@ const STORAGE = {
   index: 'daily-sayings:index',
   favorites: 'daily-sayings:favorites',
   notifications: 'daily-sayings:notifications',
+  notificationTime: 'daily-sayings:notificationTime',
   installId: 'daily-sayings:installId'
 };
+
+const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -30,10 +33,11 @@ function todayIndex(offset = 0) {
   return day % proverbs.length;
 }
 
-function nextTenDate(offsetDays) {
+function nextNotificationDate(offsetDays, time) {
+  const [hour, minute] = time.split(':').map(Number);
   const date = new Date();
   date.setDate(date.getDate() + offsetDays);
-  date.setHours(10, 0, 0, 0);
+  date.setHours(hour, minute, 0, 0);
   if (offsetDays === 0 && date <= new Date()) date.setDate(date.getDate() + 1);
   return date;
 }
@@ -46,7 +50,7 @@ async function ensureInstallId() {
   return id;
 }
 
-async function scheduleDailyProverbs(language) {
+async function scheduleDailyProverbs(language, time = '10:00') {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('daily-proverbs', {
       name: 'Daily proverb',
@@ -62,16 +66,16 @@ async function scheduleDailyProverbs(language) {
 
   await Notifications.cancelAllScheduledNotificationsAsync();
 
-  // Schedule the next month individually so the notification can contain the actual proverb of the day.
   for (let day = 0; day < 30; day += 1) {
-    const item = proverbs[todayIndex(day)][language];
+    const proverbIndex = todayIndex(day);
+    const item = proverbs[proverbIndex][language];
     await Notifications.scheduleNotificationAsync({
       content: {
         title: item.saying,
         body: item.explanation,
-        data: { proverbId: proverbs[todayIndex(day)].id }
+        data: { proverbId: proverbs[proverbIndex].id }
       },
-      trigger: { type: 'date', date: nextTenDate(day), channelId: 'daily-proverbs' }
+      trigger: { type: 'date', date: nextNotificationDate(day, time), channelId: 'daily-proverbs' }
     });
   }
 
@@ -84,49 +88,66 @@ export default function App() {
   const [index, setIndex] = useState(todayIndex());
   const [favorites, setFavorites] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationTime, setNotificationTime] = useState('10:00');
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [ready, setReady] = useState(false);
 
   const current = proverbs[index];
   const copy = current[language];
   const isFavorite = favorites.includes(current.id);
 
-  const favoriteCount = useMemo(() => favorites.length, [favorites]);
+  const savedProverbs = useMemo(
+    () => favorites.map((id) => proverbs.find((item) => item.id === id)).filter(Boolean),
+    [favorites]
+  );
 
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
-        AsyncStorage.getItem(STORAGE.notifications)
+        AsyncStorage.getItem(STORAGE.notifications),
+        AsyncStorage.getItem(STORAGE.notificationTime)
       ]);
 
+      const lang = storedLanguage || 'en';
+      const time = storedTime || '10:00';
       if (storedLanguage) setLanguage(storedLanguage);
       if (storedIndex) setIndex(Number(storedIndex));
       if (storedFavorites) setFavorites(JSON.parse(storedFavorites));
+      setNotificationTime(time);
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
       setReady(true);
 
-      if (wantsNotifications) {
-        const lang = storedLanguage || 'en';
-        scheduleDailyProverbs(lang).catch(() => {});
-      }
+      if (wantsNotifications) scheduleDailyProverbs(lang, time).catch(() => {});
     })();
   }, []);
 
   async function changeLanguage(nextLanguage) {
     setLanguage(nextLanguage);
     await AsyncStorage.setItem(STORAGE.language, nextLanguage);
-    if (notificationsEnabled) scheduleDailyProverbs(nextLanguage).catch(() => {});
+    if (notificationsEnabled) scheduleDailyProverbs(nextLanguage, notificationTime).catch(() => {});
   }
 
-  async function go(direction) {
-    const next = (index + direction + proverbs.length) % proverbs.length;
+  async function setCurrentIndex(next) {
     setIndex(next);
     await AsyncStorage.setItem(STORAGE.index, String(next));
+  }
+
+  async function previous() {
+    await setCurrentIndex((index - 1 + proverbs.length) % proverbs.length);
+  }
+
+  async function refresh() {
+    let next = index;
+    while (next === index && proverbs.length > 1) {
+      next = Math.floor(Math.random() * proverbs.length);
+    }
+    await setCurrentIndex(next);
   }
 
   async function toggleFavorite() {
@@ -138,18 +159,24 @@ export default function App() {
   async function toggleNotifications(value) {
     setNotificationsEnabled(value);
     if (value) {
-      const ok = await scheduleDailyProverbs(language);
-      if (!ok) Alert.alert('Notifications are off', 'Turn on notifications in settings to receive the daily proverb at 10:00.');
+      const ok = await scheduleDailyProverbs(language, notificationTime);
+      if (!ok) Alert.alert('Notifications are off', 'Turn on notifications in settings to receive the daily proverb.');
     } else {
       await Notifications.cancelAllScheduledNotificationsAsync();
       await AsyncStorage.setItem(STORAGE.notifications, 'off');
     }
   }
 
+  async function changeNotificationTime(time) {
+    setNotificationTime(time);
+    await AsyncStorage.setItem(STORAGE.notificationTime, time);
+    if (notificationsEnabled) scheduleDailyProverbs(language, time).catch(() => {});
+  }
+
   if (!ready) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" />
+        <StatusBar barStyle="light-content" />
         <View style={styles.center}><Text style={styles.loading}>Loading…</Text></View>
       </SafeAreaView>
     );
@@ -157,111 +184,115 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar barStyle="light-content" />
       <View style={styles.container}>
-        <View style={styles.adSlot}>
-          <Text style={styles.adText}>AD SPACE</Text>
-        </View>
+        <Text style={styles.adText}>ADVERTISEMENT</Text>
 
         <View style={styles.topRow}>
           <View style={styles.languageRow}>
             {languages.map((item) => (
-              <Pressable
-                key={item.key}
-                onPress={() => changeLanguage(item.key)}
-                style={[styles.langButton, language === item.key && styles.langButtonActive]}
-              >
-                <Text style={[styles.langText, language === item.key && styles.langTextActive]}>{item.label}</Text>
+              <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={styles.flatButton}>
+                <Text style={[styles.langText, language === item.key && styles.activeText]}>{item.label}</Text>
               </Pressable>
             ))}
           </View>
-          <Pressable onPress={toggleFavorite} hitSlop={12} style={styles.starButton}>
-            <Ionicons name={isFavorite ? 'star' : 'star-outline'} size={34} color={isFavorite ? '#f2b84b' : '#2d2a26'} />
+          <Pressable onPress={toggleFavorite} hitSlop={14} style={styles.iconTap}>
+            <Ionicons name={isFavorite ? 'star' : 'star-outline'} size={32} color={isFavorite ? '#ffd166' : '#ffffff'} />
           </Pressable>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.counter}>{index + 1} / {proverbs.length}</Text>
+        <View style={styles.content}>
           <Text style={styles.saying}>{copy.saying}</Text>
           <Text style={styles.explanation}>{copy.explanation}</Text>
         </View>
 
-        <View style={styles.arrows}>
-          <Pressable accessibilityLabel="Previous proverb" onPress={() => go(-1)} style={styles.arrowButton}>
-            <Ionicons name="chevron-back" size={42} color="#2d2a26" />
+        <View style={styles.controls}>
+          <Pressable accessibilityLabel="Previous proverb" onPress={previous} style={styles.controlButton}>
+            <Ionicons name="chevron-back" size={36} color="#ffffff" />
           </Pressable>
-          <Pressable accessibilityLabel="Next proverb" onPress={() => go(1)} style={styles.arrowButton}>
-            <Ionicons name="chevron-forward" size={42} color="#2d2a26" />
+          <Pressable accessibilityLabel="Refresh proverb" onPress={refresh} style={styles.refreshButton}>
+            <Ionicons name="refresh" size={38} color="#000000" />
+          </Pressable>
+          <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} style={styles.controlButton}>
+            <Ionicons name="settings-outline" size={32} color="#ffffff" />
           </Pressable>
         </View>
 
-        <View style={styles.footer}>
-          <View>
-            <Text style={styles.footerTitle}>Daily 10:00 proverb</Text>
-            <Text style={styles.footerSub}>Default on • {favoriteCount} saved</Text>
+        {settingsOpen && (
+          <View style={styles.settingsPanel}>
+            <View style={styles.settingsHeader}>
+              <Text style={styles.sectionTitle}>Settings</Text>
+              <Pressable onPress={() => setSettingsOpen(false)} hitSlop={12}>
+                <Ionicons name="close" size={28} color="#ffffff" />
+              </Pressable>
+            </View>
+
+            <View style={styles.settingRow}>
+              <View>
+                <Text style={styles.settingTitle}>Daily notification</Text>
+                <Text style={styles.muted}>Current time: {notificationTime}</Text>
+              </View>
+              <Switch value={notificationsEnabled} onValueChange={toggleNotifications} />
+            </View>
+
+            <View style={styles.timeRow}>
+              {NOTIFICATION_TIMES.map((time) => (
+                <Pressable key={time} onPress={() => changeNotificationTime(time)} style={styles.timeButton}>
+                  <Text style={[styles.timeText, notificationTime === time && styles.activeText]}>{time}</Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={styles.sectionTitle}>Saved proverbs</Text>
+            <ScrollView style={styles.savedList} contentContainerStyle={styles.savedListContent}>
+              {savedProverbs.length === 0 ? (
+                <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
+              ) : (
+                savedProverbs.map((item) => (
+                  <Pressable key={item.id} onPress={() => setCurrentIndex(proverbs.findIndex((p) => p.id === item.id))} style={styles.savedItem}>
+                    <Text style={styles.savedSaying}>{item[language].saying}</Text>
+                    <Text style={styles.savedExplanation}>{item[language].explanation}</Text>
+                  </Pressable>
+                ))
+              )}
+            </ScrollView>
           </View>
-          <Switch value={notificationsEnabled} onValueChange={toggleNotifications} />
-        </View>
+        )}
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f7f2e8' },
-  container: { flex: 1, padding: 20, gap: 18 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  loading: { fontSize: 18, color: '#6d655c' },
-  adSlot: {
-    height: 70,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#cdbf9f',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fffaf0'
-  },
-  adText: { letterSpacing: 2, color: '#9b8d72', fontWeight: '700' },
+  safeArea: { flex: 1, backgroundColor: '#000000' },
+  container: { flex: 1, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 26 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
+  loading: { fontSize: 18, color: '#ffffff' },
+  adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center', marginBottom: 28 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  languageRow: { flexDirection: 'row', gap: 8 },
-  langButton: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, backgroundColor: '#e9ddc7' },
-  langButtonActive: { backgroundColor: '#2d2a26' },
-  langText: { fontWeight: '800', color: '#2d2a26' },
-  langTextActive: { color: '#fffaf0' },
-  starButton: { padding: 4 },
-  card: {
-    flex: 1,
-    borderRadius: 32,
-    padding: 28,
-    backgroundColor: '#fffaf0',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 4
-  },
-  counter: { textAlign: 'center', color: '#9b8d72', fontWeight: '700', marginBottom: 18 },
-  saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#2d2a26' },
-  explanation: { marginTop: 24, fontSize: 19, lineHeight: 28, textAlign: 'center', color: '#6d655c' },
-  arrows: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  arrowButton: {
-    width: 96,
-    height: 64,
-    borderRadius: 22,
-    backgroundColor: '#e9ddc7',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  footer: {
-    borderRadius: 22,
-    padding: 16,
-    backgroundColor: '#fffaf0',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  footerTitle: { fontSize: 16, fontWeight: '800', color: '#2d2a26' },
-  footerSub: { marginTop: 3, color: '#8c806c' }
+  languageRow: { flexDirection: 'row', gap: 18 },
+  flatButton: { paddingVertical: 8, paddingRight: 4 },
+  langText: { color: '#777777', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
+  activeText: { color: '#ffffff' },
+  iconTap: { padding: 6 },
+  content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
+  saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
+  explanation: { marginTop: 28, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
+  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34, marginBottom: 8 },
+  controlButton: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
+  refreshButton: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
+  settingsPanel: { maxHeight: '45%', paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222', marginTop: 16 },
+  settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
+  settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  settingTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  muted: { color: '#8f8f8f', fontSize: 14, lineHeight: 20 },
+  timeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginBottom: 24 },
+  timeButton: { paddingVertical: 4, paddingRight: 4 },
+  timeText: { color: '#777777', fontSize: 16, fontWeight: '800' },
+  savedList: { flexGrow: 0 },
+  savedListContent: { gap: 14, paddingBottom: 12 },
+  savedItem: { paddingVertical: 8 },
+  savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  savedExplanation: { color: '#a6a6a6', fontSize: 14, marginTop: 3, lineHeight: 20 }
 });
