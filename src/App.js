@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Switch, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { Ionicons } from '@expo/vector-icons';
 import { proverbs, languages } from './proverbs';
 
 const STORAGE = {
@@ -188,7 +187,7 @@ export default function App() {
       <View style={styles.container}>
         <View style={styles.header}>
           <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
-            <Ionicons name="settings-outline" size={30} color="#ffffff" />
+            <Text style={styles.headerIcon}>⚙</Text>
           </Pressable>
           <Text style={styles.adText}>ADVERTISEMENT</Text>
           <View style={styles.headerSpacer} />
@@ -201,13 +200,13 @@ export default function App() {
 
         <View style={styles.controls}>
           <Pressable accessibilityLabel="Previous proverb" onPress={previous} style={styles.controlButton}>
-            <Ionicons name="chevron-back" size={36} color="#ffffff" />
+            <Text style={styles.controlIcon}>‹</Text>
           </Pressable>
           <Pressable accessibilityLabel="Refresh proverb" onPress={refresh} style={styles.refreshButton}>
-            <Ionicons name="refresh" size={38} color="#000000" />
+            <Text style={styles.refreshIcon}>↻</Text>
           </Pressable>
           <Pressable accessibilityLabel="Save proverb" onPress={toggleFavorite} style={styles.controlButton}>
-            <Ionicons name={isFavorite ? 'star' : 'star-outline'} size={34} color={isFavorite ? '#ffd166' : '#ffffff'} />
+            <Text style={[styles.controlIcon, isFavorite && styles.favoriteIcon]}>{isFavorite ? '★' : '☆'}</Text>
           </Pressable>
         </View>
 
@@ -216,7 +215,7 @@ export default function App() {
             <View style={styles.settingsHeader}>
               <Text style={styles.sectionTitle}>Settings</Text>
               <Pressable onPress={() => setSettingsOpen(false)} hitSlop={12}>
-                <Ionicons name="close" size={28} color="#ffffff" />
+                <Text style={styles.closeIcon}>×</Text>
               </Pressable>
             </View>
 
@@ -278,12 +277,17 @@ const styles = StyleSheet.create({
   langText: { color: '#777777', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
   activeText: { color: '#ffffff' },
   iconTap: { padding: 6 },
+  headerIcon: { color: '#ffffff', fontSize: 30, lineHeight: 34, fontWeight: '700' },
+  closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
   explanation: { marginTop: 28, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34, marginBottom: 8 },
   controlButton: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
+  controlIcon: { color: '#ffffff', fontSize: 46, lineHeight: 50, fontWeight: '300' },
+  favoriteIcon: { color: '#ffd166' },
   refreshButton: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
+  refreshIcon: { color: '#000000', fontSize: 42, lineHeight: 46, fontWeight: '700' },
   settingsPanel: { maxHeight: '45%', paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222', marginTop: 16 },
   settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
