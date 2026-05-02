@@ -41,6 +41,21 @@ function nextNotificationDate(offsetDays, time) {
   return date;
 }
 
+function normalizeFavoriteIds(value) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    const list = Array.isArray(parsed) ? parsed : [];
+    return [...new Set(
+      list
+        .map((item) => (typeof item === 'string' ? item : item?.id))
+        .filter((id) => proverbs.some((proverb) => proverb.id === id))
+    )];
+  } catch {
+    return [];
+  }
+}
+
 async function ensureInstallId() {
   const existing = await AsyncStorage.getItem(STORAGE.installId);
   if (existing) return existing;
@@ -116,7 +131,7 @@ export default function App() {
       const time = storedTime || '10:00';
       if (storedLanguage) setLanguage(storedLanguage);
       if (storedIndex) setIndex(Number(storedIndex));
-      if (storedFavorites) setFavorites(JSON.parse(storedFavorites));
+      setFavorites(normalizeFavoriteIds(storedFavorites));
       setNotificationTime(time);
 
       const wantsNotifications = storedNotifications !== 'off';
@@ -151,8 +166,11 @@ export default function App() {
   }
 
   async function toggleFavorite() {
-    const next = isFavorite ? favorites.filter((id) => id !== current.id) : [...favorites, current.id];
+    const next = isFavorite
+      ? favorites.filter((id) => id !== current.id)
+      : [...new Set([...favorites, current.id])];
     setFavorites(next);
+    setSavedOpen(true);
     await AsyncStorage.setItem(STORAGE.favorites, JSON.stringify(next));
   }
 
@@ -194,6 +212,14 @@ export default function App() {
           <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
             <Text style={styles.headerIcon}>≡</Text>
           </Pressable>
+
+          <View style={styles.topLanguageRow}>
+            {languages.map((item) => (
+              <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={styles.topLanguageButton}>
+                <Text style={[styles.topLanguageText, language === item.key && styles.activeText]}>{item.label}</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={styles.content}>
@@ -215,66 +241,58 @@ export default function App() {
 
         {settingsOpen && (
           <View style={styles.settingsPanel}>
-            <View style={styles.settingsHeader}>
-              <Text style={styles.sectionTitle}>Settings</Text>
-              <Pressable onPress={() => setSettingsOpen(false)} hitSlop={12}>
-                <Text style={styles.closeIcon}>×</Text>
-              </Pressable>
-            </View>
-
-            <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
-              <Text style={styles.savedToggleIcon}>☆</Text>
-              <Text style={styles.savedToggleText}>Saved proverbs ({savedProverbs.length})</Text>
-              <Text style={styles.savedToggleArrow}>{savedOpen ? '−' : '+'}</Text>
-            </Pressable>
-
-            {savedOpen && (
-              <ScrollView style={styles.savedList} contentContainerStyle={styles.savedListContent}>
-                {savedProverbs.length === 0 ? (
-                  <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
-                ) : (
-                  savedProverbs.map((item) => (
-                    <Pressable
-                      key={item.id}
-                      onPress={() => {
-                        setCurrentIndex(proverbs.findIndex((p) => p.id === item.id));
-                        setSettingsOpen(false);
-                      }}
-                      style={styles.savedItem}
-                    >
-                      <Text style={styles.savedSaying}>{item[language].saying}</Text>
-                      <Text style={styles.savedExplanation}>{item[language].explanation}</Text>
-                    </Pressable>
-                  ))
-                )}
-              </ScrollView>
-            )}
-
-            <Text style={styles.sectionTitle}>Language</Text>
-            <View style={styles.languageRow}>
-              {languages.map((item) => (
-                <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={styles.symbolButton}>
-                  <Text style={[styles.langText, language === item.key && styles.activeText]}>{item.label}</Text>
+            <ScrollView contentContainerStyle={styles.settingsContent}>
+              <View style={styles.settingsHeader}>
+                <Text style={styles.sectionTitle}>Settings</Text>
+                <Pressable onPress={() => setSettingsOpen(false)} hitSlop={12}>
+                  <Text style={styles.closeIcon}>×</Text>
                 </Pressable>
-              ))}
-            </View>
-
-            <View style={styles.settingRow}>
-              <View>
-                <Text style={styles.settingTitle}>Daily notification</Text>
-                <Text style={styles.muted}>Current time: {notificationTime}</Text>
               </View>
-              <Switch value={notificationsEnabled} onValueChange={toggleNotifications} />
-            </View>
 
-            <View style={styles.timeRow}>
-              {NOTIFICATION_TIMES.map((time) => (
-                <Pressable key={time} onPress={() => changeNotificationTime(time)} style={styles.timeButton}>
-                  <Text style={[styles.timeText, notificationTime === time && styles.activeText]}>{time}</Text>
-                </Pressable>
-              ))}
-            </View>
+              <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
+                <Text style={styles.savedToggleIcon}>☆</Text>
+                <Text style={styles.savedToggleText}>Saved proverbs ({savedProverbs.length})</Text>
+                <Text style={styles.savedToggleArrow}>{savedOpen ? '−' : '+'}</Text>
+              </Pressable>
 
+              {savedOpen && (
+                <View style={styles.savedList}>
+                  {savedProverbs.length === 0 ? (
+                    <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
+                  ) : (
+                    savedProverbs.map((item) => (
+                      <Pressable
+                        key={item.id}
+                        onPress={() => {
+                          setCurrentIndex(proverbs.findIndex((p) => p.id === item.id));
+                          setSettingsOpen(false);
+                        }}
+                        style={styles.savedItem}
+                      >
+                        <Text style={styles.savedSaying}>{item[language].saying}</Text>
+                        <Text style={styles.savedExplanation}>{item[language].explanation}</Text>
+                      </Pressable>
+                    ))
+                  )}
+                </View>
+              )}
+
+              <View style={styles.settingRow}>
+                <View>
+                  <Text style={styles.settingTitle}>Daily notification</Text>
+                  <Text style={styles.muted}>Current time: {notificationTime}</Text>
+                </View>
+                <Switch value={notificationsEnabled} onValueChange={toggleNotifications} />
+              </View>
+
+              <View style={styles.timeRow}>
+                {NOTIFICATION_TIMES.map((time) => (
+                  <Pressable key={time} onPress={() => changeNotificationTime(time)} style={styles.timeButton}>
+                    <Text style={[styles.timeText, notificationTime === time && styles.activeText]}>{time}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </ScrollView>
           </View>
         )}
       </View>
@@ -284,15 +302,15 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#000000' },
-  container: { flex: 1, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 26 },
+  container: { flex: 1, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 26, position: 'relative' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  topActions: { alignItems: 'flex-start', marginBottom: 18 },
+  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
-  languageRow: { flexDirection: 'row', gap: 18, marginBottom: 22 },
-  symbolButton: { paddingVertical: 8, paddingRight: 4 },
-  langText: { color: '#777777', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
+  topLanguageRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  topLanguageButton: { paddingVertical: 8, paddingLeft: 4 },
+  topLanguageText: { color: '#777777', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
   activeText: { color: '#ffffff' },
   iconTap: { width: 58, height: 42, alignItems: 'flex-start', justifyContent: 'center' },
   headerIcon: { color: '#ffffff', fontSize: 38, lineHeight: 40, fontWeight: '300' },
@@ -306,7 +324,8 @@ const styles = StyleSheet.create({
   favoriteIcon: { color: '#ffd166' },
   refreshButton: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
   refreshIcon: { color: '#000000', fontSize: 42, lineHeight: 46, fontWeight: '700' },
-  settingsPanel: { maxHeight: '56%', paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222', marginTop: 16 },
+  settingsPanel: { position: 'absolute', top: 66, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
+  settingsContent: { paddingBottom: 36 },
   settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
@@ -319,8 +338,7 @@ const styles = StyleSheet.create({
   savedToggleIcon: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
   savedToggleText: { flex: 1, color: '#ffffff', fontSize: 16, fontWeight: '800' },
   savedToggleArrow: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
-  savedList: { flexGrow: 0, maxHeight: 190, marginBottom: 22 },
-  savedListContent: { gap: 14, paddingBottom: 12 },
+  savedList: { marginBottom: 24, gap: 14 },
   savedItem: { paddingVertical: 8 },
   savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
   savedExplanation: { color: '#a6a6a6', fontSize: 14, marginTop: 3, lineHeight: 20 }
