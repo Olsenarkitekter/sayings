@@ -89,6 +89,7 @@ export default function App() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('10:00');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [savedOpen, setSavedOpen] = useState(false);
   const [ready, setReady] = useState(false);
 
   const current = proverbs[index];
@@ -185,12 +186,14 @@ export default function App() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
-            <Text style={styles.headerIcon}>⚙</Text>
-          </Pressable>
+        <View style={styles.adArea}>
           <Text style={styles.adText}>ADVERTISEMENT</Text>
-          <View style={styles.headerSpacer} />
+        </View>
+
+        <View style={styles.topActions}>
+          <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
+            <Text style={styles.headerIcon}>≡</Text>
+          </Pressable>
         </View>
 
         <View style={styles.content}>
@@ -219,6 +222,34 @@ export default function App() {
               </Pressable>
             </View>
 
+            <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
+              <Text style={styles.savedToggleIcon}>☆</Text>
+              <Text style={styles.savedToggleText}>Saved proverbs ({savedProverbs.length})</Text>
+              <Text style={styles.savedToggleArrow}>{savedOpen ? '−' : '+'}</Text>
+            </Pressable>
+
+            {savedOpen && (
+              <ScrollView style={styles.savedList} contentContainerStyle={styles.savedListContent}>
+                {savedProverbs.length === 0 ? (
+                  <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
+                ) : (
+                  savedProverbs.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      onPress={() => {
+                        setCurrentIndex(proverbs.findIndex((p) => p.id === item.id));
+                        setSettingsOpen(false);
+                      }}
+                      style={styles.savedItem}
+                    >
+                      <Text style={styles.savedSaying}>{item[language].saying}</Text>
+                      <Text style={styles.savedExplanation}>{item[language].explanation}</Text>
+                    </Pressable>
+                  ))
+                )}
+              </ScrollView>
+            )}
+
             <Text style={styles.sectionTitle}>Language</Text>
             <View style={styles.languageRow}>
               {languages.map((item) => (
@@ -244,19 +275,6 @@ export default function App() {
               ))}
             </View>
 
-            <Text style={styles.sectionTitle}>Saved proverbs</Text>
-            <ScrollView style={styles.savedList} contentContainerStyle={styles.savedListContent}>
-              {savedProverbs.length === 0 ? (
-                <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
-              ) : (
-                savedProverbs.map((item) => (
-                  <Pressable key={item.id} onPress={() => setCurrentIndex(proverbs.findIndex((p) => p.id === item.id))} style={styles.savedItem}>
-                    <Text style={styles.savedSaying}>{item[language].saying}</Text>
-                    <Text style={styles.savedExplanation}>{item[language].explanation}</Text>
-                  </Pressable>
-                ))
-              )}
-            </ScrollView>
           </View>
         )}
       </View>
@@ -269,15 +287,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 26 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
-  headerSpacer: { width: 42 },
+  adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  topActions: { alignItems: 'flex-start', marginBottom: 18 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
   languageRow: { flexDirection: 'row', gap: 18, marginBottom: 22 },
   symbolButton: { paddingVertical: 8, paddingRight: 4 },
   langText: { color: '#777777', fontSize: 15, fontWeight: '800', letterSpacing: 1 },
   activeText: { color: '#ffffff' },
-  iconTap: { padding: 6 },
-  headerIcon: { color: '#ffffff', fontSize: 30, lineHeight: 34, fontWeight: '700' },
+  iconTap: { width: 58, height: 42, alignItems: 'flex-start', justifyContent: 'center' },
+  headerIcon: { color: '#ffffff', fontSize: 38, lineHeight: 40, fontWeight: '300' },
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
@@ -288,7 +306,7 @@ const styles = StyleSheet.create({
   favoriteIcon: { color: '#ffd166' },
   refreshButton: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
   refreshIcon: { color: '#000000', fontSize: 42, lineHeight: 46, fontWeight: '700' },
-  settingsPanel: { maxHeight: '45%', paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222', marginTop: 16 },
+  settingsPanel: { maxHeight: '56%', paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222', marginTop: 16 },
   settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
@@ -297,7 +315,11 @@ const styles = StyleSheet.create({
   timeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginBottom: 24 },
   timeButton: { paddingVertical: 4, paddingRight: 4 },
   timeText: { color: '#777777', fontSize: 16, fontWeight: '800' },
-  savedList: { flexGrow: 0 },
+  savedToggle: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#1d1d1d' },
+  savedToggleIcon: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
+  savedToggleText: { flex: 1, color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  savedToggleArrow: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
+  savedList: { flexGrow: 0, maxHeight: 190, marginBottom: 22 },
   savedListContent: { gap: 14, paddingBottom: 12 },
   savedItem: { paddingVertical: 8 },
   savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
