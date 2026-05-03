@@ -447,7 +447,6 @@ export default function App() {
               <Text style={styles.shareText}>Edit</Text>
             </Pressable>
           </View>
-          {infoOpen && <Text style={styles.explanation}>{infoText}</Text>}
 
           {editOpen && (
             <View style={styles.editPanel}>
@@ -484,6 +483,22 @@ export default function App() {
             <Text style={[styles.controlIcon, isFavorite && styles.favoriteIcon]}>{isFavorite ? '★' : '☆'}</Text>
           </Pressable>
         </View>
+
+        {infoOpen && (
+          <View style={styles.infoOverlay}>
+            <View style={styles.infoPanel}>
+              <View style={styles.infoHeader}>
+                <Text style={styles.infoTitle}>{copy.saying}</Text>
+                <Pressable onPress={() => setInfoOpen(false)} hitSlop={12}>
+                  <Text style={styles.infoClose}>×</Text>
+                </Pressable>
+              </View>
+              <ScrollView contentContainerStyle={styles.infoScrollContent} showsVerticalScrollIndicator>
+                <Text style={styles.explanation}>{infoText}</Text>
+              </ScrollView>
+            </View>
+          </View>
+        )}
 
         {settingsOpen && (
           <View style={styles.settingsPanel}>
@@ -597,7 +612,13 @@ const styles = StyleSheet.create({
   infoIcon: { color: '#d9d9d9', fontSize: 16, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
   shareButton: { minWidth: 70, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   shareText: { color: '#d9d9d9', fontSize: 14, lineHeight: 18, fontWeight: '900' },
-  explanation: { marginTop: 18, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
+  infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
+  infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
+  infoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 10 },
+  infoTitle: { flex: 1, color: '#ffffff', fontSize: 20, lineHeight: 26, fontWeight: '900' },
+  infoClose: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
+  infoScrollContent: { paddingBottom: 12 },
+  explanation: { fontSize: 18, lineHeight: 28, textAlign: 'left', color: '#d9d9d9' },
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
   editInput: { minHeight: 86, color: '#ffffff', borderWidth: 1, borderColor: '#333333', borderRadius: 12, padding: 12, fontSize: 18, lineHeight: 24, textAlignVertical: 'top' },
