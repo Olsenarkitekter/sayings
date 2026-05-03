@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { proverbs, languages } from './proverbs';
+import { proverbs, languages, categories } from './proverbs';
 
 const STORAGE = {
   language: 'daily-sayings:language',
@@ -10,6 +10,7 @@ const STORAGE = {
   favorites: 'daily-sayings:favorites',
   notifications: 'daily-sayings:notifications',
   notificationTime: 'daily-sayings:notificationTime',
+  category: 'daily-sayings:category',
   installId: 'daily-sayings:installId'
 };
 
@@ -103,14 +104,21 @@ export default function App() {
   const [favorites, setFavorites] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('10:00');
+  const [category, setCategory] = useState('all');
+  const [categoryOpen, setCategoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [ready, setReady] = useState(false);
 
-  const current = proverbs[index];
+  const filteredProverbs = useMemo(
+    () => proverbs.filter((item) => category === 'all' || item.category === category),
+    [category]
+  );
+  const current = filteredProverbs[index % filteredProverbs.length] || proverbs[0];
   const copy = current[language];
   const isFavorite = favorites.includes(current.id);
+  const selectedCategory = categories.find((item) => item.key === category) || categories[0];
 
   const savedProverbs = useMemo(
     () => favorites.map((id) => proverbs.find((item) => item.id === id)).filter(Boolean),
@@ -124,17 +132,19 @@ export default function App() {
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
         AsyncStorage.getItem(STORAGE.notifications),
-        AsyncStorage.getItem(STORAGE.notificationTime)
+        AsyncStorage.getItem(STORAGE.notificationTime),
+        AsyncStorage.getItem(STORAGE.category)
       ]);
 
       const lang = storedLanguage || 'en';
       const time = storedTime || '10:00';
       if (storedLanguage) setLanguage(storedLanguage);
+      if (storedCategory && categories.some((item) => item.key === storedCategory)) setCategory(storedCategory);
       if (storedIndex) setIndex(Number(storedIndex));
       setFavorites(normalizeFavoriteIds(storedFavorites));
       setNotificationTime(time);
@@ -154,20 +164,41 @@ export default function App() {
   }
 
   async function setCurrentIndex(next) {
-    setIndex(next);
-    await AsyncStorage.setItem(STORAGE.index, String(next));
+    const normalized = ((next % filteredProverbs.length) + filteredProverbs.length) % filteredProverbs.length;
+    setIndex(normalized);
+    await AsyncStorage.setItem(STORAGE.index, String(normalized));
+  }
+
+  async function changeCategory(nextCategory) {
+    setCategory(nextCategory);
+    setCategoryOpen(false);
+    setIndex(0);
+    await Promise.all([
+      AsyncStorage.setItem(STORAGE.category, nextCategory),
+      AsyncStorage.setItem(STORAGE.index, '0')
+    ]);
   }
 
   async function previous() {
-    await setCurrentIndex((index - 1 + proverbs.length) % proverbs.length);
+    await setCurrentIndex(index - 1);
   }
 
   async function refresh() {
     let next = index;
-    while (next === index && proverbs.length > 1) {
-      next = Math.floor(Math.random() * proverbs.length);
+    while (next === index && filteredProverbs.length > 1) {
+      next = Math.floor(Math.random() * filteredProverbs.length);
     }
     await setCurrentIndex(next);
+  }
+
+  async function shareProverb() {
+    const url = 'https://olsenarkitekter.github.io/proverbs-poison/';
+    const message = `${copy.saying}\n\n${copy.explanation}\n\n${url}`;
+    try {
+      await Share.share({ title: copy.saying, message, url });
+    } catch {
+      Alert.alert('Share unavailable', 'Sharing is not available on this device right now.');
+    }
   }
 
   async function toggleFavorite() {
@@ -229,14 +260,19 @@ export default function App() {
 
         <View style={styles.content}>
           <Text style={styles.saying}>{copy.saying}</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
-            onPress={() => setInfoOpen((value) => !value)}
-            style={styles.infoButton}
-          >
-            <Text style={styles.infoIcon}>i</Text>
-          </Pressable>
+          <View style={styles.quickActions}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
+              onPress={() => setInfoOpen((value) => !value)}
+              style={styles.infoButton}
+            >
+              <Text style={styles.infoIcon}>i</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.shareButton}>
+              <Text style={styles.shareIcon}>↗</Text>
+            </Pressable>
+          </View>
           {infoOpen && <Text style={styles.explanation}>{copy.explanation}</Text>}
         </View>
 
@@ -277,7 +313,17 @@ export default function App() {
                       <Pressable
                         key={item.id}
                         onPress={() => {
-                          setCurrentIndex(proverbs.findIndex((p) => p.id === item.id));
+                          const savedIndex = filteredProverbs.findIndex((p) => p.id === item.id);
+                          if (savedIndex >= 0) {
+                            setCurrentIndex(savedIndex);
+                          } else {
+                            const allIndex = proverbs.findIndex((p) => p.id === item.id);
+                            setCategory('all');
+                            setCategoryOpen(false);
+                            setIndex(allIndex);
+                            AsyncStorage.setItem(STORAGE.category, 'all').catch(() => {});
+                            AsyncStorage.setItem(STORAGE.index, String(allIndex)).catch(() => {});
+                          }
                           setSettingsOpen(false);
                         }}
                         style={styles.savedItem}
@@ -289,6 +335,24 @@ export default function App() {
                   )}
                 </View>
               )}
+
+              <View style={styles.categoryBlock}>
+                <Text style={styles.settingTitle}>Category</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="Choose category" onPress={() => setCategoryOpen((value) => !value)} style={styles.categorySelect}>
+                  <Text style={styles.categorySelectText}>{selectedCategory.label}</Text>
+                  <Text style={styles.categorySelectArrow}>{categoryOpen ? '−' : '+'}</Text>
+                </Pressable>
+
+                {categoryOpen && (
+                  <View style={styles.categoryOptions}>
+                    {categories.map((item) => (
+                      <Pressable key={item.key} onPress={() => changeCategory(item.key)} style={styles.categoryOption}>
+                        <Text style={[styles.categoryOptionText, category === item.key && styles.activeText]}>{item.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
 
               <View style={styles.settingRow}>
                 <View>
@@ -330,8 +394,11 @@ const styles = StyleSheet.create({
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
-  infoButton: { alignSelf: 'center', marginTop: 22, width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  quickActions: { alignItems: 'center', marginTop: 22, gap: 14 },
+  infoButton: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   infoIcon: { color: '#d9d9d9', fontSize: 16, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
+  shareButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  shareIcon: { color: '#d9d9d9', fontSize: 21, lineHeight: 24, fontWeight: '700' },
   explanation: { marginTop: 18, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34, marginBottom: 8 },
   controlButton: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
@@ -345,6 +412,13 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   settingTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  categoryBlock: { marginBottom: 24 },
+  categorySelect: { marginTop: 10, minHeight: 48, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  categorySelectText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  categorySelectArrow: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
+  categoryOptions: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingVertical: 6 },
+  categoryOption: { minHeight: 42, justifyContent: 'center', paddingHorizontal: 16 },
+  categoryOptionText: { color: '#777777', fontSize: 16, fontWeight: '800' },
   muted: { color: '#8f8f8f', fontSize: 14, lineHeight: 20 },
   timeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginBottom: 24 },
   timeButton: { paddingVertical: 4, paddingRight: 4 },

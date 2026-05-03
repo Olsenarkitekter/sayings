@@ -1,4 +1,4 @@
-export const proverbs = [
+const rawProverbs = [
   { id: 'better-late-than-never', en: { saying: 'Better late than never', explanation: 'It is better to do something late than not do it at all.' }, dk: { saying: 'Bedre sent end aldrig', explanation: 'Det er bedre at gøre noget sent end slet ikke.' }, fo: { saying: 'Betri seint enn ongantíð', explanation: 'Tað er betri at gera okkurt seint enn als ikki.' } },
   { id: 'actions-speak-louder', en: { saying: 'Actions speak louder than words', explanation: 'What people do matters more than what they say.' }, dk: { saying: 'Handlinger taler højere end ord', explanation: 'Det man gør, betyder mere end det man siger.' }, fo: { saying: 'Gerðir tala hægri enn orð', explanation: 'Tað fólk gera, hevur størri týdning enn tað tey siga.' } },
   { id: 'dont-judge-book', en: { saying: 'Do not judge a book by its cover', explanation: 'Do not judge something only by how it looks.' }, dk: { saying: 'Døm ikke bogen på omslaget', explanation: 'Vurder ikke noget kun ud fra udseendet.' }, fo: { saying: 'Døm ikki bókina eftir permuna', explanation: 'Met ikki um nakað bert eftir útsjóndini.' } },
@@ -43,6 +43,68 @@ export const proverbs = [
   { id: 'better-one-bird', en: { saying: 'A bird in the hand is worth two in the bush', explanation: 'A sure thing is better than a risky possibility.' }, dk: { saying: 'Hellere én fugl i hånden end ti på taget', explanation: 'Noget sikkert er bedre end en usikker mulighed.' }, fo: { saying: 'Betri ein fuglur í hond enn tíggju á takinum', explanation: 'Okkurt trygt er betri enn ein óvissur møguleiki.' } },
   { id: 'after-rain-sun', en: { saying: 'After rain comes sunshine', explanation: 'Hard times are often followed by better times.' }, dk: { saying: 'Efter regn kommer solskin', explanation: 'Svære tider bliver ofte efterfulgt af bedre tider.' }, fo: { saying: 'Eftir regn kemur sólskin', explanation: 'Eftir torførar tíðir koma ofta betri tíðir.' } }
 ];
+
+const categoryById = {
+  'better-late-than-never': 'wisdom',
+  'actions-speak-louder': 'work',
+  'dont-judge-book': 'wisdom',
+  'two-birds-one-stone': 'work',
+  'elephant-room': 'wisdom',
+  'all-eggs-one-basket': 'wisdom',
+  'early-bird': 'work',
+  'practice-perfect': 'work',
+  'rome-not-built-day': 'work',
+  'no-smoke-without-fire': 'wisdom',
+  'old-habits-die-hard': 'life',
+  'strike-iron-hot': 'work',
+  'too-many-cooks': 'humour',
+  'look-before-leap': 'wisdom',
+  'many-hands-light-work': 'work',
+  'honesty-best-policy': 'wisdom',
+  'time-flies': 'life',
+  'you-live-and-learn': 'life',
+  'easy-come-easy-go': 'life',
+  'no-pain-no-gain': 'work',
+  'silence-golden': 'wisdom',
+  'knowledge-power': 'wisdom',
+  'all-that-glitters': 'wisdom',
+  'blood-thicker-water': 'life',
+  'walls-have-ears': 'wisdom',
+  'love-blind': 'love',
+  'necessity-invention': 'work',
+  'where-theres-will': 'work',
+  'nothing-ventured': 'work',
+  'empty-vessels': 'wisdom',
+  'slow-steady': 'work',
+  'every-beginning-hard': 'life',
+  'like-father-son': 'life',
+  'out-of-sight': 'love',
+  'one-swallow': 'weather',
+  'opposites-attract': 'love',
+  'patience-virtue': 'wisdom',
+  'truth-will-out': 'wisdom',
+  'haste-makes-waste': 'work',
+  'better-safe-than-sorry': 'wisdom',
+  'birds-feather': 'life',
+  'better-one-bird': 'sea',
+  'after-rain-sun': 'weather'
+};
+
+export const categories = [
+  { key: 'all', label: 'All' },
+  { key: 'life', label: 'Life' },
+  { key: 'love', label: 'Love' },
+  { key: 'work', label: 'Work' },
+  { key: 'sea', label: 'Sea' },
+  { key: 'weather', label: 'Weather' },
+  { key: 'wisdom', label: 'Wisdom' },
+  { key: 'humour', label: 'Humour' }
+];
+
+export const proverbs = rawProverbs.map((proverb) => ({
+  ...proverb,
+  category: categoryById[proverb.id] || 'wisdom'
+}));
 
 export const languages = [
   { key: 'en', label: 'EN' },

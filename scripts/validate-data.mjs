@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 
 const source = readFileSync('src/proverbs.js', 'utf8');
-const match = source.match(/export const proverbs = (\[[\s\S]*?\n\]);/);
-if (!match) throw new Error('Could not find proverbs export');
+const match = source.match(/(?:export const proverbs|const rawProverbs) = (\[[\s\S]*?\n\]);/);
+if (!match) throw new Error('Could not find proverbs data');
 const proverbs = Function(`return ${match[1]}`)();
 const languages = ['en', 'dk', 'fo'];
 const ids = new Set();
