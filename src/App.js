@@ -28,6 +28,71 @@ const ORIGIN_LABELS = {
   fo: 'Uppruni'
 };
 
+function wrapCanvasText(context, text, maxWidth) {
+  const lines = [];
+  const words = text.split(/\s+/).filter(Boolean);
+  let line = '';
+
+  words.forEach((word) => {
+    const testLine = line ? `${line} ${word}` : word;
+    if (context.measureText(testLine).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = testLine;
+    }
+  });
+
+  if (line) lines.push(line);
+  return lines;
+}
+
+async function createShareImageFile(text) {
+  if (Platform.OS !== 'web' || typeof document === 'undefined') return null;
+
+  const canvas = document.createElement('canvas');
+  const size = 1080;
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+
+  context.fillStyle = '#000000';
+  context.fillRect(0, 0, size, size);
+  context.fillStyle = '#ffffff';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.font = '900 76px Arial, Helvetica, sans-serif';
+
+  let lines = wrapCanvasText(context, text, 820);
+  if (lines.length > 7) {
+    context.font = '900 62px Arial, Helvetica, sans-serif';
+    lines = wrapCanvasText(context, text, 860);
+  }
+
+  const lineHeight = lines.length > 5 ? 78 : 92;
+  const startY = size / 2 - ((lines.length - 1) * lineHeight) / 2;
+  lines.forEach((line, lineIndex) => {
+    context.fillText(line, size / 2, startY + lineIndex * lineHeight);
+  });
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
+  if (!blob) return null;
+  return new File([blob], 'proverb.png', { type: 'image/png' });
+}
+
+async function downloadShareImage(file) {
+  if (!file || typeof document === 'undefined' || typeof URL === 'undefined') return;
+  const objectUrl = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = file.name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -207,9 +272,24 @@ export default function App() {
 
   async function shareProverb() {
     const url = 'https://olsenarkitekter.github.io/proverbs-poison/';
-    const message = `${copy.saying}\n\n${infoText}\n\n${url}`;
+    const shareText = `${infoText}\n\n${url}`;
+
     try {
-      await Share.share({ title: copy.saying, message, url });
+      const imageFile = await createShareImageFile(copy.saying);
+      const webNavigator = typeof navigator !== 'undefined' ? navigator : null;
+      const webSharePayload = imageFile ? {
+        title: copy.saying,
+        text: shareText,
+        files: [imageFile]
+      } : null;
+
+      if (webNavigator?.share && webSharePayload && (!webNavigator.canShare || webNavigator.canShare(webSharePayload))) {
+        await webNavigator.share(webSharePayload);
+        return;
+      }
+
+      if (imageFile) await downloadShareImage(imageFile);
+      await Share.share({ title: copy.saying, message: shareText, url });
     } catch {
       Alert.alert('Share unavailable', 'Sharing is not available on this device right now.');
     }
