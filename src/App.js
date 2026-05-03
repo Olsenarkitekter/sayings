@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { proverbs, languages, categories } from './proverbs';
@@ -11,6 +11,8 @@ const STORAGE = {
   notifications: 'daily-sayings:notifications',
   notificationTime: 'daily-sayings:notificationTime',
   category: 'daily-sayings:category',
+  edits: 'daily-sayings:edits',
+  ownerMode: 'daily-sayings:ownerMode',
   installId: 'daily-sayings:installId'
 };
 
@@ -119,6 +121,21 @@ function nextNotificationDate(offsetDays, time) {
   return date;
 }
 
+function normalizeEdits(value) {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function isOwnerUrl() {
+  if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('owner') === '1';
+}
+
 function normalizeFavoriteIds(value) {
   if (!value) return [];
   try {
@@ -186,6 +203,10 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [edits, setEdits] = useState({});
+  const [ownerMode, setOwnerMode] = useState(false);
   const [ready, setReady] = useState(false);
 
   const filteredProverbs = useMemo(
@@ -193,7 +214,8 @@ export default function App() {
     [category]
   );
   const current = filteredProverbs[index % filteredProverbs.length] || proverbs[0];
-  const copy = current[language];
+  const currentEdit = edits[current.id]?.[language];
+  const copy = currentEdit ? { ...current[language], saying: currentEdit } : current[language];
   const infoText = copy.origin ? `${copy.explanation}\n\n${ORIGIN_LABELS[language]}: ${copy.origin}` : copy.explanation;
   const shareLabel = SHARE_LABELS[language] || SHARE_LABELS.en;
   const isFavorite = favorites.includes(current.id);
@@ -206,26 +228,38 @@ export default function App() {
 
   useEffect(() => {
     setInfoOpen(false);
+    setEditOpen(false);
   }, [index, language]);
+
+  useEffect(() => {
+    if (editOpen) setEditText(copy.saying);
+  }, [editOpen, copy.saying]);
 
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
         AsyncStorage.getItem(STORAGE.notifications),
         AsyncStorage.getItem(STORAGE.notificationTime),
-        AsyncStorage.getItem(STORAGE.category)
+        AsyncStorage.getItem(STORAGE.category),
+        AsyncStorage.getItem(STORAGE.edits),
+        AsyncStorage.getItem(STORAGE.ownerMode)
       ]);
 
       const lang = storedLanguage || 'en';
       const time = storedTime || '10:00';
+      const owner = isOwnerUrl() || storedOwnerMode === 'on';
+      if (owner) await AsyncStorage.setItem(STORAGE.ownerMode, 'on');
+
       if (storedLanguage) setLanguage(storedLanguage);
       if (storedCategory && categories.some((item) => item.key === storedCategory)) setCategory(storedCategory);
       if (storedIndex) setIndex(Number(storedIndex));
       setFavorites(normalizeFavoriteIds(storedFavorites));
+      setEdits(normalizeEdits(storedEdits));
+      setOwnerMode(owner);
       setNotificationTime(time);
 
       const wantsNotifications = storedNotifications !== 'off';
@@ -268,6 +302,32 @@ export default function App() {
       next = Math.floor(Math.random() * filteredProverbs.length);
     }
     await setCurrentIndex(next);
+  }
+
+  async function submitEdit() {
+    const suggestion = editText.trim();
+    if (!suggestion) return;
+
+    if (ownerMode) {
+      const next = {
+        ...edits,
+        [current.id]: {
+          ...(edits[current.id] || {}),
+          [language]: suggestion
+        }
+      };
+      setEdits(next);
+      setEditOpen(false);
+      await AsyncStorage.setItem(STORAGE.edits, JSON.stringify(next));
+      Alert.alert('Saved', 'Your edit has been saved on this device.');
+      return;
+    }
+
+    const title = encodeURIComponent(`Edit suggestion: ${current.id} (${language.toUpperCase()})`);
+    const body = encodeURIComponent(`Proverb ID: ${current.id}\nLanguage: ${language.toUpperCase()}\n\nCurrent text:\n${copy.saying}\n\nSuggested text:\n${suggestion}`);
+    const issueUrl = `https://github.com/Olsenarkitekter/proverbs-poison/issues/new?title=${title}&body=${body}`;
+    setEditOpen(false);
+    await Linking.openURL(issueUrl);
   }
 
   async function shareProverb() {
@@ -366,8 +426,34 @@ export default function App() {
             <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.shareButton}>
               <Text style={styles.shareText}>{shareLabel}</Text>
             </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.shareButton}>
+              <Text style={styles.shareText}>Edit</Text>
+            </Pressable>
           </View>
           {infoOpen && <Text style={styles.explanation}>{infoText}</Text>}
+
+          {editOpen && (
+            <View style={styles.editPanel}>
+              <Text style={styles.editTitle}>{ownerMode ? 'Edit saying' : 'Suggest edit'}</Text>
+              <TextInput
+                value={editText}
+                onChangeText={setEditText}
+                multiline
+                autoFocus
+                style={styles.editInput}
+                placeholder="Write corrected saying…"
+                placeholderTextColor="#777777"
+              />
+              <View style={styles.editActions}>
+                <Pressable onPress={() => setEditOpen(false)} style={styles.editSecondaryButton}>
+                  <Text style={styles.editSecondaryText}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={submitEdit} style={styles.editPrimaryButton}>
+                  <Text style={styles.editPrimaryText}>{ownerMode ? 'Save' : 'Send'}</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={styles.controls}>
@@ -422,7 +508,7 @@ export default function App() {
                         }}
                         style={styles.savedItem}
                       >
-                        <Text style={styles.savedSaying}>{item[language].saying}</Text>
+                        <Text style={styles.savedSaying}>{edits[item.id]?.[language] || item[language].saying}</Text>
                         <Text style={styles.savedExplanation}>{item[language].explanation}</Text>
                       </Pressable>
                     ))
@@ -494,6 +580,14 @@ const styles = StyleSheet.create({
   shareButton: { minWidth: 70, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   shareText: { color: '#d9d9d9', fontSize: 14, lineHeight: 18, fontWeight: '900' },
   explanation: { marginTop: 18, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
+  editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
+  editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
+  editInput: { minHeight: 86, color: '#ffffff', borderWidth: 1, borderColor: '#333333', borderRadius: 12, padding: 12, fontSize: 18, lineHeight: 24, textAlignVertical: 'top' },
+  editActions: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 12 },
+  editSecondaryButton: { height: 36, minWidth: 88, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
+  editSecondaryText: { color: '#d9d9d9', fontSize: 14, fontWeight: '900' },
+  editPrimaryButton: { height: 36, minWidth: 88, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
+  editPrimaryText: { color: '#000000', fontSize: 14, fontWeight: '900' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34, marginBottom: 8 },
   controlButton: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
   controlIcon: { color: '#ffffff', fontSize: 46, lineHeight: 50, fontWeight: '300' },

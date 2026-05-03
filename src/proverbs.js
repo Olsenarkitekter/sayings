@@ -125,9 +125,6 @@ export const categories = [
   { key: 'life', label: 'Life' },
   { key: 'love', label: 'Love' },
   { key: 'work', label: 'Work' },
-  { key: 'sea', label: 'Sea' },
-  { key: 'weather', label: 'Weather' },
-  { key: 'wisdom', label: 'Wisdom' },
   { key: 'biblical', label: 'Biblical' },
   { key: 'slang', label: 'Slang' },
   { key: 'humour', label: 'Humour' }
