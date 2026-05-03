@@ -105,6 +105,7 @@ export default function App() {
   const [notificationTime, setNotificationTime] = useState('10:00');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [ready, setReady] = useState(false);
 
   const current = proverbs[index];
@@ -115,6 +116,10 @@ export default function App() {
     () => favorites.map((id) => proverbs.find((item) => item.id === id)).filter(Boolean),
     [favorites]
   );
+
+  useEffect(() => {
+    setInfoOpen(false);
+  }, [index, language]);
 
   useEffect(() => {
     (async () => {
@@ -224,7 +229,15 @@ export default function App() {
 
         <View style={styles.content}>
           <Text style={styles.saying}>{copy.saying}</Text>
-          <Text style={styles.explanation}>{copy.explanation}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
+            onPress={() => setInfoOpen((value) => !value)}
+            style={styles.infoButton}
+          >
+            <Text style={styles.infoIcon}>i</Text>
+          </Pressable>
+          {infoOpen && <Text style={styles.explanation}>{copy.explanation}</Text>}
         </View>
 
         <View style={styles.controls}>
@@ -317,7 +330,9 @@ const styles = StyleSheet.create({
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
-  explanation: { marginTop: 28, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
+  infoButton: { alignSelf: 'center', marginTop: 22, width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  infoIcon: { color: '#d9d9d9', fontSize: 16, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
+  explanation: { marginTop: 18, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34, marginBottom: 8 },
   controlButton: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
   controlIcon: { color: '#ffffff', fontSize: 46, lineHeight: 50, fontWeight: '300' },
