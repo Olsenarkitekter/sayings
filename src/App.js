@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import * as Sharing from 'expo-sharing';
+import { captureRef } from 'react-native-view-shot';
 import { proverbs, languages, categories } from './proverbs';
 
 const STORAGE = {
@@ -208,6 +210,7 @@ export default function App() {
   const [edits, setEdits] = useState({});
   const [ownerMode, setOwnerMode] = useState(false);
   const [ready, setReady] = useState(false);
+  const shareCardRef = useRef(null);
 
   const filteredProverbs = useMemo(
     () => proverbs.filter((item) => category === 'all' || item.category === category),
@@ -348,8 +351,20 @@ export default function App() {
         return;
       }
 
-      if (imageFile) await downloadShareImage(imageFile);
-      await Share.share({ title: copy.saying, message: shareText, url });
+      if (imageFile) {
+        await downloadShareImage(imageFile);
+        await Share.share({ title: copy.saying, message: shareText, url });
+        return;
+      }
+
+      if (shareCardRef.current && await Sharing.isAvailableAsync()) {
+        const imageUri = await captureRef(shareCardRef, { format: 'png', quality: 1 });
+        await Sharing.shareAsync(imageUri, { mimeType: 'image/png', dialogTitle: copy.saying });
+        await Share.share({ title: copy.saying, message: shareText, url });
+        return;
+      }
+
+      await Share.share({ title: copy.saying, message: `${copy.saying}\n\n${shareText}`, url });
     } catch {
       Alert.alert('Share unavailable', 'Sharing is not available on this device right now.');
     }
@@ -413,7 +428,9 @@ export default function App() {
         </View>
 
         <View style={styles.content}>
-          <Text style={styles.saying}>{copy.saying}</Text>
+          <View ref={shareCardRef} collapsable={false} style={styles.shareCard}>
+            <Text style={styles.saying}>{copy.saying}</Text>
+          </View>
           <View style={styles.quickActions}>
             <Pressable
               accessibilityRole="button"
@@ -573,6 +590,7 @@ const styles = StyleSheet.create({
   headerIcon: { color: '#ffffff', fontSize: 38, lineHeight: 40, fontWeight: '300' },
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
+  shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28 },
   saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
   quickActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 22, gap: 12 },
   infoButton: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
