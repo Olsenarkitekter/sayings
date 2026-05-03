@@ -15,7 +15,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.olsen.nuggets",
-      "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -37,6 +36,11 @@
       "expo-font"
     ],
     "description": "Daily proverbs, sayings and old phrases in English, Danish and Faroese.",
-    "scheme": "nuggets"
+    "scheme": "nuggets",
+    "extra": {
+      "eas": {
+        "projectId": "617ba4cc-f442-49cd-94e9-0adb9c7270f2"
+      }
+    }
   }
 }
