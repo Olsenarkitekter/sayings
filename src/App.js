@@ -16,6 +16,18 @@ const STORAGE = {
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
+const SHARE_LABELS = {
+  en: 'Share',
+  dk: 'Del',
+  fo: 'Deil'
+};
+
+const ORIGIN_LABELS = {
+  en: 'Origin',
+  dk: 'Oprindelse',
+  fo: 'Uppruni'
+};
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -117,6 +129,8 @@ export default function App() {
   );
   const current = filteredProverbs[index % filteredProverbs.length] || proverbs[0];
   const copy = current[language];
+  const infoText = copy.origin ? `${copy.explanation}\n\n${ORIGIN_LABELS[language]}: ${copy.origin}` : copy.explanation;
+  const shareLabel = SHARE_LABELS[language] || SHARE_LABELS.en;
   const isFavorite = favorites.includes(current.id);
   const selectedCategory = categories.find((item) => item.key === category) || categories[0];
 
@@ -193,7 +207,7 @@ export default function App() {
 
   async function shareProverb() {
     const url = 'https://olsenarkitekter.github.io/proverbs-poison/';
-    const message = `${copy.saying}\n\n${copy.explanation}\n\n${url}`;
+    const message = `${copy.saying}\n\n${infoText}\n\n${url}`;
     try {
       await Share.share({ title: copy.saying, message, url });
     } catch {
@@ -270,10 +284,10 @@ export default function App() {
               <Text style={styles.infoIcon}>i</Text>
             </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.shareButton}>
-              <Text style={styles.shareIcon}>↗</Text>
+              <Text style={styles.shareText}>{shareLabel}</Text>
             </Pressable>
           </View>
-          {infoOpen && <Text style={styles.explanation}>{copy.explanation}</Text>}
+          {infoOpen && <Text style={styles.explanation}>{infoText}</Text>}
         </View>
 
         <View style={styles.controls}>
@@ -394,11 +408,11 @@ const styles = StyleSheet.create({
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
-  quickActions: { alignItems: 'center', marginTop: 22, gap: 14 },
+  quickActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 22, gap: 12 },
   infoButton: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   infoIcon: { color: '#d9d9d9', fontSize: 16, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
-  shareButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
-  shareIcon: { color: '#d9d9d9', fontSize: 21, lineHeight: 24, fontWeight: '700' },
+  shareButton: { minWidth: 70, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
+  shareText: { color: '#d9d9d9', fontSize: 14, lineHeight: 18, fontWeight: '900' },
   explanation: { marginTop: 18, fontSize: 20, lineHeight: 30, textAlign: 'center', color: '#d9d9d9' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34, marginBottom: 8 },
   controlButton: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
