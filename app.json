@@ -37,11 +37,6 @@
       "expo-font"
     ],
     "description": "Daily proverbs, sayings and old phrases in English, Danish and Faroese.",
-    "scheme": "nuggets",
-    "extra": {
-      "eas": {
-        "projectId": "ca3c4219-1555-4813-8ba1-99359d3bb7e7"
-      }
-    }
+    "scheme": "nuggets"
   }
 }
