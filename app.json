@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Nuggets",
-    "slug": "nuggets",
+    "name": "Sayings",
+    "slug": "sayings",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,13 +14,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.olsen.nuggets",
+      "bundleIdentifier": "com.olsen.sayings",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.olsen.nuggets",
+      "package": "com.olsen.sayings",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#f7f2e8"
@@ -36,11 +36,6 @@
       "expo-font"
     ],
     "description": "Daily proverbs, sayings and old phrases in English, Danish and Faroese.",
-    "scheme": "nuggets",
-    "extra": {
-      "eas": {
-        "projectId": "617ba4cc-f442-49cd-94e9-0adb9c7270f2"
-      }
-    }
+    "scheme": "sayings"
   }
 }
