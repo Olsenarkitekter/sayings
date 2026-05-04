@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.olsen.sayings",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "Choose a photo to use as the proverb background when sharing."
       }
     },
     "android": {
@@ -33,7 +34,8 @@
     },
     "plugins": [
       "expo-notifications",
-      "expo-font"
+      "expo-font",
+      "expo-image-picker"
     ],
     "description": "Daily proverbs, sayings and old phrases in English, Danish and Faroese.",
     "scheme": "sayings"

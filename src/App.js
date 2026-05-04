@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, ImageBackground, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
 import { proverbs, languages, categories } from './proverbs';
@@ -15,7 +16,8 @@ const STORAGE = {
   category: 'daily-sayings:category',
   edits: 'daily-sayings:edits',
   ownerMode: 'daily-sayings:ownerMode',
-  installId: 'daily-sayings:installId'
+  installId: 'daily-sayings:installId',
+  backgroundImage: 'daily-sayings:backgroundImage'
 };
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
@@ -51,7 +53,7 @@ function wrapCanvasText(context, text, maxWidth) {
   return lines;
 }
 
-async function createShareImageFile(text) {
+async function createShareImageFile(text, backgroundImageUri) {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return null;
 
   const canvas = document.createElement('canvas');
@@ -61,12 +63,36 @@ async function createShareImageFile(text) {
   const context = canvas.getContext('2d');
   if (!context) return null;
 
-  context.fillStyle = '#000000';
-  context.fillRect(0, 0, size, size);
+  if (backgroundImageUri) {
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = backgroundImageUri;
+      });
+      const scale = Math.max(size / image.width, size / image.height);
+      const width = image.width * scale;
+      const height = image.height * scale;
+      context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+      context.fillStyle = 'rgba(0, 0, 0, 0.42)';
+      context.fillRect(0, 0, size, size);
+    } catch {
+      context.fillStyle = '#000000';
+      context.fillRect(0, 0, size, size);
+    }
+  } else {
+    context.fillStyle = '#000000';
+    context.fillRect(0, 0, size, size);
+  }
+
   context.fillStyle = '#ffffff';
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   context.font = '900 76px Arial, Helvetica, sans-serif';
+  context.shadowColor = 'rgba(0, 0, 0, 0.65)';
+  context.shadowBlur = 18;
+  context.shadowOffsetY = 6;
 
   let lines = wrapCanvasText(context, text, 820);
   if (lines.length > 7) {
@@ -153,6 +179,25 @@ function normalizeFavoriteIds(value) {
   }
 }
 
+function normalizeSelectedCategories(value) {
+  if (!value || value === 'all') return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      return [...new Set(parsed.filter((key) => key !== 'all' && categories.some((item) => item.key === key)))];
+    }
+  } catch {
+    // Older versions stored one category as plain text.
+  }
+
+  return categories.some((item) => item.key === value && value !== 'all') ? [value] : [];
+}
+
+async function persistSelectedCategories(nextCategories) {
+  await AsyncStorage.setItem(STORAGE.category, nextCategories.length ? JSON.stringify(nextCategories) : 'all');
+}
+
 async function ensureInstallId() {
   const existing = await AsyncStorage.getItem(STORAGE.installId);
   if (existing) return existing;
@@ -200,7 +245,7 @@ export default function App() {
   const [favorites, setFavorites] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('10:00');
-  const [category, setCategory] = useState('all');
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
@@ -209,12 +254,13 @@ export default function App() {
   const [editText, setEditText] = useState('');
   const [edits, setEdits] = useState({});
   const [ownerMode, setOwnerMode] = useState(false);
+  const [backgroundImageUri, setBackgroundImageUri] = useState(null);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
 
   const filteredProverbs = useMemo(
-    () => proverbs.filter((item) => category === 'all' || item.category === category),
-    [category]
+    () => proverbs.filter((item) => selectedCategories.length === 0 || selectedCategories.includes(item.category)),
+    [selectedCategories]
   );
   const current = filteredProverbs[index % filteredProverbs.length] || proverbs[0];
   const currentEdit = edits[current.id]?.[language];
@@ -222,7 +268,12 @@ export default function App() {
   const infoText = copy.origin ? `${copy.explanation}\n\n${ORIGIN_LABELS[language]}: ${copy.origin}` : copy.explanation;
   const shareLabel = SHARE_LABELS[language] || SHARE_LABELS.en;
   const isFavorite = favorites.includes(current.id);
-  const selectedCategory = categories.find((item) => item.key === category) || categories[0];
+  const selectedCategoryLabel = selectedCategories.length === 0
+    ? categories[0].label
+    : selectedCategories
+      .map((key) => categories.find((item) => item.key === key)?.label)
+      .filter(Boolean)
+      .join(', ');
 
   const savedProverbs = useMemo(
     () => favorites.map((id) => proverbs.find((item) => item.id === id)).filter(Boolean),
@@ -241,7 +292,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
@@ -249,7 +300,8 @@ export default function App() {
         AsyncStorage.getItem(STORAGE.notificationTime),
         AsyncStorage.getItem(STORAGE.category),
         AsyncStorage.getItem(STORAGE.edits),
-        AsyncStorage.getItem(STORAGE.ownerMode)
+        AsyncStorage.getItem(STORAGE.ownerMode),
+        AsyncStorage.getItem(STORAGE.backgroundImage)
       ]);
 
       const lang = storedLanguage || 'en';
@@ -258,12 +310,13 @@ export default function App() {
       if (owner) await AsyncStorage.setItem(STORAGE.ownerMode, 'on');
 
       if (storedLanguage) setLanguage(storedLanguage);
-      if (storedCategory && categories.some((item) => item.key === storedCategory)) setCategory(storedCategory);
+      setSelectedCategories(normalizeSelectedCategories(storedCategory));
       if (storedIndex) setIndex(Number(storedIndex));
       setFavorites(normalizeFavoriteIds(storedFavorites));
       setEdits(normalizeEdits(storedEdits));
       setOwnerMode(owner);
       setNotificationTime(time);
+      if (storedBackgroundImage) setBackgroundImageUri(storedBackgroundImage);
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
@@ -286,11 +339,16 @@ export default function App() {
   }
 
   async function changeCategory(nextCategory) {
-    setCategory(nextCategory);
-    setCategoryOpen(false);
+    const nextCategories = nextCategory === 'all'
+      ? []
+      : selectedCategories.includes(nextCategory)
+        ? selectedCategories.filter((key) => key !== nextCategory)
+        : [...selectedCategories, nextCategory];
+
+    setSelectedCategories(nextCategories);
     setIndex(0);
     await Promise.all([
-      AsyncStorage.setItem(STORAGE.category, nextCategory),
+      persistSelectedCategories(nextCategories),
       AsyncStorage.setItem(STORAGE.index, '0')
     ]);
   }
@@ -333,12 +391,37 @@ export default function App() {
     await Linking.openURL(issueUrl);
   }
 
+  async function chooseBackgroundImage() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Photo access needed', 'Allow photo access to use a picture as the proverb background.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.92
+    });
+
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+    const nextUri = result.assets[0].uri;
+    setBackgroundImageUri(nextUri);
+    await AsyncStorage.setItem(STORAGE.backgroundImage, nextUri);
+  }
+
+  async function clearBackgroundImage() {
+    setBackgroundImageUri(null);
+    await AsyncStorage.removeItem(STORAGE.backgroundImage);
+  }
+
   async function shareProverb() {
     const url = 'https://olsenarkitekter.github.io/proverbs-poison/';
     const shareText = `${infoText}\n\n${url}`;
 
     try {
-      const imageFile = await createShareImageFile(copy.saying);
+      const imageFile = await createShareImageFile(copy.saying, backgroundImageUri);
       const webNavigator = typeof navigator !== 'undefined' ? navigator : null;
       const webSharePayload = imageFile ? {
         title: copy.saying,
@@ -429,7 +512,15 @@ export default function App() {
 
         <View style={styles.content}>
           <View ref={shareCardRef} collapsable={false} style={styles.shareCard}>
-            <Text style={styles.saying}>{copy.saying}</Text>
+            {backgroundImageUri ? (
+              <ImageBackground source={{ uri: backgroundImageUri }} resizeMode="cover" style={styles.shareCardBackground} imageStyle={styles.shareCardImage}>
+                <View style={styles.shareCardOverlay}>
+                  <Text style={styles.saying}>{copy.saying}</Text>
+                </View>
+              </ImageBackground>
+            ) : (
+              <Text style={styles.saying}>{copy.saying}</Text>
+            )}
           </View>
           <View style={styles.quickActions}>
             <Pressable
@@ -443,8 +534,17 @@ export default function App() {
             <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.shareButton}>
               <Text style={styles.shareText}>{shareLabel}</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.shareButton}>
-              <Text style={styles.shareText}>Edit</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.iconButton}>
+              <Text style={styles.actionIcon}>✎</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Choose background image"
+              onPress={chooseBackgroundImage}
+              onLongPress={clearBackgroundImage}
+              style={[styles.iconButton, backgroundImageUri && styles.activeIconButton]}
+            >
+              <Text style={styles.actionIcon}>▧</Text>
             </Pressable>
           </View>
 
@@ -530,10 +630,10 @@ export default function App() {
                             setCurrentIndex(savedIndex);
                           } else {
                             const allIndex = proverbs.findIndex((p) => p.id === item.id);
-                            setCategory('all');
+                            setSelectedCategories([]);
                             setCategoryOpen(false);
                             setIndex(allIndex);
-                            AsyncStorage.setItem(STORAGE.category, 'all').catch(() => {});
+                            persistSelectedCategories([]).catch(() => {});
                             AsyncStorage.setItem(STORAGE.index, String(allIndex)).catch(() => {});
                           }
                           setSettingsOpen(false);
@@ -551,17 +651,20 @@ export default function App() {
               <View style={styles.categoryBlock}>
                 <Text style={styles.settingTitle}>Category</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Choose category" onPress={() => setCategoryOpen((value) => !value)} style={styles.categorySelect}>
-                  <Text style={styles.categorySelectText}>{selectedCategory.label}</Text>
+                  <Text style={styles.categorySelectText}>{selectedCategoryLabel}</Text>
                   <Text style={styles.categorySelectArrow}>{categoryOpen ? '−' : '+'}</Text>
                 </Pressable>
 
                 {categoryOpen && (
                   <View style={styles.categoryOptions}>
-                    {categories.map((item) => (
-                      <Pressable key={item.key} onPress={() => changeCategory(item.key)} style={styles.categoryOption}>
-                        <Text style={[styles.categoryOptionText, category === item.key && styles.activeText]}>{item.label}</Text>
-                      </Pressable>
-                    ))}
+                    {categories.map((item) => {
+                      const isSelected = item.key === 'all' ? selectedCategories.length === 0 : selectedCategories.includes(item.key);
+                      return (
+                        <Pressable key={item.key} onPress={() => changeCategory(item.key)} style={styles.categoryOption}>
+                          <Text style={[styles.categoryOptionText, isSelected && styles.activeText]}>{isSelected ? '✓ ' : ''}{item.label}</Text>
+                        </Pressable>
+                      );
+                    })}
                   </View>
                 )}
               </View>
@@ -605,13 +708,19 @@ const styles = StyleSheet.create({
   headerIcon: { color: '#ffffff', fontSize: 38, lineHeight: 40, fontWeight: '300' },
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
-  shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28 },
-  saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
+  shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 270, borderRadius: 28, overflow: 'hidden' },
+  shareCardBackground: { width: '100%', minHeight: 270, alignItems: 'center', justifyContent: 'center' },
+  shareCardImage: { borderRadius: 28 },
+  shareCardOverlay: { width: '100%', minHeight: 270, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
+  saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
   quickActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 22, gap: 12 },
   infoButton: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   infoIcon: { color: '#d9d9d9', fontSize: 16, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
   shareButton: { minWidth: 70, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   shareText: { color: '#d9d9d9', fontSize: 14, lineHeight: 18, fontWeight: '900' },
+  iconButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  activeIconButton: { borderColor: '#ffffff' },
+  actionIcon: { color: '#d9d9d9', fontSize: 20, lineHeight: 22, fontWeight: '900' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
   infoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 10 },
