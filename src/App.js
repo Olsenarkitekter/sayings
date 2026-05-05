@@ -31,11 +31,6 @@ const SHARE_LABELS = {
   fo: 'Deil'
 };
 
-const BACKGROUND_LABELS = {
-  en: { gestureHint: 'Drag the image. Pinch to resize.' },
-  dk: { gestureHint: 'Træk billedet. Knib med to fingre for størrelse.' },
-  fo: { gestureHint: 'Drag myndina. Klípið við tveimum fingrum fyri stødd.' }
-};
 
 const ORIGIN_LABELS = {
   en: 'Origin',
@@ -303,7 +298,6 @@ export default function App() {
   const copy = currentEdit ? { ...current[language], saying: currentEdit } : current[language];
   const infoText = copy.origin ? `${copy.explanation}\n\n${ORIGIN_LABELS[language]}: ${copy.origin}` : copy.explanation;
   const shareLabel = SHARE_LABELS[language] || SHARE_LABELS.en;
-  const backgroundLabels = BACKGROUND_LABELS[language] || BACKGROUND_LABELS.en;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -666,10 +660,6 @@ export default function App() {
             </Pressable>
           </View>
 
-          {backgroundImageUri && (
-            <Text style={styles.backgroundGestureHint}>{backgroundLabels.gestureHint}</Text>
-          )}
-
           {editOpen && (
             <View style={styles.editPanel}>
               <Text style={styles.editTitle}>{ownerMode ? 'Edit saying' : 'Suggest edit'}</Text>
@@ -830,10 +820,10 @@ const styles = StyleSheet.create({
   headerIcon: { color: '#ffffff', fontSize: 38, lineHeight: 40, fontWeight: '300' },
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
-  shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 270, borderRadius: 28, overflow: 'hidden' },
-  shareCardBackground: { width: '100%', minHeight: 270, alignItems: 'center', justifyContent: 'center' },
+  shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 390, borderRadius: 28, overflow: 'hidden' },
+  shareCardBackground: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center' },
   shareCardImage: { borderRadius: 28 },
-  shareCardOverlay: { width: '100%', minHeight: 270, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
+  shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
   quickActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 22, gap: 12 },
   infoButton: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
@@ -843,7 +833,6 @@ const styles = StyleSheet.create({
   iconButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   activeIconButton: { borderColor: '#ffffff' },
   actionIcon: { color: '#d9d9d9', fontSize: 20, lineHeight: 22, fontWeight: '900' },
-  backgroundGestureHint: { marginTop: 12, color: '#8f8f8f', fontSize: 12, lineHeight: 16, textAlign: 'center', fontWeight: '800' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
   infoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 10 },
