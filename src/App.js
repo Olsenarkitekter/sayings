@@ -17,7 +17,10 @@ const STORAGE = {
   edits: 'daily-sayings:edits',
   ownerMode: 'daily-sayings:ownerMode',
   installId: 'daily-sayings:installId',
-  backgroundImage: 'daily-sayings:backgroundImage'
+  backgroundImage: 'daily-sayings:backgroundImage',
+  backgroundImageFit: 'daily-sayings:backgroundImageFit',
+  backgroundImagePosition: 'daily-sayings:backgroundImagePosition',
+  backgroundImageScale: 'daily-sayings:backgroundImageScale'
 };
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
@@ -26,6 +29,12 @@ const SHARE_LABELS = {
   en: 'Share',
   dk: 'Del',
   fo: 'Deil'
+};
+
+const BACKGROUND_LABELS = {
+  en: { fill: 'Full screen', fit: 'Whole image', size: 'Size', position: 'Position', reset: 'Reset' },
+  dk: { fill: 'Fuld skærm', fit: 'Hele billedet', size: 'Størrelse', position: 'Position', reset: 'Nulstil' },
+  fo: { fill: 'Fullan skíggja', fit: 'Alla myndina', size: 'Stødd', position: 'Staðseting', reset: 'Nullstilla' }
 };
 
 const ORIGIN_LABELS = {
@@ -53,7 +62,7 @@ function wrapCanvasText(context, text, maxWidth) {
   return lines;
 }
 
-async function createShareImageFile(text, backgroundImageUri) {
+async function createShareImageFile(text, backgroundImageUri, imageFit = 'cover', imagePosition = { x: 0, y: 0 }, imageScale = 1) {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return null;
 
   const canvas = document.createElement('canvas');
@@ -71,10 +80,15 @@ async function createShareImageFile(text, backgroundImageUri) {
         img.onerror = reject;
         img.src = backgroundImageUri;
       });
-      const scale = Math.max(size / image.width, size / image.height);
+      const baseScale = imageFit === 'contain'
+        ? Math.min(size / image.width, size / image.height)
+        : Math.max(size / image.width, size / image.height);
+      const scale = baseScale * (Number(imageScale) || 1);
       const width = image.width * scale;
       const height = image.height * scale;
-      context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+      const positionX = Number(imagePosition?.x) || 0;
+      const positionY = Number(imagePosition?.y) || 0;
+      context.drawImage(image, ((size - width) / 2) + (positionX * 4), ((size - height) / 2) + (positionY * 4), width, height);
       context.fillStyle = 'rgba(0, 0, 0, 0.42)';
       context.fillRect(0, 0, size, size);
     } catch {
@@ -255,6 +269,9 @@ export default function App() {
   const [edits, setEdits] = useState({});
   const [ownerMode, setOwnerMode] = useState(false);
   const [backgroundImageUri, setBackgroundImageUri] = useState(null);
+  const [backgroundImageFit, setBackgroundImageFit] = useState('cover');
+  const [backgroundImagePosition, setBackgroundImagePosition] = useState({ x: 0, y: 0 });
+  const [backgroundImageScale, setBackgroundImageScale] = useState(1);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
 
@@ -267,6 +284,7 @@ export default function App() {
   const copy = currentEdit ? { ...current[language], saying: currentEdit } : current[language];
   const infoText = copy.origin ? `${copy.explanation}\n\n${ORIGIN_LABELS[language]}: ${copy.origin}` : copy.explanation;
   const shareLabel = SHARE_LABELS[language] || SHARE_LABELS.en;
+  const backgroundLabels = BACKGROUND_LABELS[language] || BACKGROUND_LABELS.en;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -292,7 +310,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
@@ -301,7 +319,10 @@ export default function App() {
         AsyncStorage.getItem(STORAGE.category),
         AsyncStorage.getItem(STORAGE.edits),
         AsyncStorage.getItem(STORAGE.ownerMode),
-        AsyncStorage.getItem(STORAGE.backgroundImage)
+        AsyncStorage.getItem(STORAGE.backgroundImage),
+        AsyncStorage.getItem(STORAGE.backgroundImageFit),
+        AsyncStorage.getItem(STORAGE.backgroundImagePosition),
+        AsyncStorage.getItem(STORAGE.backgroundImageScale)
       ]);
 
       const lang = storedLanguage || 'en';
@@ -317,6 +338,15 @@ export default function App() {
       setOwnerMode(owner);
       setNotificationTime(time);
       if (storedBackgroundImage) setBackgroundImageUri(storedBackgroundImage);
+      if (storedBackgroundFit === 'contain' || storedBackgroundFit === 'cover') setBackgroundImageFit(storedBackgroundFit);
+      try {
+        const parsedPosition = storedBackgroundPosition ? JSON.parse(storedBackgroundPosition) : null;
+        if (parsedPosition && Number.isFinite(parsedPosition.x) && Number.isFinite(parsedPosition.y)) {
+          setBackgroundImagePosition(parsedPosition);
+        }
+      } catch {}
+      const parsedScale = Number(storedBackgroundScale);
+      if (Number.isFinite(parsedScale) && parsedScale >= 0.5 && parsedScale <= 3) setBackgroundImageScale(parsedScale);
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
@@ -400,20 +430,57 @@ export default function App() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
+      allowsEditing: false,
       quality: 0.92
     });
 
     if (result.canceled || !result.assets?.[0]?.uri) return;
     const nextUri = result.assets[0].uri;
     setBackgroundImageUri(nextUri);
-    await AsyncStorage.setItem(STORAGE.backgroundImage, nextUri);
+    setBackgroundImageFit('cover');
+    setBackgroundImagePosition({ x: 0, y: 0 });
+    setBackgroundImageScale(1);
+    await AsyncStorage.multiSet([
+      [STORAGE.backgroundImage, nextUri],
+      [STORAGE.backgroundImageFit, 'cover'],
+      [STORAGE.backgroundImagePosition, JSON.stringify({ x: 0, y: 0 })],
+      [STORAGE.backgroundImageScale, '1']
+    ]);
+  }
+
+  async function updateBackgroundFit(fit) {
+    setBackgroundImageFit(fit);
+    await AsyncStorage.setItem(STORAGE.backgroundImageFit, fit);
+  }
+
+  async function updateBackgroundScale(delta) {
+    const next = Math.max(0.5, Math.min(3, Math.round((backgroundImageScale + delta) * 100) / 100));
+    setBackgroundImageScale(next);
+    await AsyncStorage.setItem(STORAGE.backgroundImageScale, String(next));
+  }
+
+  async function nudgeBackgroundImage(dx, dy) {
+    const next = { x: backgroundImagePosition.x + dx, y: backgroundImagePosition.y + dy };
+    setBackgroundImagePosition(next);
+    await AsyncStorage.setItem(STORAGE.backgroundImagePosition, JSON.stringify(next));
+  }
+
+  async function resetBackgroundImagePlacement() {
+    const next = { x: 0, y: 0 };
+    setBackgroundImagePosition(next);
+    setBackgroundImageScale(1);
+    await AsyncStorage.multiSet([
+      [STORAGE.backgroundImagePosition, JSON.stringify(next)],
+      [STORAGE.backgroundImageScale, '1']
+    ]);
   }
 
   async function clearBackgroundImage() {
     setBackgroundImageUri(null);
-    await AsyncStorage.removeItem(STORAGE.backgroundImage);
+    setBackgroundImageFit('cover');
+    setBackgroundImagePosition({ x: 0, y: 0 });
+    setBackgroundImageScale(1);
+    await AsyncStorage.multiRemove([STORAGE.backgroundImage, STORAGE.backgroundImageFit, STORAGE.backgroundImagePosition, STORAGE.backgroundImageScale]);
   }
 
   async function shareProverb() {
@@ -421,7 +488,7 @@ export default function App() {
     const shareText = `${infoText}\n\n${url}`;
 
     try {
-      const imageFile = await createShareImageFile(copy.saying, backgroundImageUri);
+      const imageFile = await createShareImageFile(copy.saying, backgroundImageUri, backgroundImageFit, backgroundImagePosition, backgroundImageScale);
       const webNavigator = typeof navigator !== 'undefined' ? navigator : null;
       const webSharePayload = imageFile ? {
         title: copy.saying,
@@ -513,7 +580,12 @@ export default function App() {
         <View style={styles.content}>
           <View ref={shareCardRef} collapsable={false} style={styles.shareCard}>
             {backgroundImageUri ? (
-              <ImageBackground source={{ uri: backgroundImageUri }} resizeMode="cover" style={styles.shareCardBackground} imageStyle={styles.shareCardImage}>
+              <ImageBackground
+                source={{ uri: backgroundImageUri }}
+                resizeMode={backgroundImageFit}
+                style={styles.shareCardBackground}
+                imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
+              >
                 <View style={styles.shareCardOverlay}>
                   <Text style={styles.saying}>{copy.saying}</Text>
                 </View>
@@ -547,6 +619,40 @@ export default function App() {
               <Text style={styles.actionIcon}>▧</Text>
             </Pressable>
           </View>
+
+          {backgroundImageUri && (
+            <View style={styles.backgroundControls}>
+              <View style={styles.backgroundFitRow}>
+                <Pressable onPress={() => updateBackgroundFit('cover')} style={[styles.backgroundFitButton, backgroundImageFit === 'cover' && styles.backgroundFitButtonActive]}>
+                  <Text style={[styles.backgroundFitText, backgroundImageFit === 'cover' && styles.backgroundFitTextActive]}>{backgroundLabels.fill}</Text>
+                </Pressable>
+                <Pressable onPress={() => updateBackgroundFit('contain')} style={[styles.backgroundFitButton, backgroundImageFit === 'contain' && styles.backgroundFitButtonActive]}>
+                  <Text style={[styles.backgroundFitText, backgroundImageFit === 'contain' && styles.backgroundFitTextActive]}>{backgroundLabels.fit}</Text>
+                </Pressable>
+              </View>
+              <View style={styles.backgroundSizePanel}>
+                <Text style={styles.backgroundPositionLabel}>{backgroundLabels.size}: {Math.round(backgroundImageScale * 100)}%</Text>
+                <View style={styles.backgroundSizeRow}>
+                  <Pressable onPress={() => updateBackgroundScale(-0.1)} style={styles.backgroundSizeButton}><Text style={styles.backgroundSizeText}>−</Text></Pressable>
+                  <Pressable onPress={() => updateBackgroundScale(0.1)} style={styles.backgroundSizeButton}><Text style={styles.backgroundSizeText}>+</Text></Pressable>
+                </View>
+              </View>
+              <View style={styles.backgroundPositionPanel}>
+                <Text style={styles.backgroundPositionLabel}>{backgroundLabels.position}</Text>
+                <View style={styles.backgroundNudgeGrid}>
+                  <View style={styles.backgroundNudgeSpacer} />
+                  <Pressable onPress={() => nudgeBackgroundImage(0, -16)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>↑</Text></Pressable>
+                  <View style={styles.backgroundNudgeSpacer} />
+                  <Pressable onPress={() => nudgeBackgroundImage(-16, 0)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>←</Text></Pressable>
+                  <Pressable onPress={resetBackgroundImagePlacement} style={styles.backgroundResetButton}><Text style={styles.backgroundResetText}>{backgroundLabels.reset}</Text></Pressable>
+                  <Pressable onPress={() => nudgeBackgroundImage(16, 0)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>→</Text></Pressable>
+                  <View style={styles.backgroundNudgeSpacer} />
+                  <Pressable onPress={() => nudgeBackgroundImage(0, 16)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>↓</Text></Pressable>
+                  <View style={styles.backgroundNudgeSpacer} />
+                </View>
+              </View>
+            </View>
+          )}
 
           {editOpen && (
             <View style={styles.editPanel}>
@@ -721,6 +827,24 @@ const styles = StyleSheet.create({
   iconButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   activeIconButton: { borderColor: '#ffffff' },
   actionIcon: { color: '#d9d9d9', fontSize: 20, lineHeight: 22, fontWeight: '900' },
+  backgroundControls: { marginTop: 14, gap: 10, alignItems: 'center' },
+  backgroundFitRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
+  backgroundFitButton: { minHeight: 32, borderRadius: 16, borderWidth: 1.5, borderColor: '#555555', paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
+  backgroundFitButtonActive: { backgroundColor: '#ffffff', borderColor: '#ffffff' },
+  backgroundFitText: { color: '#d9d9d9', fontSize: 12, fontWeight: '900' },
+  backgroundFitTextActive: { color: '#000000' },
+  backgroundSizePanel: { alignItems: 'center', gap: 6 },
+  backgroundSizeRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
+  backgroundSizeButton: { width: 46, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
+  backgroundSizeText: { color: '#ffffff', fontSize: 22, lineHeight: 24, fontWeight: '900' },
+  backgroundPositionPanel: { alignItems: 'center', gap: 6 },
+  backgroundPositionLabel: { color: '#8f8f8f', fontSize: 11, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
+  backgroundNudgeGrid: { width: 148, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
+  backgroundNudgeSpacer: { width: 42, height: 32 },
+  backgroundNudgeButton: { width: 42, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
+  backgroundNudgeText: { color: '#ffffff', fontSize: 20, lineHeight: 22, fontWeight: '900' },
+  backgroundResetButton: { width: 52, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
+  backgroundResetText: { color: '#d9d9d9', fontSize: 10, fontWeight: '900' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
   infoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 10 },
