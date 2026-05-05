@@ -32,9 +32,9 @@ const SHARE_LABELS = {
 };
 
 const BACKGROUND_LABELS = {
-  en: { fill: 'Full screen', fit: 'Whole image', size: 'Size', position: 'Position', reset: 'Reset' },
-  dk: { fill: 'Fuld skærm', fit: 'Hele billedet', size: 'Størrelse', position: 'Position', reset: 'Nulstil' },
-  fo: { fill: 'Fullan skíggja', fit: 'Alla myndina', size: 'Stødd', position: 'Staðseting', reset: 'Nullstilla' }
+  en: { gestureHint: 'Drag the image. Pinch to resize.' },
+  dk: { gestureHint: 'Træk billedet. Knib med to fingre for størrelse.' },
+  fo: { gestureHint: 'Drag myndina. Klípið við tveimum fingrum fyri stødd.' }
 };
 
 const ORIGIN_LABELS = {
@@ -60,6 +60,24 @@ function wrapCanvasText(context, text, maxWidth) {
 
   if (line) lines.push(line);
   return lines;
+}
+
+function clampImageScale(value) {
+  return Math.max(0.5, Math.min(3, Math.round((Number(value) || 1) * 100) / 100));
+}
+
+function eventPoint(nativeEvent) {
+  const touch = nativeEvent?.touches?.[0] || nativeEvent?.changedTouches?.[0];
+  return {
+    x: Number(touch?.pageX ?? nativeEvent?.pageX ?? nativeEvent?.locationX ?? 0),
+    y: Number(touch?.pageY ?? nativeEvent?.pageY ?? nativeEvent?.locationY ?? 0)
+  };
+}
+
+function touchDistance(touches = []) {
+  if (touches.length < 2) return 0;
+  const [a, b] = touches;
+  return Math.hypot((a.pageX || 0) - (b.pageX || 0), (a.pageY || 0) - (b.pageY || 0));
 }
 
 async function createShareImageFile(text, backgroundImageUri, imageFit = 'cover', imagePosition = { x: 0, y: 0 }, imageScale = 1) {
@@ -274,6 +292,7 @@ export default function App() {
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
+  const backgroundGestureRef = useRef(null);
 
   const filteredProverbs = useMemo(
     () => proverbs.filter((item) => selectedCategories.length === 0 || selectedCategories.includes(item.category)),
@@ -448,30 +467,47 @@ export default function App() {
     ]);
   }
 
-  async function updateBackgroundFit(fit) {
-    setBackgroundImageFit(fit);
-    await AsyncStorage.setItem(STORAGE.backgroundImageFit, fit);
+  function startBackgroundGesture(evt) {
+    if (!backgroundImageUri) return;
+    const touches = evt.nativeEvent?.touches || [];
+    const point = eventPoint(evt.nativeEvent);
+    backgroundGestureRef.current = {
+      startPoint: point,
+      startPosition: backgroundImagePosition,
+      startScale: backgroundImageScale,
+      startDistance: touchDistance(touches),
+      lastPosition: backgroundImagePosition,
+      lastScale: backgroundImageScale
+    };
   }
 
-  async function updateBackgroundScale(delta) {
-    const next = Math.max(0.5, Math.min(3, Math.round((backgroundImageScale + delta) * 100) / 100));
-    setBackgroundImageScale(next);
-    await AsyncStorage.setItem(STORAGE.backgroundImageScale, String(next));
+  function moveBackgroundGesture(evt) {
+    const gesture = backgroundGestureRef.current;
+    if (!gesture || !backgroundImageUri) return;
+    const touches = evt.nativeEvent?.touches || [];
+    const point = eventPoint(evt.nativeEvent);
+    const nextPosition = {
+      x: gesture.startPosition.x + (point.x - gesture.startPoint.x),
+      y: gesture.startPosition.y + (point.y - gesture.startPoint.y)
+    };
+    const currentDistance = touchDistance(touches);
+    const nextScale = touches.length >= 2 && gesture.startDistance > 0
+      ? clampImageScale(gesture.startScale * (currentDistance / gesture.startDistance))
+      : gesture.startScale;
+
+    gesture.lastPosition = nextPosition;
+    gesture.lastScale = nextScale;
+    setBackgroundImagePosition(nextPosition);
+    setBackgroundImageScale(nextScale);
   }
 
-  async function nudgeBackgroundImage(dx, dy) {
-    const next = { x: backgroundImagePosition.x + dx, y: backgroundImagePosition.y + dy };
-    setBackgroundImagePosition(next);
-    await AsyncStorage.setItem(STORAGE.backgroundImagePosition, JSON.stringify(next));
-  }
-
-  async function resetBackgroundImagePlacement() {
-    const next = { x: 0, y: 0 };
-    setBackgroundImagePosition(next);
-    setBackgroundImageScale(1);
+  async function finishBackgroundGesture() {
+    const gesture = backgroundGestureRef.current;
+    if (!gesture) return;
+    backgroundGestureRef.current = null;
     await AsyncStorage.multiSet([
-      [STORAGE.backgroundImagePosition, JSON.stringify(next)],
-      [STORAGE.backgroundImageScale, '1']
+      [STORAGE.backgroundImagePosition, JSON.stringify(gesture.lastPosition)],
+      [STORAGE.backgroundImageScale, String(gesture.lastScale)]
     ]);
   }
 
@@ -578,7 +614,17 @@ export default function App() {
         </View>
 
         <View style={styles.content}>
-          <View ref={shareCardRef} collapsable={false} style={styles.shareCard}>
+          <View
+            ref={shareCardRef}
+            collapsable={false}
+            style={styles.shareCard}
+            onStartShouldSetResponder={() => !!backgroundImageUri}
+            onMoveShouldSetResponder={() => !!backgroundImageUri}
+            onResponderGrant={startBackgroundGesture}
+            onResponderMove={moveBackgroundGesture}
+            onResponderRelease={finishBackgroundGesture}
+            onResponderTerminate={finishBackgroundGesture}
+          >
             {backgroundImageUri ? (
               <ImageBackground
                 source={{ uri: backgroundImageUri }}
@@ -621,37 +667,7 @@ export default function App() {
           </View>
 
           {backgroundImageUri && (
-            <View style={styles.backgroundControls}>
-              <View style={styles.backgroundFitRow}>
-                <Pressable onPress={() => updateBackgroundFit('cover')} style={[styles.backgroundFitButton, backgroundImageFit === 'cover' && styles.backgroundFitButtonActive]}>
-                  <Text style={[styles.backgroundFitText, backgroundImageFit === 'cover' && styles.backgroundFitTextActive]}>{backgroundLabels.fill}</Text>
-                </Pressable>
-                <Pressable onPress={() => updateBackgroundFit('contain')} style={[styles.backgroundFitButton, backgroundImageFit === 'contain' && styles.backgroundFitButtonActive]}>
-                  <Text style={[styles.backgroundFitText, backgroundImageFit === 'contain' && styles.backgroundFitTextActive]}>{backgroundLabels.fit}</Text>
-                </Pressable>
-              </View>
-              <View style={styles.backgroundSizePanel}>
-                <Text style={styles.backgroundPositionLabel}>{backgroundLabels.size}: {Math.round(backgroundImageScale * 100)}%</Text>
-                <View style={styles.backgroundSizeRow}>
-                  <Pressable onPress={() => updateBackgroundScale(-0.1)} style={styles.backgroundSizeButton}><Text style={styles.backgroundSizeText}>−</Text></Pressable>
-                  <Pressable onPress={() => updateBackgroundScale(0.1)} style={styles.backgroundSizeButton}><Text style={styles.backgroundSizeText}>+</Text></Pressable>
-                </View>
-              </View>
-              <View style={styles.backgroundPositionPanel}>
-                <Text style={styles.backgroundPositionLabel}>{backgroundLabels.position}</Text>
-                <View style={styles.backgroundNudgeGrid}>
-                  <View style={styles.backgroundNudgeSpacer} />
-                  <Pressable onPress={() => nudgeBackgroundImage(0, -16)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>↑</Text></Pressable>
-                  <View style={styles.backgroundNudgeSpacer} />
-                  <Pressable onPress={() => nudgeBackgroundImage(-16, 0)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>←</Text></Pressable>
-                  <Pressable onPress={resetBackgroundImagePlacement} style={styles.backgroundResetButton}><Text style={styles.backgroundResetText}>{backgroundLabels.reset}</Text></Pressable>
-                  <Pressable onPress={() => nudgeBackgroundImage(16, 0)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>→</Text></Pressable>
-                  <View style={styles.backgroundNudgeSpacer} />
-                  <Pressable onPress={() => nudgeBackgroundImage(0, 16)} style={styles.backgroundNudgeButton}><Text style={styles.backgroundNudgeText}>↓</Text></Pressable>
-                  <View style={styles.backgroundNudgeSpacer} />
-                </View>
-              </View>
-            </View>
+            <Text style={styles.backgroundGestureHint}>{backgroundLabels.gestureHint}</Text>
           )}
 
           {editOpen && (
@@ -827,24 +843,7 @@ const styles = StyleSheet.create({
   iconButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   activeIconButton: { borderColor: '#ffffff' },
   actionIcon: { color: '#d9d9d9', fontSize: 20, lineHeight: 22, fontWeight: '900' },
-  backgroundControls: { marginTop: 14, gap: 10, alignItems: 'center' },
-  backgroundFitRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
-  backgroundFitButton: { minHeight: 32, borderRadius: 16, borderWidth: 1.5, borderColor: '#555555', paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' },
-  backgroundFitButtonActive: { backgroundColor: '#ffffff', borderColor: '#ffffff' },
-  backgroundFitText: { color: '#d9d9d9', fontSize: 12, fontWeight: '900' },
-  backgroundFitTextActive: { color: '#000000' },
-  backgroundSizePanel: { alignItems: 'center', gap: 6 },
-  backgroundSizeRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
-  backgroundSizeButton: { width: 46, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
-  backgroundSizeText: { color: '#ffffff', fontSize: 22, lineHeight: 24, fontWeight: '900' },
-  backgroundPositionPanel: { alignItems: 'center', gap: 6 },
-  backgroundPositionLabel: { color: '#8f8f8f', fontSize: 11, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
-  backgroundNudgeGrid: { width: 148, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
-  backgroundNudgeSpacer: { width: 42, height: 32 },
-  backgroundNudgeButton: { width: 42, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
-  backgroundNudgeText: { color: '#ffffff', fontSize: 20, lineHeight: 22, fontWeight: '900' },
-  backgroundResetButton: { width: 52, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
-  backgroundResetText: { color: '#d9d9d9', fontSize: 10, fontWeight: '900' },
+  backgroundGestureHint: { marginTop: 12, color: '#8f8f8f', fontSize: 12, lineHeight: 16, textAlign: 'center', fontWeight: '800' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
   infoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 10 },
