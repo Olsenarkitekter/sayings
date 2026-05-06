@@ -5,7 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
-import { proverbs, languages, categories, getLanguageLabel, getProverbVariant } from './proverbs';
+import { proverbs, languages, categories, getProverbVariant } from './proverbs';
 
 const STORAGE = {
   language: 'daily-sayings:language',
@@ -333,7 +333,7 @@ export default function App() {
   const englishCopy = getProverbVariant(current, 'en');
   const showEnglishPair = language !== 'en' && englishCopy?.saying && englishCopy.saying !== copy.saying;
   const infoIntro = copy.explanation;
-  const primaryOrigin = copy.origin || englishCopy.origin;
+  const primaryOrigin = englishCopy.origin || copy.origin;
   const originDetails = [
     primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null,
     showEnglishPair ? `English equivalent: ${englishCopy.saying}` : null,
@@ -349,6 +349,7 @@ export default function App() {
       .map((key) => categories.find((item) => item.key === key)?.label)
       .filter(Boolean)
       .join(', ');
+  const selectedLanguageLabel = languages.find((item) => item.key === language)?.name || 'English';
 
   const savedProverbs = useMemo(
     () => favorites.map((id) => proverbs.find((item) => item.id === id)).filter(Boolean),
@@ -678,30 +679,11 @@ export default function App() {
           <BrandLogo />
 
           <View style={styles.topRightActions}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.topLanguageRow}>
-              <Text style={styles.topLanguageText}>EN</Text>
-              {language !== 'en' && <Text style={styles.topLanguageDivider}>+</Text>}
-              {language !== 'en' && <Text style={[styles.topLanguageText, styles.activeText]}>{getLanguageLabel(language)}</Text>}
-              <Text style={styles.topLanguageArrow}>{languageOpen ? '−' : '+'}</Text>
-            </Pressable>
             <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
               <Text style={styles.headerIcon}>≡</Text>
             </Pressable>
           </View>
         </View>
-
-        {languageOpen && (
-          <View style={styles.languageDropdown}>
-            <ScrollView showsVerticalScrollIndicator contentContainerStyle={styles.languageDropdownContent}>
-              {languages.map((item) => (
-                <Pressable key={item.key} onPress={() => { changeLanguage(item.key); setLanguageOpen(false); }} style={[styles.dropdownLanguageOption, language === item.key && styles.activeDropdownLanguageOption]}>
-                  <Text style={[styles.dropdownLanguageLabel, language === item.key && styles.activeText]}>{item.label}</Text>
-                  <Text style={styles.dropdownLanguageName}>{item.name}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        )}
 
         <View style={styles.content}>
           <View
@@ -857,6 +839,24 @@ export default function App() {
                 </Pressable>
               </View>
 
+              <View style={styles.categoryBlock}>
+                <Text style={styles.settingTitle}>Language</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.categorySelect}>
+                  <Text style={styles.categorySelectText}>{selectedLanguageLabel}</Text>
+                  <Text style={styles.categorySelectArrow}>{languageOpen ? '−' : '+'}</Text>
+                </Pressable>
+
+                {languageOpen && (
+                  <View style={styles.categoryOptions}>
+                    {languages.map((item) => (
+                      <Pressable key={item.key} onPress={() => { changeLanguage(item.key); setLanguageOpen(false); }} style={styles.categoryOption}>
+                        <Text style={[styles.categoryOptionText, language === item.key && styles.activeText]}>{language === item.key ? '✓ ' : ''}{item.label} · {item.name}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
+
               <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
                 <Text style={styles.savedToggleIcon}>☆</Text>
                 <Text style={styles.savedToggleText}>Saved proverbs ({savedProverbs.length})</Text>
@@ -948,20 +948,10 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   logoGlobe: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  logoMeridian: { position: 'absolute', width: 10, height: 28, borderLeftWidth: 1.4, borderColor: '#ffffff', borderRadius: 9, transform: [{ rotate: '45deg' }] },
+  logoMeridian: { position: 'absolute', width: 11, height: 29, borderLeftWidth: 1.4, borderColor: '#ffffff', borderRadius: 10, transform: [{ rotate: '-45deg' }] },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
-  topLanguageRow: { flexDirection: 'row', gap: 8, alignItems: 'center', borderWidth: 1, borderColor: '#242424', borderRadius: 16, paddingHorizontal: 12, minHeight: 34 },
-  topLanguageDivider: { color: '#555555', fontSize: 13, fontWeight: '900' },
-  topLanguageArrow: { color: '#777777', fontSize: 18, lineHeight: 20, fontWeight: '700', marginLeft: 2 },
-  topLanguageText: { color: '#777777', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
-  languageDropdown: { position: 'absolute', top: 104, right: 22, zIndex: 30, width: 220, maxHeight: 330, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8 },
-  languageDropdownContent: { gap: 4, paddingBottom: 4 },
-  dropdownLanguageOption: { minHeight: 42, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  activeDropdownLanguageOption: { backgroundColor: '#111111' },
-  dropdownLanguageLabel: { width: 30, color: '#777777', fontSize: 13, fontWeight: '900' },
-  dropdownLanguageName: { flex: 1, color: '#a6a6a6', fontSize: 13, fontWeight: '700' },
   activeText: { color: '#ffffff' },
   iconTap: { width: 34, height: 42, alignItems: 'flex-end', justifyContent: 'center' },
   headerIcon: { color: '#ffffff', fontSize: 34, lineHeight: 38, fontWeight: '300' },
