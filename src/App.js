@@ -52,8 +52,9 @@ function ActionIcon({ type, active }) {
     );
   }
   if (type === 'image') return <View style={styles.imageIconShape} />;
+  if (type === 'search') return <Text style={styles.bottomIconText}>⌕</Text>;
   if (type === 'star') return <Text style={[styles.bottomIconText, active && styles.favoriteIcon]}>{active ? '★' : '☆'}</Text>;
-  if (type === 'edit') return <Text style={styles.bottomIconText}>✎</Text>;
+  if (type === 'edit') return <View style={styles.penIcon}><View style={styles.penIconLine} /></View>;
   return <Text style={styles.bottomIconText}>i</Text>;
 }
 
@@ -308,6 +309,8 @@ export default function App() {
   const [savedOpen, setSavedOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editText, setEditText] = useState('');
@@ -319,7 +322,7 @@ export default function App() {
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
   const [backgroundRounded, setBackgroundRounded] = useState(true);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
-  const [showCardDetails, setShowCardDetails] = useState(true);
+  const [hideDetailsForImage, setHideDetailsForImage] = useState(false);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
   const backgroundGestureRef = useRef(null);
@@ -340,6 +343,25 @@ export default function App() {
   const detailText = [meaningText, primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null, englishSayingText].filter(Boolean).join(' ');
   const hasLongDetails = detailText.length > 130;
   const infoText = detailText;
+  const showCardDetails = !(backgroundImageUri && hideDetailsForImage);
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const searchResults = normalizedSearchQuery
+    ? proverbs
+        .map((item) => ({ item, variant: getProverbVariant(item, language) }))
+        .filter(({ item, variant }) => {
+          const english = getProverbVariant(item, 'en');
+          return [variant.saying, english.saying, variant.explanation, english.explanation]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(normalizedSearchQuery));
+        })
+        .sort((a, b) => {
+          const aSaying = a.variant.saying.toLowerCase();
+          const bSaying = b.variant.saying.toLowerCase();
+          const aStarts = aSaying.startsWith(normalizedSearchQuery) ? 0 : 1;
+          const bStarts = bSaying.startsWith(normalizedSearchQuery) ? 0 : 1;
+          return aStarts - bStarts || aSaying.localeCompare(bSaying);
+        })
+    : [];
   const shareText = `${copy.saying}\n\n${detailText}\n\nhttps://olsenarkitekter.github.io/sayings/`;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
@@ -361,6 +383,13 @@ export default function App() {
     setLanguageOpen(false);
     setShareOpen(false);
   }, [index, language]);
+
+  useEffect(() => {
+    if (!backgroundImageUri) {
+      setHideDetailsForImage(false);
+      setImageEditorOpen(false);
+    }
+  }, [backgroundImageUri]);
 
   useEffect(() => {
     if (editOpen) setEditText(copy.saying);
@@ -491,7 +520,7 @@ export default function App() {
     setBackgroundImageScale(1);
     setBackgroundRounded(true);
     setImageEditorOpen(true);
-    setShowCardDetails(true);
+    setHideDetailsForImage(false);
     await AsyncStorage.multiSet([
       [STORAGE.backgroundImage, nextUri],
       [STORAGE.backgroundImageFit, 'cover'],
@@ -581,6 +610,21 @@ export default function App() {
     await AsyncStorage.setItem(STORAGE.backgroundRounded, next ? 'on' : 'off');
   }
 
+  async function selectSearchResult(item) {
+    const itemIndex = filteredProverbs.findIndex((proverb) => proverb.id === item.id);
+    if (itemIndex >= 0) {
+      await setCurrentIndex(itemIndex);
+    } else {
+      setSelectedCategories([]);
+      await persistSelectedCategories([]);
+      const globalIndex = proverbs.findIndex((proverb) => proverb.id === item.id);
+      setIndex(globalIndex);
+      await AsyncStorage.setItem(STORAGE.index, String(globalIndex));
+    }
+    setSearchOpen(false);
+    setSearchQuery('');
+  }
+
   async function clearBackgroundImage() {
     setBackgroundImageUri(null);
     setImageEditorOpen(false);
@@ -588,6 +632,7 @@ export default function App() {
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
     setBackgroundRounded(true);
+    setHideDetailsForImage(false);
     await AsyncStorage.multiRemove([STORAGE.backgroundImage, STORAGE.backgroundImageFit, STORAGE.backgroundImagePosition, STORAGE.backgroundImageScale, STORAGE.backgroundRounded]);
   }
 
@@ -737,11 +782,37 @@ export default function App() {
           <BrandLogo />
 
           <View style={styles.topRightActions}>
-            <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
+            <Pressable accessibilityLabel="Search sayings" onPress={() => { setSearchOpen((value) => !value); setSettingsOpen(false); }} hitSlop={14} style={styles.iconTap}>
+              <ActionIcon type="search" />
+            </Pressable>
+            <Pressable accessibilityLabel="Settings" onPress={() => { setSettingsOpen((value) => !value); setSearchOpen(false); }} hitSlop={14} style={styles.iconTap}>
               <Text style={styles.headerIcon}>≡</Text>
             </Pressable>
           </View>
         </View>
+
+        {searchOpen && !editOpen && (
+          <View style={styles.searchPanel}>
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              placeholder="Search sayings…"
+              placeholderTextColor="#777777"
+              style={styles.searchInput}
+            />
+            {normalizedSearchQuery ? (
+              <ScrollView style={styles.searchResults} keyboardShouldPersistTaps="handled">
+                {searchResults.length ? searchResults.map(({ item, variant }) => (
+                  <Pressable key={item.id} onPress={() => selectSearchResult(item)} style={styles.searchResultItem}>
+                    <Text style={styles.searchResultSaying}>{variant.saying}</Text>
+                    <Text style={styles.searchResultMeaning} numberOfLines={1}>{getProverbVariant(item, 'en').explanation}</Text>
+                  </Pressable>
+                )) : <Text style={styles.searchEmpty}>No sayings found</Text>}
+              </ScrollView>
+            ) : null}
+          </View>
+        )}
 
         <View style={styles.content}>
           <View style={styles.cardShell}>
@@ -841,8 +912,8 @@ export default function App() {
               <Pressable accessibilityRole="button" accessibilityLabel="Toggle rounded corners" onPress={toggleBackgroundRounded} style={[styles.imageEditButton, backgroundRounded && styles.activeImageEditButton]}>
                 <Text style={styles.imageEditButtonText}>{backgroundRounded ? 'Rounded corners' : 'Square corners'}</Text>
               </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Toggle extra text" onPress={() => setShowCardDetails((value) => !value)} style={styles.imageEditButton}>
-                <Text style={styles.imageEditButtonText}>{showCardDetails ? 'Hide text' : 'Show text'}</Text>
+              <Pressable accessibilityRole="button" accessibilityLabel="Toggle image subtitle" onPress={() => setHideDetailsForImage((value) => !value)} style={styles.imageEditButton}>
+                <Text style={styles.imageEditButtonText}>{hideDetailsForImage ? 'Show subtitle' : 'Hide subtitle'}</Text>
               </Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.imageEditButton}>
                 <Text style={styles.imageEditButtonText}>Remove image</Text>
@@ -1035,6 +1106,13 @@ const styles = StyleSheet.create({
   iconTap: { width: 34, height: 42, alignItems: 'flex-end', justifyContent: 'center' },
   headerIcon: { color: '#ffffff', fontSize: 34, lineHeight: 38, fontWeight: '300' },
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
+  searchPanel: { marginTop: -8, marginBottom: 12, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 10, zIndex: 14 },
+  searchInput: { minHeight: 44, borderRadius: 14, backgroundColor: '#101010', color: '#ffffff', fontSize: 17, fontWeight: '800', paddingHorizontal: 14 },
+  searchResults: { maxHeight: 250, marginTop: 8 },
+  searchResultItem: { minHeight: 58, justifyContent: 'center', borderTopWidth: 1, borderTopColor: '#171717', paddingVertical: 8, paddingHorizontal: 6 },
+  searchResultSaying: { color: '#ffffff', fontSize: 16, lineHeight: 21, fontWeight: '900' },
+  searchResultMeaning: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, marginTop: 2 },
+  searchEmpty: { color: '#8f8f8f', fontSize: 14, fontWeight: '800', textAlign: 'center', paddingVertical: 18 },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   cardShell: { position: 'relative', justifyContent: 'center' },
   sideArrowButton: { position: 'absolute', bottom: -28, zIndex: 8, width: 34, height: 52, alignItems: 'center', justifyContent: 'center' },
@@ -1069,7 +1147,9 @@ const styles = StyleSheet.create({
   editPrimaryText: { color: '#000000', fontSize: 14, fontWeight: '900' },
   actionBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, width: '100%' },
   bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
-  bottomIconText: { color: '#ffffff', fontSize: 21, lineHeight: 25, fontWeight: '400' },
+  bottomIconText: { color: '#ffffff', fontSize: 23, lineHeight: 27, fontWeight: '300' },
+  penIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-38deg' }] },
+  penIconLine: { width: 3, height: 21, borderRadius: 2, backgroundColor: '#ffffff' },
   shareIconShape: { width: 22, height: 25, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3 },
   shareIconArrow: { position: 'absolute', top: -2, color: '#ffffff', fontSize: 24, lineHeight: 25, fontWeight: '300' },
   shareIconLine: { width: 18, height: 1.5, backgroundColor: '#ffffff', borderRadius: 1 },
@@ -1099,7 +1179,7 @@ const styles = StyleSheet.create({
   categoryBlock: { marginBottom: 24 },
   categorySelect: { marginTop: 10, minHeight: 48, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   categorySelectText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  categorySelectArrow: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
+  categorySelectArrow: { width: 28, color: '#ffffff', fontSize: 26, lineHeight: 28, fontWeight: '300', textAlign: 'center' },
   categoryOptions: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingVertical: 6 },
   categoryOption: { minHeight: 42, justifyContent: 'center', paddingHorizontal: 16 },
   categoryOptionText: { color: '#777777', fontSize: 16, fontWeight: '800' },
@@ -1110,7 +1190,7 @@ const styles = StyleSheet.create({
   savedToggle: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#1d1d1d' },
   savedToggleIcon: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
   savedToggleText: { flex: 1, color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  savedToggleArrow: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
+  savedToggleArrow: { width: 28, color: '#ffffff', fontSize: 26, lineHeight: 28, fontWeight: '300', textAlign: 'center' },
   savedList: { marginBottom: 24, gap: 14 },
   savedItem: { paddingVertical: 8 },
   savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
