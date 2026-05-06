@@ -6086,7 +6086,13 @@ const languageEquivalentsById = {
 };
 
 function makeOriginText(variant = {}) {
-  return variant.origin || variant.approxPeriod || variant.note || '';
+  return variant.origin || '';
+}
+
+function makeFallbackOriginText(variant = {}, fallbackExplanation = '') {
+  const saying = variant.saying ? `“${variant.saying}”` : 'This saying';
+  const meaning = fallbackExplanation ? ` It survives because it gives a compact way to express this idea: ${fallbackExplanation}` : '';
+  return `The exact source of ${saying} is uncertain. It is best treated as a traditional saying or idiom shaped by everyday speech rather than a single documented author or date.${meaning}`;
 }
 
 function migrateVariant(variant, fallbackExplanation = '') {
@@ -6148,6 +6154,14 @@ export const proverbs = rawProverbs.map((proverb) => {
       })
       .filter(Boolean)
   );
+  const englishVariant = variants.en || migrateVariant(proverb.en, meaning.en);
+  const englishOrigin = englishVariant?.origin || makeFallbackOriginText(englishVariant || proverb.en, meaning.en);
+  if (variants.en) variants.en.origin = englishOrigin;
+
+  languageKeys.forEach((language) => {
+    if (!variants[language] && englishVariant) variants[language] = { ...englishVariant, origin: englishOrigin };
+    if (variants[language] && !variants[language].origin) variants[language].origin = englishOrigin;
+  });
 
   return {
     ...proverb,
