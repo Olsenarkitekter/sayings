@@ -29,6 +29,19 @@ for (const category of ['all', 'life', 'love', 'work', 'biblical', 'slang', 'hum
 
 if (rawProverbs.length < 40) throw new Error(`Expected at least 40 curated meanings, got ${rawProverbs.length}`);
 
+const weakEnglishSayings = new Set([
+  'old habits die hard',
+  'after rain comes sunshine',
+  'every beginning is hard',
+  'do not judge a book by its cover',
+  'do not put all your eggs in one basket',
+  'there is no smoke without fire',
+  'can i pick your brain?',
+  'i have a bone to pick with you',
+  'put on the spot',
+  'spill the beans'
+]);
+
 const ids = new Set();
 const englishSayings = new Set();
 for (const item of rawProverbs) {
@@ -38,6 +51,7 @@ for (const item of rawProverbs) {
   if (!item.en?.saying || !item.en?.explanation) throw new Error(`Missing English canonical text for ${item.id}`);
   if (!item.fo?.saying || !item.fo?.explanation) throw new Error(`Missing Faroese text for ${item.id}`);
   const normalized = item.en.saying.toLowerCase();
+  if (weakEnglishSayings.has(normalized)) throw new Error(`Weak/literal English saying should be replaced or removed: ${item.en.saying}`);
   if (englishSayings.has(normalized)) throw new Error(`Duplicate English saying: ${item.en.saying}`);
   englishSayings.add(normalized);
 }
