@@ -5,7 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
-import { proverbs, languages, categories, getLanguageLabel, getLanguageName, getProverbVariant } from './proverbs';
+import { proverbs, languages, categories, getLanguageLabel, getProverbVariant } from './proverbs';
 
 const STORAGE = {
   language: 'daily-sayings:language',
@@ -195,6 +195,17 @@ function normalizeFavoriteIds(value) {
   }
 }
 
+function detectPreferredLanguage() {
+  const locale = (
+    (typeof navigator !== 'undefined' && (navigator.language || navigator.languages?.[0])) ||
+    (typeof Intl !== 'undefined' && Intl.DateTimeFormat?.().resolvedOptions?.().locale) ||
+    'en'
+  ).toLowerCase();
+  const languageCode = locale.split('-')[0];
+  const normalized = { nb: 'no', nn: 'no' }[languageCode] || languageCode;
+  return languages.some((item) => item.key === normalized) ? normalized : 'en';
+}
+
 function normalizeSelectedCategories(value) {
   if (!value || value === 'all') return [];
 
@@ -266,6 +277,8 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [readMoreOpen, setReadMoreOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [edits, setEdits] = useState({});
@@ -274,6 +287,7 @@ export default function App() {
   const [backgroundImageFit, setBackgroundImageFit] = useState('cover');
   const [backgroundImagePosition, setBackgroundImagePosition] = useState({ x: 0, y: 0 });
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
+  const [showCardDetails, setShowCardDetails] = useState(true);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
   const backgroundGestureRef = useRef(null);
@@ -289,14 +303,14 @@ export default function App() {
   const copy = currentEdit ? { ...selectedVariant, saying: currentEdit } : selectedVariant;
   const englishCopy = getProverbVariant(current, 'en');
   const showEnglishPair = language !== 'en' && englishCopy?.saying && englishCopy.saying !== copy.saying;
-  const selectedLanguageName = getLanguageName(language);
-  const infoText = [
-    copy.explanation,
+  const infoIntro = copy.explanation;
+  const infoMoreText = [
     copy.origin ? `${ORIGIN_LABEL}: ${copy.origin}` : null,
-    showEnglishPair ? `\nEnglish equivalent: ${englishCopy.saying}` : null,
+    showEnglishPair ? `English equivalent: ${englishCopy.saying}` : null,
     showEnglishPair && englishCopy.explanation ? englishCopy.explanation : null,
     showEnglishPair && englishCopy.origin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
   ].filter(Boolean).join('\n\n');
+  const infoText = readMoreOpen && infoMoreText ? `${infoIntro}\n\n${infoMoreText}` : infoIntro;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -312,7 +326,9 @@ export default function App() {
 
   useEffect(() => {
     setInfoOpen(false);
+    setReadMoreOpen(false);
     setEditOpen(false);
+    setLanguageOpen(false);
   }, [index, language]);
 
   useEffect(() => {
@@ -337,12 +353,12 @@ export default function App() {
         AsyncStorage.getItem(STORAGE.backgroundImageScale)
       ]);
 
-      const lang = storedLanguage || 'en';
+      const lang = storedLanguage || detectPreferredLanguage();
       const time = storedTime || '10:00';
       const owner = isOwnerUrl() || storedOwnerMode === 'on';
       if (owner) await AsyncStorage.setItem(STORAGE.ownerMode, 'on');
 
-      if (storedLanguage) setLanguage(storedLanguage);
+      setLanguage(lang);
       setSelectedCategories(normalizeSelectedCategories(storedCategory));
       if (storedIndex) setIndex(Number(storedIndex));
       setFavorites(normalizeFavoriteIds(storedFavorites));
@@ -416,7 +432,7 @@ export default function App() {
 
     const title = encodeURIComponent(`Edit suggestion: ${current.id} (${language.toUpperCase()})`);
     const body = encodeURIComponent(`Proverb ID: ${current.id}\nLanguage: ${language.toUpperCase()}\n\nCurrent text:\n${copy.saying}\n\nSuggested text:\n${suggestion}`);
-    const issueUrl = `https://github.com/Olsenarkitekter/proverbs-poison/issues/new?title=${title}&body=${body}`;
+    const issueUrl = `https://github.com/Olsenarkitekter/sayings/issues/new?title=${title}&body=${body}`;
     setEditOpen(false);
     await Linking.openURL(issueUrl);
   }
@@ -440,6 +456,7 @@ export default function App() {
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
+    setShowCardDetails(true);
     await AsyncStorage.multiSet([
       [STORAGE.backgroundImage, nextUri],
       [STORAGE.backgroundImageFit, 'cover'],
@@ -494,6 +511,14 @@ export default function App() {
     const gesture = backgroundGestureRef.current;
     backgroundGestureRef.current = null;
 
+    if (gesture && backgroundImageUri) {
+      await AsyncStorage.multiSet([
+        [STORAGE.backgroundImagePosition, JSON.stringify(gesture.lastPosition)],
+        [STORAGE.backgroundImageScale, String(gesture.lastScale)]
+      ]);
+      return;
+    }
+
     if (cardGesture) {
       const dx = cardGesture.lastPoint.x - cardGesture.startPoint.x;
       const dy = cardGesture.lastPoint.y - cardGesture.startPoint.y;
@@ -501,16 +526,13 @@ export default function App() {
       if (isHorizontalSwipe) {
         if (dx < 0) await setCurrentIndex(index + 1);
         else await setCurrentIndex(index - 1);
-        return;
       }
     }
+  }
 
-    if (gesture && backgroundImageUri) {
-      await AsyncStorage.multiSet([
-        [STORAGE.backgroundImagePosition, JSON.stringify(gesture.lastPosition)],
-        [STORAGE.backgroundImageScale, String(gesture.lastScale)]
-      ]);
-    }
+  async function changeBackgroundImageFit(nextFit) {
+    setBackgroundImageFit(nextFit);
+    await AsyncStorage.setItem(STORAGE.backgroundImageFit, nextFit);
   }
 
   async function clearBackgroundImage() {
@@ -606,12 +628,24 @@ export default function App() {
             <Text style={styles.headerIcon}>≡</Text>
           </Pressable>
 
-          <View style={styles.topLanguageRow}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.topLanguageRow}>
             <Text style={styles.topLanguageText}>EN</Text>
             {language !== 'en' && <Text style={styles.topLanguageDivider}>+</Text>}
             {language !== 'en' && <Text style={[styles.topLanguageText, styles.activeText]}>{getLanguageLabel(language)}</Text>}
-          </View>
+            <Text style={styles.topLanguageArrow}>{languageOpen ? '−' : '+'}</Text>
+          </Pressable>
         </View>
+
+        {languageOpen && (
+          <View style={styles.languageDropdown}>
+            {languages.map((item) => (
+              <Pressable key={item.key} onPress={() => { changeLanguage(item.key); setLanguageOpen(false); }} style={[styles.dropdownLanguageOption, language === item.key && styles.activeDropdownLanguageOption]}>
+                <Text style={[styles.dropdownLanguageLabel, language === item.key && styles.activeText]}>{item.label}</Text>
+                <Text style={styles.dropdownLanguageName}>{item.name}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
 
         <View style={styles.content}>
           <View
@@ -633,18 +667,16 @@ export default function App() {
                 imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
               >
                 <View style={styles.shareCardOverlay}>
-                  <Text style={styles.languageEyebrow}>{getLanguageLabel(language)} · {selectedLanguageName}</Text>
                   <Text style={styles.saying}>{copy.saying}</Text>
-                  {showEnglishPair && <Text style={styles.englishSaying}>EN · {englishCopy.saying}</Text>}
-                  {copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
+                  {showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
+                  {showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
                 </View>
               </ImageBackground>
             ) : (
               <>
-                <Text style={styles.languageEyebrow}>{getLanguageLabel(language)} · {selectedLanguageName}</Text>
                 <Text style={styles.saying}>{copy.saying}</Text>
-                {showEnglishPair && <Text style={styles.englishSaying}>EN · {englishCopy.saying}</Text>}
-                {copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
+                {showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
+                {showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
               </>
             )}
           </View>
@@ -673,35 +705,51 @@ export default function App() {
           )}
         </View>
 
-        <View style={styles.actionBar}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
-            onPress={() => setInfoOpen((value) => !value)}
-            style={styles.bottomIconButton}
-          >
-            <Text style={styles.bottomIconText}>i</Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.bottomIconButton}>
-            <Text style={styles.bottomIconText}>🌐</Text>
-          </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.bottomIconButton}>
-            <Text style={styles.bottomIconText}>✎</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Choose background image"
-            onPress={chooseBackgroundImage}
-            onLongPress={clearBackgroundImage}
-            style={[styles.bottomIconButton, backgroundImageUri && styles.activeIconButton]}
-          >
-            <Text style={styles.bottomIconText}>▧</Text>
-          </Pressable>
-          <View style={styles.actionSpacer} />
-          <Pressable accessibilityLabel="Save proverb" onPress={toggleFavorite} style={styles.bottomIconButton}>
-            <Text style={[styles.bottomIconText, isFavorite && styles.favoriteIcon]}>{isFavorite ? '★' : '☆'}</Text>
-          </Pressable>
-        </View>
+        {backgroundImageUri ? (
+          <View style={styles.imageEditBar}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.imageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
+              <Text style={styles.imageEditButtonText}>Full screen</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.imageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
+              <Text style={styles.imageEditButtonText}>See whole image</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Toggle extra text" onPress={() => setShowCardDetails((value) => !value)} style={styles.imageEditButton}>
+              <Text style={styles.imageEditButtonText}>{showCardDetails ? 'Hide details' : 'Show details'}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.imageEditButton}>
+              <Text style={styles.imageEditButtonText}>Remove</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.actionBar}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
+              onPress={() => setInfoOpen((value) => !value)}
+              style={styles.bottomIconButton}
+            >
+              <Text style={styles.bottomIconText}>i</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.bottomIconButton}>
+              <Text style={styles.bottomIconText}>◎</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.bottomIconButton}>
+              <Text style={styles.bottomIconText}>✎</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Choose background image"
+              onPress={chooseBackgroundImage}
+              style={styles.bottomIconButton}
+            >
+              <Text style={styles.bottomIconText}>▧</Text>
+            </Pressable>
+            <View style={styles.actionSpacer} />
+            <Pressable accessibilityLabel="Save proverb" onPress={toggleFavorite} style={styles.bottomIconButton}>
+              <Text style={[styles.bottomIconText, isFavorite && styles.favoriteIcon]}>{isFavorite ? '★' : '☆'}</Text>
+            </Pressable>
+          </View>
+        )}
 
         {infoOpen && (
           <View style={styles.infoOverlay}>
@@ -714,6 +762,11 @@ export default function App() {
               </View>
               <ScrollView contentContainerStyle={styles.infoScrollContent} showsVerticalScrollIndicator>
                 <Text style={styles.explanation}>{infoText}</Text>
+                {!!infoMoreText && !readMoreOpen && (
+                  <Pressable onPress={() => setReadMoreOpen(true)} style={styles.readMoreButton}>
+                    <Text style={styles.readMoreText}>Læs mere</Text>
+                  </Pressable>
+                )}
               </ScrollView>
             </View>
           </View>
@@ -727,19 +780,6 @@ export default function App() {
                 <Pressable onPress={() => setSettingsOpen(false)} hitSlop={12}>
                   <Text style={styles.closeIcon}>×</Text>
                 </Pressable>
-              </View>
-
-              <View style={styles.languageBlock}>
-                <Text style={styles.settingTitle}>Language</Text>
-                <Text style={styles.muted}>Shown together with English in the top right.</Text>
-                <View style={styles.languageGrid}>
-                  {languages.map((item) => (
-                    <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={[styles.languageOption, language === item.key && styles.activeLanguageOption]}>
-                      <Text style={[styles.languageOptionLabel, language === item.key && styles.activeText]}>{item.label}</Text>
-                      <Text style={styles.languageOptionName}>{item.name}</Text>
-                    </Pressable>
-                  ))}
-                </View>
               </View>
 
               <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
@@ -834,7 +874,13 @@ const styles = StyleSheet.create({
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
   topLanguageRow: { flexDirection: 'row', gap: 8, alignItems: 'center', borderWidth: 1, borderColor: '#242424', borderRadius: 16, paddingHorizontal: 12, minHeight: 34 },
   topLanguageDivider: { color: '#555555', fontSize: 13, fontWeight: '900' },
+  topLanguageArrow: { color: '#777777', fontSize: 18, lineHeight: 20, fontWeight: '700', marginLeft: 2 },
   topLanguageText: { color: '#777777', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
+  languageDropdown: { position: 'absolute', top: 104, right: 22, zIndex: 30, width: 220, maxHeight: 420, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8, gap: 4 },
+  dropdownLanguageOption: { minHeight: 42, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  activeDropdownLanguageOption: { backgroundColor: '#111111' },
+  dropdownLanguageLabel: { width: 30, color: '#777777', fontSize: 13, fontWeight: '900' },
+  dropdownLanguageName: { flex: 1, color: '#a6a6a6', fontSize: 13, fontWeight: '700' },
   activeText: { color: '#ffffff' },
   iconTap: { width: 58, height: 42, alignItems: 'flex-start', justifyContent: 'center' },
   headerIcon: { color: '#ffffff', fontSize: 38, lineHeight: 40, fontWeight: '300' },
@@ -844,9 +890,8 @@ const styles = StyleSheet.create({
   shareCardBackground: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center' },
   shareCardImage: { borderRadius: 28 },
   shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
-  languageEyebrow: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '900', letterSpacing: 1.2, textAlign: 'center', marginBottom: 14, textTransform: 'uppercase' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
-  englishSaying: { marginTop: 24, color: '#d9d9d9', fontSize: 21, lineHeight: 28, fontWeight: '800', textAlign: 'center' },
+  englishSaying: { marginTop: 20, color: '#d9d9d9', fontSize: 16, lineHeight: 22, fontWeight: '700', textAlign: 'center' },
   originLine: { marginTop: 18, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
   activeIconButton: { borderColor: '#ffffff' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
@@ -856,6 +901,8 @@ const styles = StyleSheet.create({
   infoClose: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   infoScrollContent: { paddingBottom: 12 },
   explanation: { fontSize: 18, lineHeight: 28, textAlign: 'left', color: '#d9d9d9' },
+  readMoreButton: { alignSelf: 'flex-start', marginTop: 14, borderBottomWidth: 1, borderBottomColor: '#ffffff' },
+  readMoreText: { color: '#ffffff', fontSize: 16, lineHeight: 22, fontWeight: '900' },
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
   editInput: { minHeight: 86, color: '#ffffff', borderWidth: 1, borderColor: '#333333', borderRadius: 12, padding: 12, fontSize: 18, lineHeight: 24, textAlignVertical: 'top' },
@@ -868,6 +915,10 @@ const styles = StyleSheet.create({
   bottomIconButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   bottomIconText: { color: '#ffffff', fontSize: 21, lineHeight: 25, fontWeight: '900' },
   actionSpacer: { flex: 1 },
+  imageEditBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  imageEditButton: { minHeight: 42, flex: 1, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
+  activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
+  imageEditButtonText: { color: '#ffffff', fontSize: 11, lineHeight: 14, fontWeight: '900', textAlign: 'center' },
   favoriteIcon: { color: '#ffd166' },
   settingsPanel: { position: 'absolute', top: 66, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
   settingsContent: { paddingBottom: 36 },
@@ -875,12 +926,6 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   settingTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  languageBlock: { marginBottom: 24 },
-  languageGrid: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  languageOption: { width: '31%', minHeight: 64, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 10, justifyContent: 'center' },
-  activeLanguageOption: { borderColor: '#ffffff', backgroundColor: '#101010' },
-  languageOptionLabel: { color: '#777777', fontSize: 14, lineHeight: 18, fontWeight: '900' },
-  languageOptionName: { color: '#8f8f8f', fontSize: 11, lineHeight: 15, marginTop: 3 },
   categoryBlock: { marginBottom: 24 },
   categorySelect: { marginTop: 10, minHeight: 48, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   categorySelectText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
