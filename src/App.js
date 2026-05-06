@@ -25,22 +25,6 @@ const STORAGE = {
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
-const SHARE_LABELS = {
-  en: 'Share',
-  de: 'Teilen',
-  es: 'Compartir',
-  no: 'Del',
-  la: 'Share',
-  zh: '分享',
-  ja: '共有',
-  it: 'Condividi',
-  hi: 'साझा करें',
-  el: 'Κοινοποίηση',
-  fr: 'Partager',
-  ar: 'مشاركة',
-  fo: 'Deil'
-};
-
 const ORIGIN_LABEL = 'Origin';
 
 function wrapCanvasText(context, text, maxWidth) {
@@ -293,6 +277,7 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
   const backgroundGestureRef = useRef(null);
+  const cardGestureRef = useRef(null);
 
   const filteredProverbs = useMemo(
     () => proverbs.filter((item) => selectedCategories.length === 0 || selectedCategories.includes(item.category)),
@@ -312,7 +297,6 @@ export default function App() {
     showEnglishPair && englishCopy.explanation ? englishCopy.explanation : null,
     showEnglishPair && englishCopy.origin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
   ].filter(Boolean).join('\n\n');
-  const shareLabel = SHARE_LABELS[language] || SHARE_LABELS.en;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -411,18 +395,6 @@ export default function App() {
     ]);
   }
 
-  async function previous() {
-    await setCurrentIndex(index - 1);
-  }
-
-  async function refresh() {
-    let next = index;
-    while (next === index && filteredProverbs.length > 1) {
-      next = Math.floor(Math.random() * filteredProverbs.length);
-    }
-    await setCurrentIndex(next);
-  }
-
   async function submitEdit() {
     const suggestion = editText.trim();
     if (!suggestion) return;
@@ -476,25 +448,31 @@ export default function App() {
     ]);
   }
 
-  function startBackgroundGesture(evt) {
-    if (!backgroundImageUri) return;
+  function startCardGesture(evt) {
     const touches = evt.nativeEvent?.touches || [];
     const point = eventPoint(evt.nativeEvent);
-    backgroundGestureRef.current = {
-      startPoint: point,
-      startPosition: backgroundImagePosition,
-      startScale: backgroundImageScale,
-      startDistance: touchDistance(touches),
-      lastPosition: backgroundImagePosition,
-      lastScale: backgroundImageScale
-    };
+    cardGestureRef.current = { startPoint: point, lastPoint: point, didSwipe: false };
+
+    if (backgroundImageUri) {
+      backgroundGestureRef.current = {
+        startPoint: point,
+        startPosition: backgroundImagePosition,
+        startScale: backgroundImageScale,
+        startDistance: touchDistance(touches),
+        lastPosition: backgroundImagePosition,
+        lastScale: backgroundImageScale
+      };
+    }
   }
 
-  function moveBackgroundGesture(evt) {
+  function moveCardGesture(evt) {
+    const cardGesture = cardGestureRef.current;
+    const point = eventPoint(evt.nativeEvent);
+    if (cardGesture) cardGesture.lastPoint = point;
+
     const gesture = backgroundGestureRef.current;
     if (!gesture || !backgroundImageUri) return;
     const touches = evt.nativeEvent?.touches || [];
-    const point = eventPoint(evt.nativeEvent);
     const nextPosition = {
       x: gesture.startPosition.x + (point.x - gesture.startPoint.x),
       y: gesture.startPosition.y + (point.y - gesture.startPoint.y)
@@ -510,14 +488,29 @@ export default function App() {
     setBackgroundImageScale(nextScale);
   }
 
-  async function finishBackgroundGesture() {
+  async function finishCardGesture() {
+    const cardGesture = cardGestureRef.current;
+    cardGestureRef.current = null;
     const gesture = backgroundGestureRef.current;
-    if (!gesture) return;
     backgroundGestureRef.current = null;
-    await AsyncStorage.multiSet([
-      [STORAGE.backgroundImagePosition, JSON.stringify(gesture.lastPosition)],
-      [STORAGE.backgroundImageScale, String(gesture.lastScale)]
-    ]);
+
+    if (cardGesture) {
+      const dx = cardGesture.lastPoint.x - cardGesture.startPoint.x;
+      const dy = cardGesture.lastPoint.y - cardGesture.startPoint.y;
+      const isHorizontalSwipe = Math.abs(dx) > 72 && Math.abs(dx) > Math.abs(dy) * 1.25;
+      if (isHorizontalSwipe) {
+        if (dx < 0) await setCurrentIndex(index + 1);
+        else await setCurrentIndex(index - 1);
+        return;
+      }
+    }
+
+    if (gesture && backgroundImageUri) {
+      await AsyncStorage.multiSet([
+        [STORAGE.backgroundImagePosition, JSON.stringify(gesture.lastPosition)],
+        [STORAGE.backgroundImageScale, String(gesture.lastScale)]
+      ]);
+    }
   }
 
   async function clearBackgroundImage() {
@@ -625,12 +618,12 @@ export default function App() {
             ref={shareCardRef}
             collapsable={false}
             style={styles.shareCard}
-            onStartShouldSetResponder={() => !!backgroundImageUri}
-            onMoveShouldSetResponder={() => !!backgroundImageUri}
-            onResponderGrant={startBackgroundGesture}
-            onResponderMove={moveBackgroundGesture}
-            onResponderRelease={finishBackgroundGesture}
-            onResponderTerminate={finishBackgroundGesture}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderGrant={startCardGesture}
+            onResponderMove={moveCardGesture}
+            onResponderRelease={finishCardGesture}
+            onResponderTerminate={finishCardGesture}
           >
             {backgroundImageUri ? (
               <ImageBackground
@@ -654,31 +647,6 @@ export default function App() {
                 {copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
               </>
             )}
-          </View>
-          <View style={styles.quickActions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
-              onPress={() => setInfoOpen((value) => !value)}
-              style={styles.infoButton}
-            >
-              <Text style={styles.infoIcon}>i</Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.shareButton}>
-              <Text style={styles.shareText}>{shareLabel}</Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.iconButton}>
-              <Text style={styles.actionIcon}>✎</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Choose background image"
-              onPress={chooseBackgroundImage}
-              onLongPress={clearBackgroundImage}
-              style={[styles.iconButton, backgroundImageUri && styles.activeIconButton]}
-            >
-              <Text style={styles.actionIcon}>▧</Text>
-            </Pressable>
           </View>
 
           {editOpen && (
@@ -705,15 +673,33 @@ export default function App() {
           )}
         </View>
 
-        <View style={styles.controls}>
-          <Pressable accessibilityLabel="Previous proverb" onPress={previous} style={styles.controlButton}>
-            <Text style={styles.controlIcon}>‹</Text>
+        <View style={styles.actionBar}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
+            onPress={() => setInfoOpen((value) => !value)}
+            style={styles.bottomIconButton}
+          >
+            <Text style={styles.bottomIconText}>i</Text>
           </Pressable>
-          <Pressable accessibilityLabel="Refresh proverb" onPress={refresh} style={styles.refreshButton}>
-            <Text style={styles.refreshIcon}>↻</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.bottomIconButton}>
+            <Text style={styles.bottomIconText}>🌐</Text>
           </Pressable>
-          <Pressable accessibilityLabel="Save proverb" onPress={toggleFavorite} style={styles.controlButton}>
-            <Text style={[styles.controlIcon, isFavorite && styles.favoriteIcon]}>{isFavorite ? '★' : '☆'}</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.bottomIconButton}>
+            <Text style={styles.bottomIconText}>✎</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Choose background image"
+            onPress={chooseBackgroundImage}
+            onLongPress={clearBackgroundImage}
+            style={[styles.bottomIconButton, backgroundImageUri && styles.activeIconButton]}
+          >
+            <Text style={styles.bottomIconText}>▧</Text>
+          </Pressable>
+          <View style={styles.actionSpacer} />
+          <Pressable accessibilityLabel="Save proverb" onPress={toggleFavorite} style={styles.bottomIconButton}>
+            <Text style={[styles.bottomIconText, isFavorite && styles.favoriteIcon]}>{isFavorite ? '★' : '☆'}</Text>
           </Pressable>
         </View>
 
@@ -862,14 +848,7 @@ const styles = StyleSheet.create({
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
   englishSaying: { marginTop: 24, color: '#d9d9d9', fontSize: 21, lineHeight: 28, fontWeight: '800', textAlign: 'center' },
   originLine: { marginTop: 18, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
-  quickActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 22, gap: 12 },
-  infoButton: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
-  infoIcon: { color: '#d9d9d9', fontSize: 16, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
-  shareButton: { minWidth: 70, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
-  shareText: { color: '#d9d9d9', fontSize: 14, lineHeight: 18, fontWeight: '900' },
-  iconButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   activeIconButton: { borderColor: '#ffffff' },
-  actionIcon: { color: '#d9d9d9', fontSize: 20, lineHeight: 22, fontWeight: '900' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
   infoHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 10 },
@@ -885,12 +864,11 @@ const styles = StyleSheet.create({
   editSecondaryText: { color: '#d9d9d9', fontSize: 14, fontWeight: '900' },
   editPrimaryButton: { height: 36, minWidth: 88, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   editPrimaryText: { color: '#000000', fontSize: 14, fontWeight: '900' },
-  controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 34, marginBottom: 8 },
-  controlButton: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center' },
-  controlIcon: { color: '#ffffff', fontSize: 46, lineHeight: 50, fontWeight: '300' },
+  actionBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  bottomIconButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  bottomIconText: { color: '#ffffff', fontSize: 21, lineHeight: 25, fontWeight: '900' },
+  actionSpacer: { flex: 1 },
   favoriteIcon: { color: '#ffd166' },
-  refreshButton: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
-  refreshIcon: { color: '#000000', fontSize: 42, lineHeight: 46, fontWeight: '700' },
   settingsPanel: { position: 'absolute', top: 66, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
   settingsContent: { paddingBottom: 36 },
   settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
