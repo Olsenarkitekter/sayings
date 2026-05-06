@@ -332,16 +332,11 @@ export default function App() {
   const selectedVariant = getProverbVariant(current, language);
   const copy = currentEdit ? { ...selectedVariant, saying: currentEdit } : selectedVariant;
   const englishCopy = getProverbVariant(current, 'en');
-  const showEnglishPair = language !== 'en' && englishCopy?.saying && englishCopy.saying !== copy.saying;
-  const infoIntro = copy.explanation;
+  const meaningText = englishCopy.explanation || copy.explanation;
   const primaryOrigin = englishCopy.origin || copy.origin;
-  const originDetails = [
-    primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null,
-    showEnglishPair ? `English equivalent: ${englishCopy.saying}` : null,
-    showEnglishPair && englishCopy.origin && englishCopy.origin !== primaryOrigin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
-  ].filter(Boolean).join('\n\n');
-  const hasLongOriginDetails = originDetails.length > 90;
-  const infoText = readMoreOpen && originDetails ? `${infoIntro}\n\n${originDetails}` : infoIntro;
+  const cardOriginText = readMoreOpen ? primaryOrigin : primaryOrigin.split(/[.!?]\s/).filter(Boolean).slice(0, 1).join('. ');
+  const hasLongOriginDetails = primaryOrigin.length > 110;
+  const infoText = [meaningText, primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null].filter(Boolean).join('\n\n');
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -716,8 +711,13 @@ export default function App() {
                     ) : (
                       <Text style={styles.saying}>{copy.saying}</Text>
                     )}
-                    {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
-                    {!editOpen && showCardDetails && primaryOrigin && <Text style={styles.originLine}>{primaryOrigin}</Text>}
+                    {!editOpen && showCardDetails && meaningText && <Text style={styles.meaningLine}>{meaningText}</Text>}
+                    {!editOpen && showCardDetails && cardOriginText && <Text style={styles.originLine}>{cardOriginText}{!readMoreOpen && hasLongOriginDetails ? '…' : ''}</Text>}
+                    {!editOpen && showCardDetails && hasLongOriginDetails && !readMoreOpen && (
+                      <Pressable onPress={() => setReadMoreOpen(true)} style={styles.cardReadMoreButton}>
+                        <Text style={styles.readMoreText}>Læs mere</Text>
+                      </Pressable>
+                    )}
                   </View>
                 </ImageBackground>
               ) : (
@@ -727,8 +727,13 @@ export default function App() {
                   ) : (
                     <Text style={styles.saying}>{copy.saying}</Text>
                   )}
-                  {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
-                  {!editOpen && showCardDetails && primaryOrigin && <Text style={styles.originLine}>{primaryOrigin}</Text>}
+                  {!editOpen && showCardDetails && meaningText && <Text style={styles.meaningLine}>{meaningText}</Text>}
+                  {!editOpen && showCardDetails && cardOriginText && <Text style={styles.originLine}>{cardOriginText}{!readMoreOpen && hasLongOriginDetails ? '…' : ''}</Text>}
+                  {!editOpen && showCardDetails && hasLongOriginDetails && !readMoreOpen && (
+                    <Pressable onPress={() => setReadMoreOpen(true)} style={styles.cardReadMoreButton}>
+                      <Text style={styles.readMoreText}>Læs mere</Text>
+                    </Pressable>
+                  )}
                 </>
               )}
             </View>
@@ -831,11 +836,6 @@ export default function App() {
               </View>
               <ScrollView contentContainerStyle={styles.infoScrollContent} showsVerticalScrollIndicator>
                 <Text style={styles.explanation}>{infoText}</Text>
-                {hasLongOriginDetails && !readMoreOpen && (
-                  <Pressable onPress={() => setReadMoreOpen(true)} style={styles.readMoreButton}>
-                    <Text style={styles.readMoreText}>Læs mere</Text>
-                  </Pressable>
-                )}
               </ScrollView>
             </View>
           </View>
@@ -971,7 +971,7 @@ const styles = StyleSheet.create({
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   cardShell: { position: 'relative', justifyContent: 'center' },
-  sideArrowButton: { position: 'absolute', bottom: -38, zIndex: 8, width: 34, height: 52, alignItems: 'center', justifyContent: 'center' },
+  sideArrowButton: { position: 'absolute', bottom: -28, zIndex: 8, width: 34, height: 52, alignItems: 'center', justifyContent: 'center' },
   leftArrowButton: { left: -10 },
   rightArrowButton: { right: -10 },
   sideArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '200', opacity: 0.72 },
@@ -980,8 +980,9 @@ const styles = StyleSheet.create({
   shareCardImage: { borderRadius: 28 },
   shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
-  englishSaying: { marginTop: 20, color: '#d9d9d9', fontSize: 16, lineHeight: 22, fontWeight: '700', textAlign: 'center' },
-  originLine: { marginTop: 18, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
+  meaningLine: { marginTop: 22, color: '#d9d9d9', fontSize: 16, lineHeight: 22, fontWeight: '700', textAlign: 'center' },
+  originLine: { marginTop: 14, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
+  cardReadMoreButton: { marginTop: 10, borderBottomWidth: 1, borderBottomColor: '#ffffff' },
   activeIconButton: { borderColor: '#ffffff' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
@@ -990,7 +991,6 @@ const styles = StyleSheet.create({
   infoClose: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   infoScrollContent: { paddingBottom: 12 },
   explanation: { fontSize: 18, lineHeight: 28, textAlign: 'left', color: '#d9d9d9' },
-  readMoreButton: { alignSelf: 'flex-start', marginTop: 14, borderBottomWidth: 1, borderBottomColor: '#ffffff' },
   readMoreText: { color: '#ffffff', fontSize: 16, lineHeight: 22, fontWeight: '900' },
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
