@@ -33,7 +33,6 @@ function BrandLogo() {
     <View style={styles.brandRow}>
       <View style={styles.logoGlobe}>
         <View style={styles.logoMeridian} />
-        <View style={styles.logoEquator} />
       </View>
       <Text style={styles.brandText}>World Sayings</Text>
     </View>
@@ -333,11 +332,12 @@ export default function App() {
   const englishCopy = getProverbVariant(current, 'en');
   const showEnglishPair = language !== 'en' && englishCopy?.saying && englishCopy.saying !== copy.saying;
   const infoIntro = copy.explanation;
+  const primaryOrigin = copy.origin || englishCopy.origin;
   const originDetails = [
-    copy.origin ? `${ORIGIN_LABEL}: ${copy.origin}` : null,
+    primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null,
     showEnglishPair ? `English equivalent: ${englishCopy.saying}` : null,
     showEnglishPair && englishCopy.explanation ? englishCopy.explanation : null,
-    showEnglishPair && englishCopy.origin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
+    showEnglishPair && englishCopy.origin && englishCopy.origin !== primaryOrigin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
   ].filter(Boolean).join('\n\n');
   const hasLongOriginDetails = originDetails.length > 90;
   const infoText = readMoreOpen && originDetails ? `${infoIntro}\n\n${originDetails}` : infoIntro;
@@ -722,7 +722,7 @@ export default function App() {
                     <Text style={styles.saying}>{copy.saying}</Text>
                   )}
                   {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
-                  {!editOpen && showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
+                  {!editOpen && showCardDetails && primaryOrigin && <Text style={styles.originLine}>{primaryOrigin}</Text>}
                 </View>
               </ImageBackground>
             ) : (
@@ -733,7 +733,7 @@ export default function App() {
                   <Text style={styles.saying}>{copy.saying}</Text>
                 )}
                 {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
-                {!editOpen && showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
+                {!editOpen && showCardDetails && primaryOrigin && <Text style={styles.originLine}>{primaryOrigin}</Text>}
               </>
             )}
           </View>
@@ -938,8 +938,7 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   logoGlobe: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  logoMeridian: { position: 'absolute', width: 9, height: 24, borderLeftWidth: 1.2, borderRightWidth: 1.2, borderColor: '#ffffff', borderRadius: 8 },
-  logoEquator: { position: 'absolute', left: 2, right: 2, height: 1.2, backgroundColor: '#ffffff' },
+  logoMeridian: { position: 'absolute', width: 10, height: 28, borderLeftWidth: 1.4, borderColor: '#ffffff', borderRadius: 9, transform: [{ rotate: '45deg' }] },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
