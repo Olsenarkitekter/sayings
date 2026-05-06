@@ -305,7 +305,6 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savedOpen, setSavedOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [readMoreOpen, setReadMoreOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -334,9 +333,10 @@ export default function App() {
   const englishCopy = getProverbVariant(current, 'en');
   const meaningText = englishCopy.explanation || copy.explanation;
   const primaryOrigin = englishCopy.origin || copy.origin;
-  const cardOriginText = readMoreOpen ? primaryOrigin : primaryOrigin.split(/[.!?]\s/).filter(Boolean).slice(0, 1).join('. ');
-  const hasLongOriginDetails = primaryOrigin.length > 110;
-  const infoText = [meaningText, primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null].filter(Boolean).join('\n\n');
+  const englishSayingText = language !== 'en' && englishCopy.saying ? `English version: ${englishCopy.saying}` : null;
+  const detailText = [meaningText, primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null, englishSayingText].filter(Boolean).join(' ');
+  const hasLongDetails = detailText.length > 130;
+  const infoText = detailText;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -353,7 +353,6 @@ export default function App() {
 
   useEffect(() => {
     setInfoOpen(false);
-    setReadMoreOpen(false);
     setEditOpen(false);
     setLanguageOpen(false);
     setShareOpen(false);
@@ -711,11 +710,10 @@ export default function App() {
                     ) : (
                       <Text style={styles.saying}>{copy.saying}</Text>
                     )}
-                    {!editOpen && showCardDetails && meaningText && <Text style={styles.meaningLine}>{meaningText}</Text>}
-                    {!editOpen && showCardDetails && cardOriginText && <Text style={styles.originLine}>{cardOriginText}{!readMoreOpen && hasLongOriginDetails ? '…' : ''}</Text>}
-                    {!editOpen && showCardDetails && hasLongOriginDetails && !readMoreOpen && (
-                      <Pressable onPress={() => setReadMoreOpen(true)} style={styles.cardReadMoreButton}>
-                        <Text style={styles.readMoreText}>Læs mere</Text>
+                    {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2}>{detailText}</Text>}
+                    {!editOpen && showCardDetails && hasLongDetails && (
+                      <Pressable onPress={() => setInfoOpen(true)} style={styles.cardReadMoreButton}>
+                        <Text style={styles.readMoreText}>Read more</Text>
                       </Pressable>
                     )}
                   </View>
@@ -727,11 +725,10 @@ export default function App() {
                   ) : (
                     <Text style={styles.saying}>{copy.saying}</Text>
                   )}
-                  {!editOpen && showCardDetails && meaningText && <Text style={styles.meaningLine}>{meaningText}</Text>}
-                  {!editOpen && showCardDetails && cardOriginText && <Text style={styles.originLine}>{cardOriginText}{!readMoreOpen && hasLongOriginDetails ? '…' : ''}</Text>}
-                  {!editOpen && showCardDetails && hasLongOriginDetails && !readMoreOpen && (
-                    <Pressable onPress={() => setReadMoreOpen(true)} style={styles.cardReadMoreButton}>
-                      <Text style={styles.readMoreText}>Læs mere</Text>
+                  {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2}>{detailText}</Text>}
+                  {!editOpen && showCardDetails && hasLongDetails && (
+                    <Pressable onPress={() => setInfoOpen(true)} style={styles.cardReadMoreButton}>
+                      <Text style={styles.readMoreText}>Read more</Text>
                     </Pressable>
                   )}
                 </>
@@ -980,9 +977,8 @@ const styles = StyleSheet.create({
   shareCardImage: { borderRadius: 28 },
   shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
-  meaningLine: { marginTop: 22, color: '#d9d9d9', fontSize: 16, lineHeight: 22, fontWeight: '700', textAlign: 'center' },
-  originLine: { marginTop: 14, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
-  cardReadMoreButton: { marginTop: 10, borderBottomWidth: 1, borderBottomColor: '#ffffff' },
+  originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
+  cardReadMoreButton: { alignSelf: 'center', marginTop: 8 },
   activeIconButton: { borderColor: '#ffffff' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
@@ -991,7 +987,7 @@ const styles = StyleSheet.create({
   infoClose: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   infoScrollContent: { paddingBottom: 12 },
   explanation: { fontSize: 18, lineHeight: 28, textAlign: 'left', color: '#d9d9d9' },
-  readMoreText: { color: '#ffffff', fontSize: 16, lineHeight: 22, fontWeight: '900' },
+  readMoreText: { color: '#ffffff', fontSize: 13, lineHeight: 18, fontWeight: '900', textAlign: 'center' },
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
   editSayingInput: { width: '100%', minHeight: 170, paddingHorizontal: 8, paddingVertical: 10, textAlignVertical: 'center', borderBottomWidth: 1.5, borderBottomColor: '#ffffff' },
