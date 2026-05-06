@@ -32,8 +32,7 @@ function BrandLogo() {
   return (
     <View style={styles.brandRow}>
       <View style={styles.logoGlobe}>
-        <View style={styles.logoCurveTop} />
-        <View style={styles.logoCurveBottom} />
+        <View style={styles.logoShadow} />
       </View>
       <Text style={styles.brandText}>World Sayings</Text>
     </View>
@@ -948,9 +947,8 @@ const styles = StyleSheet.create({
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
-  logoGlobe: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  logoCurveTop: { position: 'absolute', top: 1, left: 6, width: 16, height: 15, borderTopWidth: 1.4, borderRightWidth: 1.4, borderColor: '#ffffff', borderRadius: 12, transform: [{ rotate: '-45deg' }] },
-  logoCurveBottom: { position: 'absolute', bottom: 1, right: 6, width: 16, height: 15, borderBottomWidth: 1.4, borderLeftWidth: 1.4, borderColor: '#ffffff', borderRadius: 12, transform: [{ rotate: '-45deg' }] },
+  logoGlobe: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#ffffff', overflow: 'hidden', backgroundColor: '#ffffff' },
+  logoShadow: { position: 'absolute', left: -2, bottom: -2, width: 18, height: 18, borderTopRightRadius: 18, backgroundColor: '#000000' },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
