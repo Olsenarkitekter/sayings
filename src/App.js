@@ -26,6 +26,34 @@ const STORAGE = {
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
 const ORIGIN_LABEL = 'Origin';
+const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
+
+function BrandLogo() {
+  return (
+    <View style={styles.brandRow}>
+      <View style={styles.logoGlobe}>
+        <View style={styles.logoMeridian} />
+        <View style={styles.logoEquator} />
+      </View>
+      <Text style={styles.brandText}>World Sayings</Text>
+    </View>
+  );
+}
+
+function ActionIcon({ type, active }) {
+  if (type === 'share') {
+    return (
+      <View style={styles.shareIconShape}>
+        <Text style={styles.shareIconArrow}>↑</Text>
+        <View style={styles.shareIconLine} />
+      </View>
+    );
+  }
+  if (type === 'image') return <View style={styles.imageIconShape} />;
+  if (type === 'star') return <Text style={[styles.bottomIconText, active && styles.favoriteIcon]}>{active ? '★' : '☆'}</Text>;
+  if (type === 'edit') return <Text style={styles.bottomIconText}>✎</Text>;
+  return <Text style={styles.bottomIconText}>i</Text>;
+}
 
 function wrapCanvasText(context, text, maxWidth) {
   const lines = [];
@@ -433,11 +461,11 @@ export default function App() {
       return;
     }
 
-    const title = encodeURIComponent(`Edit suggestion: ${current.id} (${language.toUpperCase()})`);
+    const subject = encodeURIComponent(`World Sayings edit suggestion: ${current.id} (${language.toUpperCase()})`);
     const body = encodeURIComponent(`Proverb ID: ${current.id}\nLanguage: ${language.toUpperCase()}\n\nCurrent text:\n${copy.saying}\n\nSuggested text:\n${suggestion}`);
-    const issueUrl = `https://github.com/Olsenarkitekter/sayings/issues/new?title=${title}&body=${body}`;
+    const mailUrl = `mailto:${EDIT_EMAIL}?subject=${subject}&body=${body}`;
     setEditOpen(false);
-    await Linking.openURL(issueUrl);
+    await Linking.openURL(mailUrl);
   }
 
   async function chooseBackgroundImage() {
@@ -640,16 +668,19 @@ export default function App() {
         </View>
 
         <View style={styles.topActions}>
-          <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
-            <Text style={styles.headerIcon}>≡</Text>
-          </Pressable>
+          <BrandLogo />
 
-          <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.topLanguageRow}>
-            <Text style={styles.topLanguageText}>EN</Text>
-            {language !== 'en' && <Text style={styles.topLanguageDivider}>+</Text>}
-            {language !== 'en' && <Text style={[styles.topLanguageText, styles.activeText]}>{getLanguageLabel(language)}</Text>}
-            <Text style={styles.topLanguageArrow}>{languageOpen ? '−' : '+'}</Text>
-          </Pressable>
+          <View style={styles.topRightActions}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.topLanguageRow}>
+              <Text style={styles.topLanguageText}>EN</Text>
+              {language !== 'en' && <Text style={styles.topLanguageDivider}>+</Text>}
+              {language !== 'en' && <Text style={[styles.topLanguageText, styles.activeText]}>{getLanguageLabel(language)}</Text>}
+              <Text style={styles.topLanguageArrow}>{languageOpen ? '−' : '+'}</Text>
+            </Pressable>
+            <Pressable accessibilityLabel="Settings" onPress={() => setSettingsOpen((value) => !value)} hitSlop={14} style={styles.iconTap}>
+              <Text style={styles.headerIcon}>≡</Text>
+            </Pressable>
+          </View>
         </View>
 
         {languageOpen && (
@@ -670,12 +701,12 @@ export default function App() {
             ref={shareCardRef}
             collapsable={false}
             style={styles.shareCard}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-            onResponderGrant={startCardGesture}
-            onResponderMove={moveCardGesture}
-            onResponderRelease={finishCardGesture}
-            onResponderTerminate={finishCardGesture}
+            onStartShouldSetResponder={() => !editOpen}
+            onMoveShouldSetResponder={() => !editOpen}
+            onResponderGrant={editOpen ? undefined : startCardGesture}
+            onResponderMove={editOpen ? undefined : moveCardGesture}
+            onResponderRelease={editOpen ? undefined : finishCardGesture}
+            onResponderTerminate={editOpen ? undefined : finishCardGesture}
           >
             {backgroundImageUri ? (
               <ImageBackground
@@ -685,45 +716,44 @@ export default function App() {
                 imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
               >
                 <View style={styles.shareCardOverlay}>
-                  <Text style={styles.saying}>{copy.saying}</Text>
-                  {showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
-                  {showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
+                  {editOpen ? (
+                    <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
+                  ) : (
+                    <Text style={styles.saying}>{copy.saying}</Text>
+                  )}
+                  {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
+                  {!editOpen && showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
                 </View>
               </ImageBackground>
             ) : (
               <>
-                <Text style={styles.saying}>{copy.saying}</Text>
-                {showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
-                {showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
+                {editOpen ? (
+                  <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
+                ) : (
+                  <Text style={styles.saying}>{copy.saying}</Text>
+                )}
+                {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
+                {!editOpen && showCardDetails && copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
               </>
             )}
           </View>
 
           {editOpen && (
             <View style={styles.editPanel}>
-              <Text style={styles.editTitle}>{ownerMode ? 'Edit saying' : 'Suggest edit'}</Text>
-              <TextInput
-                value={editText}
-                onChangeText={setEditText}
-                multiline
-                autoFocus
-                style={styles.editInput}
-                placeholder="Write corrected saying…"
-                placeholderTextColor="#777777"
-              />
+              <Text style={styles.editTitle}>{ownerMode ? 'Edit saying' : `Suggest edit by email`}</Text>
               <View style={styles.editActions}>
                 <Pressable onPress={() => setEditOpen(false)} style={styles.editSecondaryButton}>
                   <Text style={styles.editSecondaryText}>Cancel</Text>
                 </Pressable>
                 <Pressable onPress={submitEdit} style={styles.editPrimaryButton}>
-                  <Text style={styles.editPrimaryText}>{ownerMode ? 'Save' : 'Send'}</Text>
+                  <Text style={styles.editPrimaryText}>{ownerMode ? 'Save' : 'Send email'}</Text>
                 </Pressable>
               </View>
             </View>
           )}
         </View>
 
-        {backgroundImageUri ? (
+        {editOpen ? null : backgroundImageUri ? (
           <View style={styles.imageEditorPanel}>
             <View style={styles.imageEditorHeader}>
               <View>
@@ -754,13 +784,13 @@ export default function App() {
               onPress={() => setInfoOpen((value) => !value)}
               style={styles.bottomIconButton}
             >
-              <Text style={styles.bottomIconText}>i</Text>
+              <ActionIcon type="info" />
             </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={() => setShareOpen((value) => !value)} style={styles.bottomIconButton}>
-              <Text style={styles.bottomIconText}>□↑</Text>
+              <ActionIcon type="share" />
             </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.bottomIconButton}>
-              <Text style={styles.bottomIconText}>✎</Text>
+              <ActionIcon type="edit" />
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -768,16 +798,15 @@ export default function App() {
               onPress={chooseBackgroundImage}
               style={styles.bottomIconButton}
             >
-              <Text style={styles.bottomIconText}>▧</Text>
+              <ActionIcon type="image" />
             </Pressable>
-            <View style={styles.actionSpacer} />
             <Pressable accessibilityLabel="Save proverb" onPress={toggleFavorite} style={styles.bottomIconButton}>
-              <Text style={[styles.bottomIconText, isFavorite && styles.favoriteIcon]}>{isFavorite ? '★' : '☆'}</Text>
+              <ActionIcon type="star" active={isFavorite} />
             </Pressable>
           </View>
         )}
 
-        {shareOpen && (
+        {shareOpen && !editOpen && (
           <View style={styles.shareMenu}>
             <Pressable onPress={shareProverb} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>System share</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
@@ -906,7 +935,13 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
+  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
+  logoGlobe: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  logoMeridian: { position: 'absolute', width: 9, height: 24, borderLeftWidth: 1.2, borderRightWidth: 1.2, borderColor: '#ffffff', borderRadius: 8 },
+  logoEquator: { position: 'absolute', left: 2, right: 2, height: 1.2, backgroundColor: '#ffffff' },
+  brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
+  topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
   topLanguageRow: { flexDirection: 'row', gap: 8, alignItems: 'center', borderWidth: 1, borderColor: '#242424', borderRadius: 16, paddingHorizontal: 12, minHeight: 34 },
   topLanguageDivider: { color: '#555555', fontSize: 13, fontWeight: '900' },
@@ -919,8 +954,8 @@ const styles = StyleSheet.create({
   dropdownLanguageLabel: { width: 30, color: '#777777', fontSize: 13, fontWeight: '900' },
   dropdownLanguageName: { flex: 1, color: '#a6a6a6', fontSize: 13, fontWeight: '700' },
   activeText: { color: '#ffffff' },
-  iconTap: { width: 58, height: 42, alignItems: 'flex-start', justifyContent: 'center' },
-  headerIcon: { color: '#ffffff', fontSize: 38, lineHeight: 40, fontWeight: '300' },
+  iconTap: { width: 34, height: 42, alignItems: 'flex-end', justifyContent: 'center' },
+  headerIcon: { color: '#ffffff', fontSize: 34, lineHeight: 38, fontWeight: '300' },
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 390, borderRadius: 28, overflow: 'hidden' },
@@ -942,19 +977,22 @@ const styles = StyleSheet.create({
   readMoreText: { color: '#ffffff', fontSize: 16, lineHeight: 22, fontWeight: '900' },
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
-  editInput: { minHeight: 86, color: '#ffffff', borderWidth: 1, borderColor: '#333333', borderRadius: 12, padding: 12, fontSize: 18, lineHeight: 24, textAlignVertical: 'top' },
+  editSayingInput: { width: '100%', minHeight: 170, paddingHorizontal: 8, paddingVertical: 10, textAlignVertical: 'center', borderBottomWidth: 1.5, borderBottomColor: '#ffffff' },
   editActions: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 12 },
   editSecondaryButton: { height: 36, minWidth: 88, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   editSecondaryText: { color: '#d9d9d9', fontSize: 14, fontWeight: '900' },
   editPrimaryButton: { height: 36, minWidth: 88, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   editPrimaryText: { color: '#000000', fontSize: 14, fontWeight: '900' },
-  actionBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
-  bottomIconButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
-  bottomIconText: { color: '#ffffff', fontSize: 21, lineHeight: 25, fontWeight: '900' },
+  actionBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, width: '100%' },
+  bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  bottomIconText: { color: '#ffffff', fontSize: 21, lineHeight: 25, fontWeight: '400' },
+  shareIconShape: { width: 22, height: 25, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3 },
+  shareIconArrow: { position: 'absolute', top: -2, color: '#ffffff', fontSize: 24, lineHeight: 25, fontWeight: '300' },
+  shareIconLine: { width: 18, height: 1.5, backgroundColor: '#ffffff', borderRadius: 1 },
+  imageIconShape: { width: 21, height: 18, borderWidth: 1.5, borderColor: '#ffffff', borderRadius: 2 },
   shareMenu: { position: 'absolute', left: 22, right: 22, bottom: 92, zIndex: 25, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8, gap: 4 },
   shareMenuItem: { minHeight: 42, borderRadius: 12, justifyContent: 'center', paddingHorizontal: 12 },
   shareMenuText: { color: '#ffffff', fontSize: 15, fontWeight: '800' },
-  actionSpacer: { flex: 1 },
   imageEditorPanel: { marginBottom: 8, borderWidth: 1, borderColor: '#242424', borderRadius: 22, padding: 10, backgroundColor: '#050505', gap: 10 },
   imageEditorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },
