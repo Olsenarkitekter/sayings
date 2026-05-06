@@ -338,7 +338,6 @@ export default function App() {
   const originDetails = [
     primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null,
     showEnglishPair ? `English equivalent: ${englishCopy.saying}` : null,
-    showEnglishPair && englishCopy.explanation ? englishCopy.explanation : null,
     showEnglishPair && englishCopy.origin && englishCopy.origin !== primaryOrigin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
   ].filter(Boolean).join('\n\n');
   const hasLongOriginDetails = originDetails.length > 90;
@@ -961,7 +960,7 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   logoGlobe: { width: 28, height: 28, borderRadius: 14, overflow: 'hidden', backgroundColor: '#ffffff' },
-  logoShadow: { position: 'absolute', left: -12, bottom: -8, width: 31, height: 31, borderRadius: 16, backgroundColor: '#000000' },
+  logoShadow: { position: 'absolute', left: -5, bottom: -12, width: 31, height: 31, borderRadius: 16, backgroundColor: '#000000' },
   logoOutline: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 1.6, borderColor: '#ffffff' },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -972,7 +971,7 @@ const styles = StyleSheet.create({
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
   cardShell: { position: 'relative', justifyContent: 'center' },
-  sideArrowButton: { position: 'absolute', bottom: -54, zIndex: 8, width: 34, height: 52, alignItems: 'center', justifyContent: 'center' },
+  sideArrowButton: { position: 'absolute', bottom: -38, zIndex: 8, width: 34, height: 52, alignItems: 'center', justifyContent: 'center' },
   leftArrowButton: { left: -10 },
   rightArrowButton: { right: -10 },
   sideArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '200', opacity: 0.72 },
