@@ -315,6 +315,7 @@ export default function App() {
   const [backgroundImageFit, setBackgroundImageFit] = useState('cover');
   const [backgroundImagePosition, setBackgroundImagePosition] = useState({ x: 0, y: 0 });
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [showCardDetails, setShowCardDetails] = useState(true);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
@@ -487,6 +488,7 @@ export default function App() {
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
+    setImageEditorOpen(true);
     setShowCardDetails(true);
     await AsyncStorage.multiSet([
       [STORAGE.backgroundImage, nextUri],
@@ -501,7 +503,7 @@ export default function App() {
     const point = eventPoint(evt.nativeEvent);
     cardGestureRef.current = { startPoint: point, lastPoint: point, didSwipe: false };
 
-    if (backgroundImageUri) {
+    if (backgroundImageUri && imageEditorOpen) {
       backgroundGestureRef.current = {
         startPoint: point,
         startPosition: backgroundImagePosition,
@@ -542,7 +544,7 @@ export default function App() {
     const gesture = backgroundGestureRef.current;
     backgroundGestureRef.current = null;
 
-    if (gesture && backgroundImageUri) {
+    if (gesture && backgroundImageUri && imageEditorOpen) {
       await AsyncStorage.multiSet([
         [STORAGE.backgroundImagePosition, JSON.stringify(gesture.lastPosition)],
         [STORAGE.backgroundImageScale, String(gesture.lastScale)]
@@ -566,8 +568,13 @@ export default function App() {
     await AsyncStorage.setItem(STORAGE.backgroundImageFit, nextFit);
   }
 
+  function acceptImageEdit() {
+    setImageEditorOpen(false);
+  }
+
   async function clearBackgroundImage() {
     setBackgroundImageUri(null);
+    setImageEditorOpen(false);
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
@@ -753,14 +760,14 @@ export default function App() {
           )}
         </View>
 
-        {editOpen ? null : backgroundImageUri ? (
+        {editOpen ? null : backgroundImageUri && imageEditorOpen ? (
           <View style={styles.imageEditorPanel}>
             <View style={styles.imageEditorHeader}>
               <View>
                 <Text style={styles.imageEditorTitle}>Image editor</Text>
                 <Text style={styles.imageEditorHint}>Drag the image. Pinch/scroll to zoom.</Text>
               </View>
-              <Pressable accessibilityRole="button" accessibilityLabel="Exit image editor" onPress={clearBackgroundImage} style={styles.imageEditCloseButton}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Accept image changes" onPress={acceptImageEdit} style={styles.imageEditCloseButton}>
                 <Text style={styles.imageEditCloseText}>×</Text>
               </Pressable>
             </View>
@@ -773,6 +780,9 @@ export default function App() {
               </Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel="Toggle extra text" onPress={() => setShowCardDetails((value) => !value)} style={styles.imageEditButton}>
                 <Text style={styles.imageEditButtonText}>{showCardDetails ? 'Hide text' : 'Show text'}</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.imageEditButton}>
+                <Text style={styles.imageEditButtonText}>Remove image</Text>
               </Pressable>
             </View>
           </View>
@@ -795,8 +805,8 @@ export default function App() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Choose background image"
-              onPress={chooseBackgroundImage}
-              style={styles.bottomIconButton}
+              onPress={() => backgroundImageUri ? setImageEditorOpen(true) : chooseBackgroundImage()}
+              style={[styles.bottomIconButton, backgroundImageUri && styles.activeIconButton]}
             >
               <ActionIcon type="image" />
             </Pressable>
