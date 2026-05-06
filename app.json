@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Sayings",
+    "name": "World Sayings",
     "slug": "sayings",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -37,7 +37,7 @@
       "expo-font",
       "expo-image-picker"
     ],
-    "description": "Daily proverbs, sayings and old phrases in English, Danish and Faroese.",
+    "description": "Culturally adapted proverbs and sayings across languages, with English equivalents and origin notes.",
     "scheme": "sayings"
   }
 }

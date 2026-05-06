@@ -5,7 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { captureRef } from 'react-native-view-shot';
-import { proverbs, languages, categories } from './proverbs';
+import { proverbs, languages, categories, getLanguageLabel, getLanguageName, getProverbVariant } from './proverbs';
 
 const STORAGE = {
   language: 'daily-sayings:language',
@@ -27,16 +27,21 @@ const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
 const SHARE_LABELS = {
   en: 'Share',
-  dk: 'Del',
+  de: 'Teilen',
+  es: 'Compartir',
+  no: 'Del',
+  la: 'Share',
+  zh: '分享',
+  ja: '共有',
+  it: 'Condividi',
+  hi: 'साझा करें',
+  el: 'Κοινοποίηση',
+  fr: 'Partager',
+  ar: 'مشاركة',
   fo: 'Deil'
 };
 
-
-const ORIGIN_LABELS = {
-  en: 'Origin',
-  dk: 'Oprindelse',
-  fo: 'Uppruni'
-};
+const ORIGIN_LABEL = 'Origin';
 
 function wrapCanvasText(context, text, maxWidth) {
   const lines = [];
@@ -251,7 +256,7 @@ async function scheduleDailyProverbs(language, time = '10:00') {
 
   for (let day = 0; day < 30; day += 1) {
     const proverbIndex = todayIndex(day);
-    const item = proverbs[proverbIndex][language];
+    const item = getProverbVariant(proverbs[proverbIndex], language);
     await Notifications.scheduleNotificationAsync({
       content: {
         title: item.saying,
@@ -295,8 +300,18 @@ export default function App() {
   );
   const current = filteredProverbs[index % filteredProverbs.length] || proverbs[0];
   const currentEdit = edits[current.id]?.[language];
-  const copy = currentEdit ? { ...current[language], saying: currentEdit } : current[language];
-  const infoText = copy.origin ? `${copy.explanation}\n\n${ORIGIN_LABELS[language]}: ${copy.origin}` : copy.explanation;
+  const selectedVariant = getProverbVariant(current, language);
+  const copy = currentEdit ? { ...selectedVariant, saying: currentEdit } : selectedVariant;
+  const englishCopy = getProverbVariant(current, 'en');
+  const showEnglishPair = language !== 'en' && englishCopy?.saying && englishCopy.saying !== copy.saying;
+  const selectedLanguageName = getLanguageName(language);
+  const infoText = [
+    copy.explanation,
+    copy.origin ? `${ORIGIN_LABEL}: ${copy.origin}` : null,
+    showEnglishPair ? `\nEnglish equivalent: ${englishCopy.saying}` : null,
+    showEnglishPair && englishCopy.explanation ? englishCopy.explanation : null,
+    showEnglishPair && englishCopy.origin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
+  ].filter(Boolean).join('\n\n');
   const shareLabel = SHARE_LABELS[language] || SHARE_LABELS.en;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
@@ -514,7 +529,7 @@ export default function App() {
   }
 
   async function shareProverb() {
-    const url = 'https://olsenarkitekter.github.io/proverbs-poison/';
+    const url = 'https://olsenarkitekter.github.io/sayings/';
     const shareText = `${infoText}\n\n${url}`;
 
     try {
@@ -599,11 +614,9 @@ export default function App() {
           </Pressable>
 
           <View style={styles.topLanguageRow}>
-            {languages.map((item) => (
-              <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={styles.topLanguageButton}>
-                <Text style={[styles.topLanguageText, language === item.key && styles.activeText]}>{item.label}</Text>
-              </Pressable>
-            ))}
+            <Text style={styles.topLanguageText}>EN</Text>
+            {language !== 'en' && <Text style={styles.topLanguageDivider}>+</Text>}
+            {language !== 'en' && <Text style={[styles.topLanguageText, styles.activeText]}>{getLanguageLabel(language)}</Text>}
           </View>
         </View>
 
@@ -627,11 +640,19 @@ export default function App() {
                 imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
               >
                 <View style={styles.shareCardOverlay}>
+                  <Text style={styles.languageEyebrow}>{getLanguageLabel(language)} · {selectedLanguageName}</Text>
                   <Text style={styles.saying}>{copy.saying}</Text>
+                  {showEnglishPair && <Text style={styles.englishSaying}>EN · {englishCopy.saying}</Text>}
+                  {copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
                 </View>
               </ImageBackground>
             ) : (
-              <Text style={styles.saying}>{copy.saying}</Text>
+              <>
+                <Text style={styles.languageEyebrow}>{getLanguageLabel(language)} · {selectedLanguageName}</Text>
+                <Text style={styles.saying}>{copy.saying}</Text>
+                {showEnglishPair && <Text style={styles.englishSaying}>EN · {englishCopy.saying}</Text>}
+                {copy.origin && <Text style={styles.originLine}>{copy.origin}</Text>}
+              </>
             )}
           </View>
           <View style={styles.quickActions}>
@@ -722,6 +743,19 @@ export default function App() {
                 </Pressable>
               </View>
 
+              <View style={styles.languageBlock}>
+                <Text style={styles.settingTitle}>Language</Text>
+                <Text style={styles.muted}>Shown together with English in the top right.</Text>
+                <View style={styles.languageGrid}>
+                  {languages.map((item) => (
+                    <Pressable key={item.key} onPress={() => changeLanguage(item.key)} style={[styles.languageOption, language === item.key && styles.activeLanguageOption]}>
+                      <Text style={[styles.languageOptionLabel, language === item.key && styles.activeText]}>{item.label}</Text>
+                      <Text style={styles.languageOptionName}>{item.name}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
               <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
                 <Text style={styles.savedToggleIcon}>☆</Text>
                 <Text style={styles.savedToggleText}>Saved proverbs ({savedProverbs.length})</Text>
@@ -752,8 +786,8 @@ export default function App() {
                         }}
                         style={styles.savedItem}
                       >
-                        <Text style={styles.savedSaying}>{edits[item.id]?.[language] || item[language].saying}</Text>
-                        <Text style={styles.savedExplanation}>{item[language].explanation}</Text>
+                        <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
+                        <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
                       </Pressable>
                     ))
                   )}
@@ -812,8 +846,8 @@ const styles = StyleSheet.create({
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
-  topLanguageRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
-  topLanguageButton: { paddingVertical: 8, paddingLeft: 4 },
+  topLanguageRow: { flexDirection: 'row', gap: 8, alignItems: 'center', borderWidth: 1, borderColor: '#242424', borderRadius: 16, paddingHorizontal: 12, minHeight: 34 },
+  topLanguageDivider: { color: '#555555', fontSize: 13, fontWeight: '900' },
   topLanguageText: { color: '#777777', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
   activeText: { color: '#ffffff' },
   iconTap: { width: 58, height: 42, alignItems: 'flex-start', justifyContent: 'center' },
@@ -824,7 +858,10 @@ const styles = StyleSheet.create({
   shareCardBackground: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center' },
   shareCardImage: { borderRadius: 28 },
   shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
-  saying: { fontSize: 46, lineHeight: 52, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
+  languageEyebrow: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '900', letterSpacing: 1.2, textAlign: 'center', marginBottom: 14, textTransform: 'uppercase' },
+  saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
+  englishSaying: { marginTop: 24, color: '#d9d9d9', fontSize: 21, lineHeight: 28, fontWeight: '800', textAlign: 'center' },
+  originLine: { marginTop: 18, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700' },
   quickActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 22, gap: 12 },
   infoButton: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   infoIcon: { color: '#d9d9d9', fontSize: 16, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
@@ -860,6 +897,12 @@ const styles = StyleSheet.create({
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   settingTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  languageBlock: { marginBottom: 24 },
+  languageGrid: { marginTop: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  languageOption: { width: '31%', minHeight: 64, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 10, paddingVertical: 10, justifyContent: 'center' },
+  activeLanguageOption: { borderColor: '#ffffff', backgroundColor: '#101010' },
+  languageOptionLabel: { color: '#777777', fontSize: 14, lineHeight: 18, fontWeight: '900' },
+  languageOptionName: { color: '#8f8f8f', fontSize: 11, lineHeight: 15, marginTop: 3 },
   categoryBlock: { marginBottom: 24 },
   categorySelect: { marginTop: 10, minHeight: 48, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   categorySelectText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
