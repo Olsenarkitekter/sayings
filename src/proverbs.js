@@ -6090,9 +6090,7 @@ function makeOriginText(variant = {}) {
 }
 
 function makeFallbackOriginText(variant = {}, fallbackExplanation = '') {
-  const saying = variant.saying ? `“${variant.saying}”` : 'This saying';
-  const meaning = fallbackExplanation ? ` It survives because it gives a compact way to express this idea: ${fallbackExplanation}` : '';
-  return `The exact source of ${saying} is uncertain. It is best treated as a traditional saying or idiom shaped by everyday speech rather than a single documented author or date.${meaning}`;
+  return fallbackExplanation ? `Origin unknown. ${fallbackExplanation}` : 'Origin unknown.';
 }
 
 function migrateVariant(variant, fallbackExplanation = '') {
