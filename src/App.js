@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, ImageBackground, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, ImageBackground, Keyboard, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
@@ -772,6 +772,11 @@ export default function App() {
     if (notificationsEnabled) scheduleDailyProverbs(language, time).catch(() => {});
   }
 
+  function closeEditMode() {
+    Keyboard.dismiss();
+    setEditOpen(false);
+  }
+
   if (!ready) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -891,10 +896,13 @@ export default function App() {
             <View style={styles.editPanel}>
               <Text style={styles.editTitle}>{ownerMode ? 'Edit saying' : `Suggest edit by email`}</Text>
               <View style={styles.editActions}>
-                <Pressable onPress={() => setEditOpen(false)} style={styles.editSecondaryButton}>
+                <Pressable onPress={closeEditMode} style={styles.editSecondaryButton}>
                   <Text style={styles.editSecondaryText}>Cancel</Text>
                 </Pressable>
-                <Pressable onPress={submitEdit} style={styles.editPrimaryButton}>
+                <Pressable onPress={Keyboard.dismiss} style={styles.editSecondaryButton}>
+                  <Text style={styles.editSecondaryText}>Hide keyboard</Text>
+                </Pressable>
+                <Pressable onPress={() => { Keyboard.dismiss(); submitEdit(); }} style={styles.editPrimaryButton}>
                   <Text style={styles.editPrimaryText}>{ownerMode ? 'Save' : 'Send email'}</Text>
                 </Pressable>
               </View>
@@ -1003,7 +1011,7 @@ export default function App() {
                 <Text style={styles.settingTitle}>Language</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.categorySelect}>
                   <Text style={styles.categorySelectText}>{selectedLanguageLabel}</Text>
-                  <Text style={styles.categorySelectArrow}>{languageOpen ? '−' : '+'}</Text>
+                  <View style={styles.toggleIconBox}><Text style={styles.categorySelectArrow}>{languageOpen ? '−' : '+'}</Text></View>
                 </Pressable>
 
                 {languageOpen && (
@@ -1020,7 +1028,7 @@ export default function App() {
               <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
                 <Text style={styles.savedToggleIcon}>☆</Text>
                 <Text style={styles.savedToggleText}>Saved proverbs ({savedProverbs.length})</Text>
-                <Text style={styles.savedToggleArrow}>{savedOpen ? '−' : '+'}</Text>
+                <View style={styles.toggleIconBox}><Text style={styles.savedToggleArrow}>{savedOpen ? '−' : '+'}</Text></View>
               </Pressable>
 
               {savedOpen && (
@@ -1059,7 +1067,7 @@ export default function App() {
                 <Text style={styles.settingTitle}>Category</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Choose category" onPress={() => setCategoryOpen((value) => !value)} style={styles.categorySelect}>
                   <Text style={styles.categorySelectText}>{selectedCategoryLabel}</Text>
-                  <Text style={styles.categorySelectArrow}>{categoryOpen ? '−' : '+'}</Text>
+                  <View style={styles.toggleIconBox}><Text style={styles.categorySelectArrow}>{categoryOpen ? '−' : '+'}</Text></View>
                 </Pressable>
 
                 {categoryOpen && (
@@ -1108,7 +1116,7 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   logoGlobe: { width: 28, height: 28, borderRadius: 14, overflow: 'hidden', backgroundColor: '#ffffff' },
-  logoShadow: { position: 'absolute', left: -5, bottom: -12, width: 31, height: 31, borderRadius: 16, backgroundColor: '#000000' },
+  logoShadow: { position: 'absolute', left: -14, top: -2, width: 31, height: 31, borderRadius: 16, backgroundColor: '#000000' },
   logoOutline: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 1.6, borderColor: '#ffffff' },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -1151,7 +1159,7 @@ const styles = StyleSheet.create({
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
   editSayingInput: { width: '100%', minHeight: 170, paddingHorizontal: 8, paddingVertical: 10, textAlignVertical: 'center', borderBottomWidth: 1.5, borderBottomColor: '#ffffff' },
-  editActions: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 12 },
+  editActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginTop: 12 },
   editSecondaryButton: { height: 36, minWidth: 88, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   editSecondaryText: { color: '#d9d9d9', fontSize: 14, fontWeight: '900' },
   editPrimaryButton: { height: 36, minWidth: 88, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
@@ -1160,7 +1168,7 @@ const styles = StyleSheet.create({
   bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   bottomIconText: { color: '#ffffff', fontSize: 23, lineHeight: 27, fontWeight: '300' },
   searchIconText: { color: '#ffffff', fontSize: 31, lineHeight: 35, fontWeight: '300' },
-  penIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-38deg' }] },
+  penIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '45deg' }] },
   penIconLine: { width: 3, height: 21, borderRadius: 2, backgroundColor: '#ffffff' },
   shareIconShape: { width: 22, height: 25, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3 },
   shareIconArrow: { position: 'absolute', top: -2, color: '#ffffff', fontSize: 24, lineHeight: 25, fontWeight: '300' },
@@ -1191,7 +1199,8 @@ const styles = StyleSheet.create({
   categoryBlock: { marginBottom: 24 },
   categorySelect: { marginTop: 10, minHeight: 48, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   categorySelectText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  categorySelectArrow: { width: 28, color: '#ffffff', fontSize: 26, lineHeight: 28, fontWeight: '300', textAlign: 'center' },
+  toggleIconBox: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+  categorySelectArrow: { color: '#ffffff', fontSize: 26, lineHeight: 30, fontWeight: '300', textAlign: 'center' },
   categoryOptions: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingVertical: 6 },
   categoryOption: { minHeight: 42, justifyContent: 'center', paddingHorizontal: 16 },
   categoryOptionText: { color: '#777777', fontSize: 16, fontWeight: '800' },
@@ -1202,7 +1211,7 @@ const styles = StyleSheet.create({
   savedToggle: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#1d1d1d' },
   savedToggleIcon: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
   savedToggleText: { flex: 1, color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  savedToggleArrow: { width: 28, color: '#ffffff', fontSize: 26, lineHeight: 28, fontWeight: '300', textAlign: 'center' },
+  savedToggleArrow: { color: '#ffffff', fontSize: 26, lineHeight: 30, fontWeight: '300', textAlign: 'center' },
   savedList: { marginBottom: 24, gap: 14 },
   savedItem: { paddingVertical: 8 },
   savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
