@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
   logoGlobe: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  logoMeridian: { position: 'absolute', width: 11, height: 29, borderLeftWidth: 1.4, borderColor: '#ffffff', borderRadius: 10, transform: [{ rotate: '-45deg' }] },
+  logoMeridian: { position: 'absolute', width: 15, height: 29, borderLeftWidth: 1.4, borderColor: '#ffffff', borderRadius: 15, transform: [{ rotate: '-45deg' }, { translateX: 2 }] },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
