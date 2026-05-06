@@ -27,7 +27,6 @@ const STORAGE = {
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
-const ORIGIN_LABEL = 'Origin';
 const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
 
 function BrandLogo() {
@@ -52,7 +51,7 @@ function ActionIcon({ type, active }) {
     );
   }
   if (type === 'image') return <View style={styles.imageIconShape} />;
-  if (type === 'search') return <Text style={styles.bottomIconText}>⌕</Text>;
+  if (type === 'search') return <Text style={styles.searchIconText}>⌕</Text>;
   if (type === 'star') return <Text style={[styles.bottomIconText, active && styles.favoriteIcon]}>{active ? '★' : '☆'}</Text>;
   if (type === 'edit') return <View style={styles.penIcon}><View style={styles.penIconLine} /></View>;
   return <Text style={styles.bottomIconText}>i</Text>;
@@ -323,6 +322,7 @@ export default function App() {
   const [backgroundRounded, setBackgroundRounded] = useState(true);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [hideDetailsForImage, setHideDetailsForImage] = useState(false);
+  const [detailLineCount, setDetailLineCount] = useState(0);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
   const backgroundGestureRef = useRef(null);
@@ -339,12 +339,23 @@ export default function App() {
   const englishCopy = getProverbVariant(current, 'en');
   const meaningText = englishCopy.explanation || copy.explanation;
   const primaryOrigin = englishCopy.origin || copy.origin;
-  const englishSayingText = language !== 'en' && englishCopy.saying ? `English version: ${englishCopy.saying}` : null;
-  const detailText = [meaningText, primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null, englishSayingText].filter(Boolean).join(' ');
-  const hasLongDetails = detailText.length > 130;
+  const englishSayingText = englishCopy.saying ? `English: ${englishCopy.saying}` : null;
+  const meaningLine = meaningText ? `Meaning: ${meaningText}` : null;
+  const detailText = [primaryOrigin, meaningLine, englishSayingText].filter(Boolean).join('\n\n');
+  const hasLongDetails = detailText.length > 92;
+  const shouldShowReadMore = hasLongDetails || detailLineCount > 2;
   const infoText = detailText;
   const showCardDetails = !(backgroundImageUri && hideDetailsForImage);
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  useEffect(() => {
+    setDetailLineCount(0);
+  }, [current.id, language, detailText]);
+
+  function handleDetailTextLayout(event) {
+    const nextLineCount = event?.nativeEvent?.lines?.length || 0;
+    if (nextLineCount && nextLineCount !== detailLineCount) setDetailLineCount(nextLineCount);
+  }
+
   const searchResults = normalizedSearchQuery
     ? proverbs
         .map((item) => ({ item, variant: getProverbVariant(item, language) }))
@@ -845,8 +856,8 @@ export default function App() {
                     ) : (
                       <Text style={styles.saying}>{copy.saying}</Text>
                     )}
-                    {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2}>{detailText}</Text>}
-                    {!editOpen && showCardDetails && hasLongDetails && (
+                    {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2} onTextLayout={handleDetailTextLayout}>{detailText}</Text>}
+                    {!editOpen && showCardDetails && shouldShowReadMore && (
                       <Pressable onPress={() => setInfoOpen(true)} style={styles.cardReadMoreButton}>
                         <Text style={styles.readMoreText}>Read more</Text>
                       </Pressable>
@@ -860,8 +871,8 @@ export default function App() {
                   ) : (
                     <Text style={styles.saying}>{copy.saying}</Text>
                   )}
-                  {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2}>{detailText}</Text>}
-                  {!editOpen && showCardDetails && hasLongDetails && (
+                  {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2} onTextLayout={handleDetailTextLayout}>{detailText}</Text>}
+                  {!editOpen && showCardDetails && shouldShowReadMore && (
                     <Pressable onPress={() => setInfoOpen(true)} style={styles.cardReadMoreButton}>
                       <Text style={styles.readMoreText}>Read more</Text>
                     </Pressable>
@@ -1148,6 +1159,7 @@ const styles = StyleSheet.create({
   actionBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, width: '100%' },
   bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   bottomIconText: { color: '#ffffff', fontSize: 23, lineHeight: 27, fontWeight: '300' },
+  searchIconText: { color: '#ffffff', fontSize: 31, lineHeight: 35, fontWeight: '300' },
   penIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '-38deg' }] },
   penIconLine: { width: 3, height: 21, borderRadius: 2, backgroundColor: '#ffffff' },
   shareIconShape: { width: 22, height: 25, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3 },
