@@ -9,7 +9,7 @@ const rawProverbs = [
   { id: 'practice-perfect', en: { saying: 'Practice makes perfect', explanation: 'You improve by practicing.' }, dk: { saying: 'Øvelse gør mester', explanation: 'Man bliver bedre ved at øve sig.' }, fo: { saying: 'Venjing ger meistara', explanation: 'Tú verður betri við at venja.' } },
   { id: 'rome-not-built-day', en: { saying: 'Rome was not built in a day', explanation: 'Big things take time.' }, dk: { saying: 'Rom blev ikke bygget på én dag', explanation: 'Store ting tager tid.' }, fo: { saying: 'Róm varð ikki bygdur eftir einum degi', explanation: 'Stór ting taka tíð.' } },
   { id: 'no-smoke-without-fire', en: { saying: 'Where there’s smoke, there’s fire', explanation: 'Rumors often have a reason behind them.' }, dk: { saying: 'Ingen røg uden ild', explanation: 'Rygter har ofte en årsag bag sig.' }, fo: { saying: 'Eingin roykur uttan eld', explanation: 'Søgur hava ofta eina orsøk aftanfyri seg.' } },
-  { id: 'old-habits-die-hard', en: { saying: 'You can’t teach an old dog new tricks', explanation: 'It is difficult to make someone change long-established habits or ways of thinking.' }, dk: { saying: 'Gamle vaner er svære at bryde', explanation: 'Det er svært at ændre vaner.' }, fo: { saying: 'Gamlar vanar eru torførar at bróta', explanation: 'Tað er torført at broyta vanar.' } },
+  { id: 'old-habits-die-hard', en: { saying: 'You can’t teach an old dog new tricks', explanation: 'It is difficult to make someone change long-established habits or ways of thinking.' }, dk: { saying: 'Man kan ikke lære en gammel hund nye tricks', explanation: 'Det er svært at ændre gamle vaner eller tankemønstre.' }, fo: { saying: 'Tú kanst ikki læra ein gamlan hund nýggj kynstur', explanation: 'Tað er torført at broyta gamlar vanar ella hugsanarhættir.' } },
   { id: 'strike-iron-hot', en: { saying: 'Strike while the iron is hot', explanation: 'Act while the opportunity is good.' }, dk: { saying: 'Smed mens jernet er varmt', explanation: 'Handl mens muligheden er god.' }, fo: { saying: 'Smíð meðan jarnið er heitt', explanation: 'Ger nakað meðan møguleikin er góður.' } },
   { id: 'too-many-cooks', en: { saying: 'Too many cooks spoil the broth', explanation: 'Too many people controlling something can make it worse.' }, dk: { saying: 'For mange kokke fordærver maden', explanation: 'For mange der bestemmer, kan gøre resultatet dårligere.' }, fo: { saying: 'Ov nógvir kokkar spilla matin', explanation: 'Ov nógv fólk við stýring kunnu gera úrslitið verri.' } },
   { id: 'look-before-leap', en: { saying: 'Look before you leap', explanation: 'Think before you act.' }, dk: { saying: 'Se dig for, før du springer', explanation: 'Tænk dig om, før du handler.' }, fo: { saying: 'Hygg áðrenn tú leypir', explanation: 'Hugsa teg um, áðrenn tú gert nakað.' } },
@@ -61,7 +61,7 @@ const rawProverbs = [
   { id: 'turn-blind-eye', en: { saying: 'Turn a blind eye', explanation: 'To deliberately ignore something you know is happening.', origin: 'Often linked to Admiral Horatio Nelson, who supposedly ignored a signal by putting the telescope to his blind eye.' }, dk: { saying: 'Vende det blinde øje til', explanation: 'Bevidst at ignorere noget, man godt ved sker.', origin: 'Forbindes ofte med admiral Horatio Nelson, der efter sigende ignorerede et signal ved at sætte kikkerten for sit blinde øje.' }, fo: { saying: 'Venda blinda eygað til', explanation: 'Tilvitað at lata sum einki, hóast tú veitst, hvat hendir.', origin: 'Verður ofta knýtt at admiral Horatio Nelson, sum sigst hava latið sum um hann ikki sá eitt merki, tí hann setti kikaran fyri blinda eygað.' } },
   { id: 'beat-around-bush', en: { saying: 'Beat around the bush', explanation: 'To avoid saying the main point directly.', origin: 'From hunting, where people beat bushes to drive birds out before the real action began.' }, dk: { saying: 'Gå som katten om den varme grød', explanation: 'At undgå at sige det vigtigste direkte.', origin: 'Udtrykket forbindes med jagt, hvor man slog i buske for at få fugle frem, før selve jagten kunne begynde.' }, fo: { saying: 'Ganga uttan um kjarnuna', explanation: 'At sleppa undan at siga høvuðspunktið beinleiðis.', origin: 'Orðingin verður knýtt at veiðu, har runnar vórðu slignir fyri at fáa fuglar fram, áðrenn sjálv veiðan byrjaði.' } },
   { id: 'read-riot-act', en: { saying: 'Read the riot act', explanation: 'To strongly warn or scold someone.', origin: 'From the British Riot Act of 1714, which was read aloud to unlawful crowds before punishment could follow.' }, dk: { saying: 'Læse nogen teksten', explanation: 'At give nogen en kraftig advarsel eller skideballe.', origin: 'Fra den britiske Riot Act fra 1714, som blev læst højt for ulovlige forsamlinger, før myndighederne kunne gribe ind.' }, fo: { saying: 'Lesa onkrum lógina', explanation: 'At geva onkrum eina harða ávaring ella skolu.', origin: 'Frá bretsku Riot Act frá 1714, sum varð lisin upp fyri ólógligum mannamúgvum, áðrenn revsing kundi fylgja.' } },
-  { id: 'horses-mouth', en: { saying: 'Straight from the horse’s mouth', explanation: 'Information from the most direct or reliable source.', origin: 'From horse racing, where people checked a horse’s condition closely — even its mouth — before betting.' }, dk: { saying: 'Direkte fra kilden', explanation: 'Information fra den mest direkte eller troværdige kilde.', origin: 'Kommer fra hestevæddeløb, hvor folk ville have information tæt på hesten selv, før de satsede penge.' }, fo: { saying: 'Beint frá kelduni', explanation: 'Upplýsingar frá beinleiðis ella álítandi keldu.', origin: 'Kemur úr rossakappingum, har fólk vildu hava upplýsingar so nær rossinum sum gjørligt, áðrenn tey settu pengar upp á tað.' } },
+  { id: 'horses-mouth', en: { saying: 'Straight from the horse’s mouth', explanation: 'Information from the most direct or reliable source.', origin: 'From horse racing, where people checked a horse’s condition closely — even its mouth — before betting.' }, dk: { saying: 'Fra hestens mund', explanation: 'Information fra den mest direkte eller troværdige kilde.', origin: 'Kommer fra hestevæddeløb, hvor folk ville have information tæt på hesten selv — helt ind i munden — før de satsede penge.' }, fo: { saying: 'Beint úr rossamunninum', explanation: 'Upplýsingar frá beinleiðis ella álítandi keldu.', origin: 'Kemur úr rossakappingum, har fólk vildu hava upplýsingar so nær rossinum sum gjørligt — heilt úr munninum — áðrenn tey settu pengar upp á tað.' } },
   { id: 'put-on-spot', en: { saying: 'Be put on the spot', explanation: 'To be forced to answer or act in an awkward situation.', origin: 'The origin is debated, but the phrase became tied to being marked out for pressure, danger, or public attention.' }, dk: { saying: 'Blive sat på stedet', explanation: 'At blive tvunget til at svare eller handle i en presset situation.', origin: 'Oprindelsen er omdiskuteret, men udtrykket handler om at blive udpeget og sat under pres.' }, fo: { saying: 'Verða settur á staðið', explanation: 'At verða noyddur at svara ella gera okkurt í einari kroystari støðu.', origin: 'Upprunin er umrøddur, men orðingin merkir at verða peikaður út og settur undir trýst.' } },
   { id: 'wet-blanket', en: { saying: 'A wet blanket', explanation: 'Someone who spoils other people’s fun or enthusiasm.', origin: 'A wet blanket can put out a fire. The fire became a metaphor for joy, and the wet blanket became the person who kills it.' }, dk: { saying: 'En lyseslukker', explanation: 'En person der ødelægger andres glæde eller entusiasme.', origin: 'Et vådt tæppe kan slukke ild. Ilden blev et billede på glæde, og det våde tæppe blev personen, der slukker den.' }, fo: { saying: 'Ein gleðissløkkjari', explanation: 'Ein persónur sum oyðileggur gleðina ella hugan hjá øðrum.', origin: 'Eitt vátt teppi kann sløkkja eld. Eldurin gjørdist mynd fyri gleði, og tað váta teppið fyri tann, sum sløkkir hana.' } },
   { id: 'mad-as-hatter', en: { saying: 'Mad as a hatter', explanation: 'Completely eccentric, strange, or mentally unbalanced.', origin: 'Hat makers once used mercury in felt production, and mercury poisoning could cause tremors, anxiety, and strange behaviour.' }, dk: { saying: 'Skør som en hattemager', explanation: 'Meget excentrisk, mærkelig eller ude af balance.', origin: 'Hattemagere brugte engang kviksølv i filtproduktion, og kviksølvforgiftning kunne give rystelser, uro og mærkelig adfærd.' }, fo: { saying: 'Ørur sum ein hattamakari', explanation: 'Sera løgin, ørkymlaður ella ójavnur.', origin: 'Hattamakarar brúktu einaferð kyksilvur í filtframleiðslu, og kyksilvureitran kundi geva ristningar, ótta og løgna atferð.' } },
@@ -888,77 +888,17 @@ const languageEquivalentsById = {
     }
   },
   "old-habits-die-hard": {
-    "de": {
-      "saying": "Alte Gewohnheiten legt man schwer ab",
-      "country": "Germany",
-      "approxPeriod": "modern common usage",
-      "confidence": "high"
-    },
-    "es": {
-      "saying": "Las viejas costumbres nunca mueren",
-      "country": "Spain / Latin America",
-      "approxPeriod": "modern common usage",
-      "confidence": "high"
-    },
-    "no": {
-      "saying": "Gammel vane er vond å vende",
-      "country": "Norway",
-      "approxPeriod": "traditional",
-      "confidence": "high"
-    },
-    "la": {
-      "saying": "Difficile est consuetudinem mutare",
-      "literal": "It is difficult to change habit",
-      "country": "Latin tradition",
-      "approxPeriod": "classical/medieval idea",
-      "confidence": "medium"
-    },
-    "zh": {
-      "saying": "积习难改",
-      "literal": "Long-standing habits are hard to change",
-      "country": "China",
-      "approxPeriod": "traditional",
-      "confidence": "high"
-    },
-    "ja": {
-      "saying": "三つ子の魂百まで",
-      "literal": "The soul of a three-year-old lasts to one hundred",
-      "country": "Japan",
-      "approxPeriod": "traditional",
-      "confidence": "medium"
-    },
-    "it": {
-      "saying": "Le vecchie abitudini sono dure a morire",
-      "country": "Italy",
-      "approxPeriod": "modern common usage",
-      "confidence": "high"
-    },
-    "hi": {
-      "saying": "पुरानी आदतें मुश्किल से जाती हैं",
-      "country": "India",
-      "approxPeriod": "modern common usage",
-      "confidence": "medium"
-    },
-    "el": {
-      "saying": "Οι παλιές συνήθειες δύσκολα κόβονται",
-      "country": "Greece",
-      "approxPeriod": "modern common usage",
-      "confidence": "high"
-    },
-    "fr": {
-      "saying": "Chassez le naturel, il revient au galop",
-      "literal": "Drive nature away, it returns at a gallop",
-      "country": "France",
-      "approxPeriod": "traditional",
-      "confidence": "high"
-    },
-    "ar": {
-      "saying": "من شبّ على شيء شاب عليه",
-      "literal": "Who grows up with something grows old with it",
-      "country": "Arab world",
-      "approxPeriod": "traditional",
-      "confidence": "high"
-    }
+    "de": { "saying": "Einem alten Hund bringt man keine neuen Tricks bei", "literal": "You cannot teach an old dog new tricks", "country": "Germany", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "es": { "saying": "No se le enseñan trucos nuevos a un perro viejo", "literal": "You do not teach new tricks to an old dog", "country": "Spain / Latin America", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Man kan ikke lære en gammel hund nye triks", "literal": "You cannot teach an old dog new tricks", "country": "Norway", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Canem senem novos dolos docere non potes", "literal": "You cannot teach an old dog new tricks", "country": "Modern Latin", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "zh": { "saying": "老狗学不会新把戏", "literal": "An old dog cannot learn new tricks", "country": "China", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "ja": { "saying": "老犬に新しい芸は教えられない", "literal": "You cannot teach an old dog new tricks", "country": "Japan", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "it": { "saying": "Non si insegnano nuovi trucchi a un cane vecchio", "literal": "You do not teach new tricks to an old dog", "country": "Italy", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "hi": { "saying": "बूढ़े कुत्ते को नई तरकीबें नहीं सिखाई जा सकतीं", "literal": "An old dog cannot be taught new tricks", "country": "India", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "el": { "saying": "Δεν μαθαίνεις καινούργια κόλπα σε γέρικο σκυλί", "literal": "You do not teach new tricks to an old dog", "country": "Greece", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "fr": { "saying": "On n’apprend pas de nouveaux tours à un vieux chien", "literal": "You do not teach new tricks to an old dog", "country": "France", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "ar": { "saying": "لا تعلّم كلبًا عجوزًا حيلًا جديدة", "literal": "Do not teach an old dog new tricks", "country": "Arab world", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
   },
   "too-many-cooks": {
     "de": {
@@ -4817,81 +4757,81 @@ const languageEquivalentsById = {
   },
   "horses-mouth": {
     "de": {
-      "saying": "Aus erster Hand",
-      "literal": "From first hand",
+      "saying": "Direkt aus dem Maul des Pferdes",
+      "literal": "Straight from the horse’s mouth",
       "country": "Germany",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
-    },
-    "es": {
-      "saying": "De primera mano",
-      "literal": "From first hand",
-      "country": "Spain / Latin America",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
-    },
-    "no": {
-      "saying": "Fra første hånd",
-      "literal": "From first hand",
-      "country": "Norway",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
-    },
-    "la": {
-      "saying": "Ex fonte ipso",
-      "literal": "From the source itself",
-      "country": "Ancient Rome / modern Latin",
-      "approxPeriod": "classical-style equivalent",
+      "approxPeriod": "direct image-preserving calque",
       "confidence": "medium"
     },
+    "es": {
+      "saying": "Directamente de la boca del caballo",
+      "literal": "Straight from the horse’s mouth",
+      "country": "Spain / Latin America",
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
+    },
+    "no": {
+      "saying": "Rett fra hestens munn",
+      "literal": "Straight from the horse’s mouth",
+      "country": "Norway",
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
+    },
+    "la": {
+      "saying": "Ex ore equi ipso",
+      "literal": "From the horse’s own mouth",
+      "country": "Modern Latin",
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "low"
+    },
     "zh": {
-      "saying": "第一手消息",
-      "literal": "First-hand information",
+      "saying": "直接从马嘴里来",
+      "literal": "Come directly from the horse’s mouth",
       "country": "China",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
     },
     "ja": {
-      "saying": "本人から直接聞く",
-      "literal": "Hear it directly from the person concerned",
+      "saying": "馬の口から直接",
+      "literal": "Directly from the horse’s mouth",
       "country": "Japan",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
     },
     "it": {
-      "saying": "Di prima mano",
-      "literal": "From first hand",
+      "saying": "Direttamente dalla bocca del cavallo",
+      "literal": "Straight from the horse’s mouth",
       "country": "Italy",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
     },
     "hi": {
-      "saying": "सीधे स्रोत से",
-      "literal": "Directly from the source",
+      "saying": "सीधे घोड़े के मुँह से",
+      "literal": "Straight from the horse’s mouth",
       "country": "India",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
     },
     "el": {
-      "saying": "Από πρώτο χέρι",
-      "literal": "From first hand",
+      "saying": "Κατευθείαν από το στόμα του αλόγου",
+      "literal": "Straight from the horse’s mouth",
       "country": "Greece",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
     },
     "fr": {
-      "saying": "De première main",
-      "literal": "From first hand",
+      "saying": "Directement de la bouche du cheval",
+      "literal": "Straight from the horse’s mouth",
       "country": "France",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
     },
     "ar": {
-      "saying": "من المصدر مباشرة",
-      "literal": "Directly from the source",
+      "saying": "مباشرة من فم الحصان",
+      "literal": "Straight from the horse’s mouth",
       "country": "Arab world",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
+      "approxPeriod": "direct image-preserving calque",
+      "confidence": "medium"
     }
   },
   "put-on-spot": {
@@ -6106,6 +6046,45 @@ function migrateVariant(variant, fallbackExplanation = '') {
   };
 }
 
+
+const imagePreservingOverridesById = {
+  "pick-your-brain": {
+    "fo": { "saying": "Kann eg plukka eitt sindur í heilanum hjá tær?", "literal": "May I pick a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "es": { "saying": "¿Puedo hurgar un poco en tu cerebro?", "literal": "May I poke a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Cerebrum tuum paululum carpere possum?", "literal": "May I pick your brain a little?", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "zh": { "saying": "我可以摘一点你的脑子吗？", "literal": "May I pick a little of your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "ja": { "saying": "少し君の脳をつついてもいい？", "literal": "May I poke your brain a little?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "it": { "saying": "Posso pescare un po’ nel tuo cervello?", "literal": "May I fish a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "hi": { "saying": "क्या मैं तुम्हारा दिमाग़ थोड़ा टटोल सकता हूँ?", "literal": "May I feel around your brain a little?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "el": { "saying": "Μπορώ να σκαλίσω λίγο το μυαλό σου;", "literal": "May I dig a little in your mind?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "fr": { "saying": "Je peux picorer un peu dans ton cerveau ?", "literal": "May I peck a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "ar": { "saying": "هل يمكنني أن ألتقط قليلاً من دماغك؟", "literal": "May I pick a little from your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "under-the-weather": {
+    "fo": { "saying": "Undir veðrinum", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "es": { "saying": "Bajo el tiempo", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "no": { "saying": "Under været", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Sub tempestate", "literal": "Under the weather/storm", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "zh": { "saying": "在天气下面", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "ja": { "saying": "天気の下にいる", "literal": "Be under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Sotto il tempo", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "hi": { "saying": "मौसम के नीचे", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "el": { "saying": "Κάτω από τον καιρό", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "ar": { "saying": "تحت الطقس", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" }
+  },
+  "silver-lining": {
+    "de": { "saying": "Jede Wolke hat einen Silberrand", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "es": { "saying": "Cada nube tiene un borde de plata", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Hver sky har en sølvkant", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Omnis nubes marginem argenteum habet", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Ogni nuvola ha un bordo d’argento", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "hi": { "saying": "हर बादल की चाँदी की किनारी होती है", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "el": { "saying": "Κάθε σύννεφο έχει ασημένια άκρη", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "fr": { "saying": "Chaque nuage a une bordure d’argent", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "ar": { "saying": "لكل سحابة حافة فضية", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  }
+};
+
 export const categories = [
   { key: 'all', label: 'All' },
   { key: 'life', label: 'Life' },
@@ -6140,11 +6119,11 @@ export const proverbs = rawProverbs.map((proverb) => {
     en: proverb.en?.explanation || '',
     fo: proverb.fo?.explanation || proverb.en?.explanation || ''
   };
-  const cultural = languageEquivalentsById[proverb.id] || {};
+  const cultural = { ...(languageEquivalentsById[proverb.id] || {}), ...(imagePreservingOverridesById[proverb.id] || {}) };
   const variants = Object.fromEntries(
     languageKeys
       .map((language) => {
-        const source = language === 'en' ? proverb.en : language === 'fo' ? proverb.fo : cultural[language];
+        const source = language === 'en' ? proverb.en : cultural[language] || (language === 'fo' ? proverb.fo : undefined);
         const variant = migrateVariant(source, meaning.en);
         return variant ? [language, variant] : null;
       })
