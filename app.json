@@ -29,7 +29,7 @@
       "edgeToEdgeEnabled": true,
       "versionCode": 1,
       "permissions": [
-        "POST_NOTIFICATIONS"
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "plugins": [
@@ -37,7 +37,13 @@
       "expo-font",
       "expo-image-picker"
     ],
-    "description": "Culturally adapted proverbs and sayings across languages, with English equivalents and origin notes.",
-    "scheme": "sayings"
+    "description": "Culturally adapted proverbs and sayings across languages, with meanings and origin notes.",
+    "scheme": "sayings",
+    "extra": {
+      "eas": {
+        "projectId": "a5ebfb04-bd46-4462-b420-700419b199c2"
+      }
+    },
+    "owner": "havardur"
   }
 }
