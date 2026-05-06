@@ -41,17 +41,17 @@ const rawProverbs = [
   { id: 'better-safe-than-sorry', en: { saying: 'Better safe than sorry', explanation: 'It is better to be careful than regret it later.' }, dk: { saying: 'Hellere være på den sikre side', explanation: 'Det er bedre at være forsigtig end at fortryde senere.' }, fo: { saying: 'Betri tryggur enn harmur', explanation: 'Tað er betri at vera varin enn at angra seinni.' } },
   { id: 'birds-feather', en: { saying: 'Birds of a feather flock together', explanation: 'Similar people often spend time together.' }, dk: { saying: 'Lige børn leger bedst', explanation: 'Folk der ligner hinanden, finder ofte sammen.' }, fo: { saying: 'Lík børn spæla best', explanation: 'Fólk sum líkjast, finna ofta saman.' } },
   { id: 'better-one-bird', en: { saying: 'A bird in the hand is worth two in the bush', explanation: 'A sure thing is better than a risky possibility.' }, dk: { saying: 'Hellere én fugl i hånden end ti på taget', explanation: 'Noget sikkert er bedre end en usikker mulighed.' }, fo: { saying: 'Betri ein fuglur í hond enn tíggju á takinum', explanation: 'Okkurt trygt er betri enn ein óvissur møguleiki.' } },
-  { id: 'pick-your-brain', en: { saying: 'Pick someone’s brain', explanation: 'To ask someone for advice, ideas, or knowledge.', origin: 'The phrase imagines gently taking useful thoughts from someone’s mind. It became common in everyday English in the 1900s.' }, dk: { saying: 'Må jeg lige høre din mening?', explanation: 'En venlig måde at spørge nogen om råd, idéer eller viden.', origin: 'Det engelske udtryk betyder bogstaveligt at “plukke” i nogens hjerne, men bruges uformelt og ikke voldsomt.' }, fo: { saying: 'Kann eg hoyra tína meining?', explanation: 'Ein vinarligur máti at spyrja onkran um ráð, hugskot ella vitan.', origin: 'Enska orðingin merkir bókstaviliga at “plukka” í heilanum hjá onkrum, men verður brúkt óformliga.' } },
-  { id: 'bone-to-pick', en: { saying: 'Have a bone to pick', explanation: 'To have a complaint or disagreement you want to discuss.', origin: 'It likely comes from two dogs fighting over the same bone, so today it means there is an issue to settle.' }, dk: { saying: 'Jeg har noget at tale med dig om', explanation: 'Du har en klage eller uenighed, som du vil tage op.', origin: 'Udtrykket forbindes ofte med to hunde, der slås om det samme ben — altså noget der skal afklares.' }, fo: { saying: 'Eg havi nakað at tosa við teg um', explanation: 'Tú hevur eina klagu ella ósemju, sum tú vilt taka upp.', origin: 'Orðingin verður ofta knýtt at tveimum hundum, sum stríðast um sama bein — nakað má fáast upp á pláss.' } },
+  { id: 'pick-your-brain', en: { saying: 'Pick someone’s brain', explanation: 'To ask someone for advice, ideas, or knowledge.', origin: 'The phrase imagines gently taking useful thoughts from someone’s mind. It became common in everyday English in the 1900s.' }, dk: { saying: 'Må jeg plukke lidt i din hjerne?', explanation: 'En venlig måde at spørge nogen om råd, idéer eller viden.', origin: 'Det engelske udtryk betyder bogstaveligt at “plukke” i nogens hjerne, men bruges uformelt og ikke voldsomt.' }, fo: { saying: 'Kann eg plukka eitt sindur í heilanum hjá tær?', explanation: 'Ein vinarligur máti at spyrja onkran um ráð, hugskot ella vitan.', origin: 'Enska orðingin merkir bókstaviliga at “plukka” í heilanum hjá onkrum, men verður brúkt óformliga.' } },
+  { id: 'bone-to-pick', en: { saying: 'Have a bone to pick', explanation: 'To have a complaint or disagreement you want to discuss.', origin: 'It likely comes from two dogs fighting over the same bone, so today it means there is an issue to settle.' }, dk: { saying: 'Jeg har et ben at pille med dig', explanation: 'Du har en klage eller uenighed, som du vil tage op.', origin: 'Udtrykket forbindes ofte med to hunde, der slås om det samme ben — altså noget der skal afklares.' }, fo: { saying: 'Eg havi eitt bein at pilla við teg', explanation: 'Tú hevur eina klagu ella ósemju, sum tú vilt taka upp.', origin: 'Orðingin verður ofta knýtt at tveimum hundum, sum stríðast um sama bein — nakað má fáast upp á pláss.' } },
   { id: 'break-the-ice', en: { saying: 'Break the ice', explanation: 'To make a first meeting or awkward situation feel easier.', origin: 'Ships once had to break ice to open a route. The phrase later became social: opening the way for conversation.' }, dk: { saying: 'Bryde isen', explanation: 'At gøre et første møde eller en akavet situation lettere.', origin: 'Skibe måtte bryde is for at åbne en vej. Senere blev det brugt om at åbne en samtale.' }, fo: { saying: 'Bróta ísin', explanation: 'At gera ein fyrsta fund ella eina ótrygga støðu lættari.', origin: 'Skip máttu bróta ís fyri at sleppa fram. Seinni varð tað brúkt um at lata upp fyri samrøðu.' } },
-  { id: 'bite-the-bullet', en: { saying: 'Bite the bullet', explanation: 'To accept something painful or difficult and get through it.', origin: 'Before modern anaesthetic, soldiers were sometimes said to bite on a bullet during surgery. The history is debated, but the meaning survived.' }, dk: { saying: 'Bide tænderne sammen', explanation: 'At acceptere noget svært eller ubehageligt og komme igennem det.', origin: 'Udtrykket knyttes ofte til soldater, der bed i en kugle under operationer før moderne bedøvelse. Historien er omdiskuteret.' }, fo: { saying: 'Bíta tenninar saman', explanation: 'At taka okkurt trupult ella pínufult á seg og koma ígjøgnum tað.', origin: 'Orðingin verður ofta knýtt at hermonnum, sum bitu í eina kúlu undir skurðviðgerð áðrenn nútímans doyving. Søgan er tó umrødd.' } },
-  { id: 'under-the-weather', en: { saying: 'Under the weather', explanation: 'To feel ill, tired, or not quite yourself.', origin: 'Often linked to sailors who went below deck, under the bad weather, when they felt sick.' }, dk: { saying: 'Ikke helt på toppen', explanation: 'At føle sig syg, træt eller ikke helt som sig selv.', origin: 'Udtrykket forbindes ofte med søfolk, der gik under dæk — væk fra vejret — når de blev søsyge.' }, fo: { saying: 'Ikki heilt væl fyri', explanation: 'At kenna seg sjúkan, móðan ella ikki heilt sum vanligt.', origin: 'Orðingin verður ofta knýtt at sjófólki, sum fóru undir dekk — undir veðrinum — tá tey gjørdust sjóverk.' } },
+  { id: 'bite-the-bullet', en: { saying: 'Bite the bullet', explanation: 'To accept something painful or difficult and get through it.', origin: 'Before modern anaesthetic, soldiers were sometimes said to bite on a bullet during surgery. The history is debated, but the meaning survived.' }, dk: { saying: 'Bide i kuglen', explanation: 'At acceptere noget svært eller ubehageligt og komme igennem det.', origin: 'Udtrykket knyttes ofte til soldater, der bed i en kugle under operationer før moderne bedøvelse. Historien er omdiskuteret.' }, fo: { saying: 'Bíta í kúluna', explanation: 'At taka okkurt trupult ella pínufult á seg og koma ígjøgnum tað.', origin: 'Orðingin verður ofta knýtt at hermonnum, sum bitu í eina kúlu undir skurðviðgerð áðrenn nútímans doyving. Søgan er tó umrødd.' } },
+  { id: 'under-the-weather', en: { saying: 'Under the weather', explanation: 'To feel ill, tired, or not quite yourself.', origin: 'Often linked to sailors who went below deck, under the bad weather, when they felt sick.' }, dk: { saying: 'Under vejret', explanation: 'At føle sig syg, træt eller ikke helt som sig selv.', origin: 'Udtrykket forbindes ofte med søfolk, der gik under dæk — væk fra vejret — når de blev søsyge.' }, fo: { saying: 'Undir veðrinum', explanation: 'At kenna seg sjúkan, móðan ella ikki heilt sum vanligt.', origin: 'Orðingin verður ofta knýtt at sjófólki, sum fóru undir dekk — undir veðrinum — tá tey gjørdust sjóverk.' } },
   { id: 'blessing-in-disguise', en: { saying: 'A blessing in disguise', explanation: 'Something that first seems bad but later turns out to be good.', origin: 'The phrase has been used since at least the 1700s and carries a religious idea: good fortune hidden inside trouble.' }, dk: { saying: 'Et held i uheld', explanation: 'Noget der først virker dårligt, men senere viser sig at være godt.', origin: 'Udtrykket har været brugt siden mindst 1700-tallet og bygger på idéen om en skjult velsignelse.' }, fo: { saying: 'Eitt hepni í óhepni', explanation: 'Okkurt sum fyrst tykist ringt, men seinni vísir seg at vera gott.', origin: 'Orðingin hevur verið brúkt í fleiri øldir og ber hugmyndina um eina goymda signing.' } },
   { id: 'good-samaritan', en: { saying: 'A good Samaritan', explanation: 'Someone who helps a stranger or person in need.', origin: 'From Jesus’ parable in the Gospel of Luke, where a Samaritan helps a wounded traveller when others pass by.' }, dk: { saying: 'En barmhjertig samaritaner', explanation: 'En person der hjælper en fremmed eller én i nød.', origin: 'Fra Jesu lignelse i Lukasevangeliet, hvor en samaritaner hjælper en såret rejsende.' }, fo: { saying: 'Ein miskunnsamur samverji', explanation: 'Ein persónur sum hjálpir einum fremmandum ella einum í neyð.', origin: 'Úr líknilsi Jesusar í Lukasevangeliinum, har ein samverji hjálpir einum særdum ferðamanni.' } },
   { id: 'forbidden-fruit', en: { saying: 'Forbidden fruit', explanation: 'Something becomes more tempting because it is not allowed.', origin: 'From the story of Adam and Eve in Genesis. The fruit is not named as an apple in the Bible, though art often shows it that way.' }, dk: { saying: 'Forbuden frugt', explanation: 'Noget bliver mere fristende, fordi det ikke er tilladt.', origin: 'Fra fortællingen om Adam og Eva i Første Mosebog. Bibelen siger ikke, at frugten var et æble.' }, fo: { saying: 'Forboðin frukt', explanation: 'Okkurt verður meira freistandi, tí tað ikki er loyvt.', origin: 'Úr frásøgnini um Ádam og Evu í Fyrstu Mósebók. Bíblian sigur ikki, at fruktin var eitt súrepli.' } },
   { id: 'scapegoat', en: { saying: 'Scapegoat', explanation: 'A person or group blamed for something, often unfairly.', origin: 'From Leviticus, where a goat symbolically carried the community’s sins into the wilderness.' }, dk: { saying: 'Syndebuk', explanation: 'En person eller gruppe der får skylden, ofte uretfærdigt.', origin: 'Fra Tredje Mosebog, hvor en buk symbolsk bar folkets synder ud i ørkenen.' }, fo: { saying: 'Syndabukkur', explanation: 'Ein persónur ella bólkur, sum fær skyldina, ofta órættvíst.', origin: 'Úr Triðju Mósebók, har ein bukkur ímyndarliga bar syndir fólksins út í oyðimørkina.' } },
-  { id: 'skin-of-teeth', en: { saying: 'By the skin of your teeth', explanation: 'To only just succeed or escape.', origin: 'From the Book of Job. It survives today as a vivid way to say “barely”.' }, dk: { saying: 'Med nød og næppe', explanation: 'At klare noget eller slippe væk lige akkurat.', origin: 'Fra Jobs Bog i Bibelen. Udtrykket lever videre som en stærk måde at sige “kun lige”.' }, fo: { saying: 'Við neyð og deyð', explanation: 'At klára okkurt ella sleppa burtur akkurát.', origin: 'Úr Jobs bók í Bíbliuni. Orðingin livir víðari sum ein sterk mynd fyri “bara akkurát”.' } },
-  { id: 'no-brainer', en: { saying: 'A no-brainer', explanation: 'An easy decision that does not need much thought.', origin: 'Modern informal English from the late 1900s, built on the idea that the answer is so obvious it hardly needs a brain.' }, dk: { saying: 'En selvfølge', explanation: 'En nem beslutning, der næsten ikke kræver overvejelse.', origin: 'Moderne uformelt engelsk fra slutningen af 1900-tallet: svaret er så oplagt, at man næsten ikke behøver hjernen.' }, fo: { saying: 'Sjálvsagt', explanation: 'Ein løtt avgerð, sum næstan ikki krevur umhugsan.', origin: 'Nýggjari óformelt enskt mál: svarið er so eyðsýnt, at tú næstan ikki nýtir heilan.' } },
+  { id: 'skin-of-teeth', en: { saying: 'By the skin of your teeth', explanation: 'To only just succeed or escape.', origin: 'From the Book of Job. It survives today as a vivid way to say “barely”.' }, dk: { saying: 'Med huden på tænderne', explanation: 'At klare noget eller slippe væk lige akkurat.', origin: 'Fra Jobs Bog i Bibelen. Udtrykket lever videre som en stærk måde at sige “kun lige”.' }, fo: { saying: 'Við húðini á tonnunum', explanation: 'At klára okkurt ella sleppa burtur akkurát.', origin: 'Úr Jobs bók í Bíbliuni. Orðingin livir víðari sum ein sterk mynd fyri “bara akkurát”.' } },
+  { id: 'no-brainer', en: { saying: 'A no-brainer', explanation: 'An easy decision that does not need much thought.', origin: 'Modern informal English from the late 1900s, built on the idea that the answer is so obvious it hardly needs a brain.' }, dk: { saying: 'En no-brainer', explanation: 'En nem beslutning, der næsten ikke kræver overvejelse.', origin: 'Moderne uformelt engelsk fra slutningen af 1900-tallet: svaret er så oplagt, at man næsten ikke behøver hjernen.' }, fo: { saying: 'Ein no-brainer', explanation: 'Ein løtt avgerð, sum næstan ikki krevur umhugsan.', origin: 'Nýggjari óformelt enskt mál: svarið er so eyðsýnt, at tú næstan ikki nýtir heilan.' } },
   { id: 'hangry', en: { saying: 'Hangry', explanation: 'Irritable or angry because you are hungry.', origin: 'A modern blend of “hungry” and “angry”. It became widely used online and in casual speech.' }, dk: { saying: 'Sulten og sur', explanation: 'Irriteret eller vred, fordi man er sulten.', origin: 'Et moderne slangord sammensat af “hungry” og “angry”, især udbredt online og i hverdagssprog.' }, fo: { saying: 'Svangaður og illur', explanation: 'Irriteraður ella illur, tí tú ert svangur.', origin: 'Eitt nýggjari slangorð úr enskum, sett saman av “hungry” og “angry”.' } },
   { id: 'ghost-someone', en: { saying: 'To ghost someone', explanation: 'To suddenly stop replying to someone without explanation.', origin: 'Modern digital slang: the person disappears from contact like a ghost.' }, dk: { saying: 'At ghoste nogen', explanation: 'Pludselig at stoppe med at svare nogen uden forklaring.', origin: 'Moderne digital slang: personen forsvinder fra kontakten som et spøgelse.' }, fo: { saying: 'At ghosta onkran', explanation: 'Brádliga at gevast at svara onkrum uttan frágreiðing.', origin: 'Nýggjari talgilt slang: persónurin hvørvur sum eitt spøkilsi.' } },
   { id: 'throw-shade', en: { saying: 'Throw shade', explanation: 'To subtly criticize or show disrespect.', origin: 'Popularized through Black and LGBTQ+ ballroom culture, then spread widely through media and social platforms.' }, dk: { saying: 'Kaste skygge', explanation: 'At kritisere eller vise mangel på respekt på en indirekte måde.', origin: 'Udbredt gennem Black og LGBTQ+ ballroom-kultur og senere gennem medier og sociale platforme.' }, fo: { saying: 'Kasta skugga', explanation: 'At finnast at ella vísa vanvirðing á ein óbeinleiðis hátt.', origin: 'Vorðið kent gjøgnum Black og LGBTQ+ ballroom-mentan og seinni gjøgnum miðlar og sosialar pallir.' } },
@@ -59,22 +59,22 @@ const rawProverbs = [
   { id: 'let-cat-out-bag', en: { saying: 'Let the cat out of the bag', explanation: 'To reveal a secret, often accidentally.', origin: 'Often linked to old markets, where a dishonest seller might swap a pig in a bag for a cat. Opening the bag exposed the trick.' }, dk: { saying: 'Lukke katten ud af sækken', explanation: 'At afsløre en hemmelighed, ofte ved et uheld.', origin: 'Forbindes ofte med gamle markeder, hvor en uærlig sælger kunne bytte en gris i en sæk ud med en kat. Når sækken blev åbnet, blev bedraget afsløret.' }, fo: { saying: 'Lata ketuna úr sekkinum', explanation: 'At avdúka eitt loyndarmál, ofta av óvart.', origin: 'Verður ofta knýtt at gomlum marknaðum, har ein óerligur seljari kundi lata ein ketu í sekk í staðin fyri ein grís. Tá sekkurin varð latin upp, kom svikið undan kavi.' } },
   { id: 'bull-china-shop', en: { saying: 'A bull in a china shop', explanation: 'Someone clumsy or careless who causes damage or chaos.', origin: 'The image is simple: a large bull surrounded by fragile china. It has been used for centuries to describe destructive clumsiness.' }, dk: { saying: 'Som en elefant i en glasbutik', explanation: 'En klodset eller uforsigtig person, der skaber kaos.', origin: 'Billedet er enkelt: et stort dyr blandt skrøbelige ting. Derfor bruges det om en person, der ødelægger eller forstyrrer uden finesse.' }, fo: { saying: 'Sum ein tarvur í einum postulínshandli', explanation: 'Ein klombrutur ella óvarin persónur, sum ger skaða ella ruðuleika.', origin: 'Myndin er einføld: eitt stórt dýr millum viðbreknar lutir. Tí verður tað brúkt um klombruta atferð.' } },
   { id: 'turn-blind-eye', en: { saying: 'Turn a blind eye', explanation: 'To deliberately ignore something you know is happening.', origin: 'Often linked to Admiral Horatio Nelson, who supposedly ignored a signal by putting the telescope to his blind eye.' }, dk: { saying: 'Vende det blinde øje til', explanation: 'Bevidst at ignorere noget, man godt ved sker.', origin: 'Forbindes ofte med admiral Horatio Nelson, der efter sigende ignorerede et signal ved at sætte kikkerten for sit blinde øje.' }, fo: { saying: 'Venda blinda eygað til', explanation: 'Tilvitað at lata sum einki, hóast tú veitst, hvat hendir.', origin: 'Verður ofta knýtt at admiral Horatio Nelson, sum sigst hava latið sum um hann ikki sá eitt merki, tí hann setti kikaran fyri blinda eygað.' } },
-  { id: 'beat-around-bush', en: { saying: 'Beat around the bush', explanation: 'To avoid saying the main point directly.', origin: 'From hunting, where people beat bushes to drive birds out before the real action began.' }, dk: { saying: 'Gå som katten om den varme grød', explanation: 'At undgå at sige det vigtigste direkte.', origin: 'Udtrykket forbindes med jagt, hvor man slog i buske for at få fugle frem, før selve jagten kunne begynde.' }, fo: { saying: 'Ganga uttan um kjarnuna', explanation: 'At sleppa undan at siga høvuðspunktið beinleiðis.', origin: 'Orðingin verður knýtt at veiðu, har runnar vórðu slignir fyri at fáa fuglar fram, áðrenn sjálv veiðan byrjaði.' } },
+  { id: 'beat-around-bush', en: { saying: 'Beat around the bush', explanation: 'To avoid saying the main point directly.', origin: 'From hunting, where people beat bushes to drive birds out before the real action began.' }, dk: { saying: 'Gå som katten om den varme grød', explanation: 'At undgå at sige det vigtigste direkte.', origin: 'Udtrykket forbindes med jagt, hvor man slog i buske for at få fugle frem, før selve jagten kunne begynde.' }, fo: { saying: 'Sláa rundan um runnin', explanation: 'At sleppa undan at siga høvuðspunktið beinleiðis.', origin: 'Orðingin verður knýtt at veiðu, har runnar vórðu slignir fyri at fáa fuglar fram, áðrenn sjálv veiðan byrjaði.' } },
   { id: 'read-riot-act', en: { saying: 'Read the riot act', explanation: 'To strongly warn or scold someone.', origin: 'From the British Riot Act of 1714, which was read aloud to unlawful crowds before punishment could follow.' }, dk: { saying: 'Læse nogen teksten', explanation: 'At give nogen en kraftig advarsel eller skideballe.', origin: 'Fra den britiske Riot Act fra 1714, som blev læst højt for ulovlige forsamlinger, før myndighederne kunne gribe ind.' }, fo: { saying: 'Lesa onkrum lógina', explanation: 'At geva onkrum eina harða ávaring ella skolu.', origin: 'Frá bretsku Riot Act frá 1714, sum varð lisin upp fyri ólógligum mannamúgvum, áðrenn revsing kundi fylgja.' } },
   { id: 'horses-mouth', en: { saying: 'Straight from the horse’s mouth', explanation: 'Information from the most direct or reliable source.', origin: 'From horse racing, where people checked a horse’s condition closely — even its mouth — before betting.' }, dk: { saying: 'Fra hestens mund', explanation: 'Information fra den mest direkte eller troværdige kilde.', origin: 'Kommer fra hestevæddeløb, hvor folk ville have information tæt på hesten selv — helt ind i munden — før de satsede penge.' }, fo: { saying: 'Beint úr rossamunninum', explanation: 'Upplýsingar frá beinleiðis ella álítandi keldu.', origin: 'Kemur úr rossakappingum, har fólk vildu hava upplýsingar so nær rossinum sum gjørligt — heilt úr munninum — áðrenn tey settu pengar upp á tað.' } },
   { id: 'put-on-spot', en: { saying: 'Be put on the spot', explanation: 'To be forced to answer or act in an awkward situation.', origin: 'The origin is debated, but the phrase became tied to being marked out for pressure, danger, or public attention.' }, dk: { saying: 'Blive sat på stedet', explanation: 'At blive tvunget til at svare eller handle i en presset situation.', origin: 'Oprindelsen er omdiskuteret, men udtrykket handler om at blive udpeget og sat under pres.' }, fo: { saying: 'Verða settur á staðið', explanation: 'At verða noyddur at svara ella gera okkurt í einari kroystari støðu.', origin: 'Upprunin er umrøddur, men orðingin merkir at verða peikaður út og settur undir trýst.' } },
-  { id: 'wet-blanket', en: { saying: 'A wet blanket', explanation: 'Someone who spoils other people’s fun or enthusiasm.', origin: 'A wet blanket can put out a fire. The fire became a metaphor for joy, and the wet blanket became the person who kills it.' }, dk: { saying: 'En lyseslukker', explanation: 'En person der ødelægger andres glæde eller entusiasme.', origin: 'Et vådt tæppe kan slukke ild. Ilden blev et billede på glæde, og det våde tæppe blev personen, der slukker den.' }, fo: { saying: 'Ein gleðissløkkjari', explanation: 'Ein persónur sum oyðileggur gleðina ella hugan hjá øðrum.', origin: 'Eitt vátt teppi kann sløkkja eld. Eldurin gjørdist mynd fyri gleði, og tað váta teppið fyri tann, sum sløkkir hana.' } },
+  { id: 'wet-blanket', en: { saying: 'A wet blanket', explanation: 'Someone who spoils other people’s fun or enthusiasm.', origin: 'A wet blanket can put out a fire. The fire became a metaphor for joy, and the wet blanket became the person who kills it.' }, dk: { saying: 'Et vådt tæppe', explanation: 'En person der ødelægger andres glæde eller entusiasme.', origin: 'Et vådt tæppe kan slukke ild. Ilden blev et billede på glæde, og det våde tæppe blev personen, der slukker den.' }, fo: { saying: 'Eitt vátt teppi', explanation: 'Ein persónur sum oyðileggur gleðina ella hugan hjá øðrum.', origin: 'Eitt vátt teppi kann sløkkja eld. Eldurin gjørdist mynd fyri gleði, og tað váta teppið fyri tann, sum sløkkir hana.' } },
   { id: 'mad-as-hatter', en: { saying: 'Mad as a hatter', explanation: 'Completely eccentric, strange, or mentally unbalanced.', origin: 'Hat makers once used mercury in felt production, and mercury poisoning could cause tremors, anxiety, and strange behaviour.' }, dk: { saying: 'Skør som en hattemager', explanation: 'Meget excentrisk, mærkelig eller ude af balance.', origin: 'Hattemagere brugte engang kviksølv i filtproduktion, og kviksølvforgiftning kunne give rystelser, uro og mærkelig adfærd.' }, fo: { saying: 'Ørur sum ein hattamakari', explanation: 'Sera løgin, ørkymlaður ella ójavnur.', origin: 'Hattamakarar brúktu einaferð kyksilvur í filtframleiðslu, og kyksilvureitran kundi geva ristningar, ótta og løgna atferð.' } },
-  { id: 'push-envelope', en: { saying: 'Push the envelope', explanation: 'To test or go beyond normal limits.', origin: 'From aviation, where the “flight envelope” describes the limits within which an aircraft can safely perform.' }, dk: { saying: 'Presse grænserne', explanation: 'At teste eller gå ud over normale grænser.', origin: 'Fra luftfart, hvor “flight envelope” beskriver de grænser, et fly sikkert kan operere indenfor.' }, fo: { saying: 'Trýsta mørkini', explanation: 'At royna ella fara út um vanlig mørk.', origin: 'Úr flogvinnu, har “flight envelope” lýsir mørkini fyri, hvat eitt flogfar trygt kann gera.' } },
+  { id: 'push-envelope', en: { saying: 'Push the envelope', explanation: 'To test or go beyond normal limits.', origin: 'From aviation, where the “flight envelope” describes the limits within which an aircraft can safely perform.' }, dk: { saying: 'Skubbe konvolutten', explanation: 'At teste eller gå ud over normale grænser.', origin: 'Fra luftfart, hvor “flight envelope” beskriver de grænser, et fly sikkert kan operere indenfor.' }, fo: { saying: 'Skumpa brævbjálvan', explanation: 'At royna ella fara út um vanlig mørk.', origin: 'Úr flogvinnu, har “flight envelope” lýsir mørkini fyri, hvat eitt flogfar trygt kann gera.' } },
   { id: 'cat-got-tongue', en: { saying: 'Cat got your tongue?', explanation: 'Said when someone is unusually silent or cannot answer.', origin: 'The exact origin is uncertain. One common theory links “cat” to the cat-o’-nine-tails whip used at sea, leaving victims unable to speak.' }, dk: { saying: 'Har katten taget din tunge?', explanation: 'Siges når nogen er usædvanligt tavs eller ikke kan svare.', origin: 'Oprindelsen er usikker. En teori forbinder “cat” med pisken cat-o’-nine-tails, som kunne efterlade folk ude af stand til at tale.' }, fo: { saying: 'Hevur ketan tikið tunguna?', explanation: 'Verður sagt, tá onkur er óvanliga tigandi ella ikki fær svarað.', origin: 'Upprunin er óvissur. Ein teori knýtir “cat” at sjómanapískinum cat-o’-nine-tails, sum kundi gera fólk málleys av pínu.' } },
   { id: 'hair-of-dog', en: { saying: 'Hair of the dog', explanation: 'Drinking more alcohol to ease a hangover.', origin: 'From an old belief that a dog bite could be treated with hair from the same dog — a cure made from the cause.' }, dk: { saying: 'En reparationsbajer', explanation: 'At drikke mere alkohol for at dulme tømmermænd.', origin: 'Fra en gammel tro på, at et hundebid kunne behandles med hår fra den samme hund — en kur lavet af årsagen.' }, fo: { saying: 'Hár av hundinum', explanation: 'At drekka meira fyri at linna timburmenn.', origin: 'Frá gamlari trúgv um, at eitt hundabit kundi lekjast við hári frá sama hundi — ein lekidómur úr sjálvari orsøkini.' } },
   { id: 'bury-hatchet', en: { saying: 'Bury the hatchet', explanation: 'To end a conflict and make peace.', origin: 'Often linked to Indigenous North American peace customs, where weapons could be buried as a sign that fighting had ended.' }, dk: { saying: 'Begrave stridsøksen', explanation: 'At afslutte en konflikt og slutte fred.', origin: 'Forbindes ofte med nordamerikanske fredsskikke, hvor våben blev begravet som tegn på, at kampen var slut.' }, fo: { saying: 'Grava stríðsøksina niður', explanation: 'At enda eina ósemju og gera frið.', origin: 'Verður ofta knýtt at norðuramerikanskum friðarsiðum, har vápn vórðu grivin niður sum tekin um, at stríðið var liðugt.' } },
   { id: 'go-belly-up', en: { saying: 'Go belly up', explanation: 'For a business, project, or plan to collapse or go bankrupt.', origin: 'From dead animals or fish floating on their backs with their bellies upward.' }, dk: { saying: 'Med maven opad', explanation: 'At mislykkes, bryde sammen eller gå konkurs.', origin: 'Fra døde dyr eller fisk, der ligger eller flyder på ryggen med bugen opad.' }, fo: { saying: 'Við búkinum uppeftir', explanation: 'At miseydnast, detta saman ella fara á húsagang.', origin: 'Frá deyðum djórum ella fiskum, sum liggja ella flóta á rygginum við búkinum uppeftir.' } },
-  { id: 'silver-lining', en: { saying: 'Every cloud has a silver lining', explanation: 'Even a bad situation may contain something positive.', origin: 'The image comes from sunlight glowing around the edge of a dark cloud, famously used by the poet John Milton.' }, dk: { saying: 'Der er en lys side ved det hele', explanation: 'Selv en dårlig situation kan indeholde noget positivt.', origin: 'Billedet kommer fra sollys langs kanten af en mørk sky og blev berømt brugt af digteren John Milton.' }, fo: { saying: 'Hvørt skýggj hevur eina ljósa rond', explanation: 'Sjálvt ein ring støða kann hava okkurt gott í sær.', origin: 'Myndin kemur frá sólarljósi fram við rondini á einum myrkum skýggi og varð kent brúkt av yrkjaranum John Milton.' } },
-  { id: 'bigwig', en: { saying: 'A bigwig', explanation: 'An important or powerful person.', origin: 'In the 1700s, wealthy and powerful men often wore large wigs. The bigger the wig, the more important the man appeared.' }, dk: { saying: 'En vigtig kanon', explanation: 'En vigtig eller magtfuld person.', origin: 'I 1700-tallet bar rige og magtfulde mænd ofte store parykker. Jo større paryk, jo vigtigere virkede personen.' }, fo: { saying: 'Ein stórur maður', explanation: 'Ein týdningarmikil ella máttmikil persónur.', origin: 'Í 1700-talinum bóru ríkir og máttmiklir menn ofta stórar parykkar. Jú størri parykkur, jú týdningarmiklari tyktist maðurin.' } },
+  { id: 'silver-lining', en: { saying: 'Every cloud has a silver lining', explanation: 'Even a bad situation may contain something positive.', origin: 'The image comes from sunlight glowing around the edge of a dark cloud, famously used by the poet John Milton.' }, dk: { saying: 'Hver sky har en sølvkant', explanation: 'Selv en dårlig situation kan indeholde noget positivt.', origin: 'Billedet kommer fra sollys langs kanten af en mørk sky og blev berømt brugt af digteren John Milton.' }, fo: { saying: 'Hvørt skýggj hevur eina ljósa rond', explanation: 'Sjálvt ein ring støða kann hava okkurt gott í sær.', origin: 'Myndin kemur frá sólarljósi fram við rondini á einum myrkum skýggi og varð kent brúkt av yrkjaranum John Milton.' } },
+  { id: 'bigwig', en: { saying: 'A bigwig', explanation: 'An important or powerful person.', origin: 'In the 1700s, wealthy and powerful men often wore large wigs. The bigger the wig, the more important the man appeared.' }, dk: { saying: 'En stor paryk', explanation: 'En vigtig eller magtfuld person.', origin: 'I 1700-tallet bar rige og magtfulde mænd ofte store parykker. Jo større paryk, jo vigtigere virkede personen.' }, fo: { saying: 'Ein stórur parykkur', explanation: 'Ein týdningarmikil ella máttmikil persónur.', origin: 'Í 1700-talinum bóru ríkir og máttmiklir menn ofta stórar parykkar. Jú størri parykkur, jú týdningarmiklari tyktist maðurin.' } },
   { id: 'earworm', en: { saying: 'Earworm', explanation: 'A song or phrase that gets stuck in your head.', origin: 'The term comes through German and was later used for music that seems to crawl into your ear and stay there.' }, dk: { saying: 'Ørehænger', explanation: 'En sang eller sætning, der sætter sig fast i hovedet.', origin: 'Udtrykket kommer via tysk og blev senere brugt om musik, der føles som om den kravler ind i øret og bliver der.' }, fo: { saying: 'Oyraormur', explanation: 'Ein sangur ella setningur, sum setur seg fastan í høvdinum.', origin: 'Orðingin kemur umvegis týskt og varð seinni brúkt um tónleik, sum tykist krúpa inn í oyrað og verða verandi.' } },
   { id: 'cold-feet', en: { saying: 'Get cold feet', explanation: 'To lose courage or confidence before doing something.', origin: 'Often linked to soldiers who literally could not move forward because their feet were frozen or badly protected.' }, dk: { saying: 'Få kolde fødder', explanation: 'At miste modet lige før man skal gøre noget.', origin: 'Forbindes ofte med soldater, der bogstaveligt ikke kunne gå frem, fordi deres fødder var frosne eller dårligt beskyttet.' }, fo: { saying: 'Fáa kaldar føtur', explanation: 'At missa dirvið beint áðrenn tú skalt gera okkurt.', origin: 'Verður ofta knýtt at hermonnum, sum bókstaviliga ikki kundu ganga fram, tí føturnir vóru frystir ella illa vardir.' } },
-  { id: 'go-bananas', en: { saying: 'Go bananas', explanation: 'To become very excited, angry, or wild.', origin: 'A modern slang phrase from the 1900s, related to “go ape”, meaning to act wildly.' }, dk: { saying: 'Gå helt amok', explanation: 'At blive meget begejstret, vred eller vild.', origin: 'Et moderne slangudtryk fra 1900-tallet, beslægtet med “go ape”, altså at opføre sig vildt.' }, fo: { saying: 'Gerast heilt villur', explanation: 'At gerast sera spentur, illur ella villur.', origin: 'Eitt nýggjari slangorð úr 1900-talinum, í ætt við “go ape”, sum merkir at bera seg villt at.' } },
+  { id: 'go-bananas', en: { saying: 'Go bananas', explanation: 'To become very excited, angry, or wild.', origin: 'A modern slang phrase from the 1900s, related to “go ape”, meaning to act wildly.' }, dk: { saying: 'Gå bananas', explanation: 'At blive meget begejstret, vred eller vild.', origin: 'Et moderne slangudtryk fra 1900-tallet, beslægtet med “go ape”, altså at opføre sig vildt.' }, fo: { saying: 'Fara bananas', explanation: 'At gerast sera spentur, illur ella villur.', origin: 'Eitt nýggjari slangorð úr 1900-talinum, í ætt við “go ape”, sum merkir at bera seg villt at.' } },
   { id: 'armed-to-teeth', en: { saying: 'Armed to the teeth', explanation: 'Fully equipped, especially with weapons or tools.', origin: 'Often linked to pirates carrying as many weapons as possible, even knives held in their teeth.' }, dk: { saying: 'Bevæbnet til tænderne', explanation: 'Fuldt udstyret, især med våben eller redskaber.', origin: 'Forbindes ofte med pirater, der bar så mange våben som muligt, endda knive mellem tænderne.' }, fo: { saying: 'Vápnaður upp undir tenn', explanation: 'Fullkomiliga útgjørdur, serliga við vápnum ella amboðum.', origin: 'Verður ofta knýtt at sjórænarum, sum bóru so nógv vápn sum gjørligt, enntá knívar millum tenninar.' } },
   { id: 'bite-dust', en: { saying: 'Bite the dust', explanation: 'To fail badly, fall, or die.', origin: 'The wording was popularized by Westerns, but similar images of enemies licking or falling into dust are much older, including biblical language.' }, dk: { saying: 'Bide i støvet', explanation: 'At fejle stort, falde eller dø.', origin: 'Udtrykket blev gjort populært af westerns, men billedet af fjender der ender i støvet er langt ældre, også i bibelsk sprog.' }, fo: { saying: 'Bíta í dustið', explanation: 'At miseydnast illa, detta ella doyggja.', origin: 'Orðingin varð kend gjøgnum westernfilmar, men myndin av fíggindum, sum enda í dustinum, er nógv eldri og finst eisini í bíbilskum máli.' } }
 ];
@@ -5785,83 +5785,17 @@ const languageEquivalentsById = {
     }
   },
   "go-bananas": {
-    "de": {
-      "saying": "Ausflippen",
-      "literal": "Flip out",
-      "country": "Germany",
-      "approxPeriod": "modern slang",
-      "confidence": "high"
-    },
-    "es": {
-      "saying": "Volverse loco",
-      "literal": "Go crazy",
-      "country": "Spain / Latin America",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
-    },
-    "no": {
-      "saying": "Gå bananas",
-      "literal": "Go bananas",
-      "country": "Norway",
-      "approxPeriod": "modern slang / loan idiom",
-      "confidence": "high"
-    },
-    "la": {
-      "saying": "Insanire",
-      "literal": "Go mad",
-      "country": "Ancient Rome / modern Latin",
-      "approxPeriod": "classical vocabulary",
-      "confidence": "medium"
-    },
-    "zh": {
-      "saying": "抓狂",
-      "literal": "Grab madness",
-      "country": "China",
-      "approxPeriod": "modern slang",
-      "confidence": "high"
-    },
-    "ja": {
-      "saying": "キレる",
-      "literal": "Snap",
-      "country": "Japan",
-      "approxPeriod": "modern slang",
-      "confidence": "high"
-    },
-    "it": {
-      "saying": "Andare fuori di testa",
-      "literal": "Go out of one’s head",
-      "country": "Italy",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
-    },
-    "hi": {
-      "saying": "पागल हो जाना",
-      "literal": "Go mad",
-      "country": "India",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
-    },
-    "el": {
-      "saying": "Τα χάνω",
-      "literal": "Lose it",
-      "country": "Greece",
-      "approxPeriod": "modern common expression",
-      "confidence": "high"
-    },
-    "fr": {
-      "saying": "Péter les plombs",
-      "literal": "Blow the fuses",
-      "country": "France",
-      "approxPeriod": "modern slang",
-      "confidence": "high"
-    },
-    "ar": {
-      "saying": "جن جنونه",
-      "literal": "His madness went mad",
-      "country": "Arab world",
-      "approxPeriod": "modern idiom",
-      "confidence": "high"
-    }
+    "de": { "saying": "Bananen gehen", "literal": "Go bananas", "country": "Germany", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "es": { "saying": "Volverse bananas", "literal": "Become bananas", "country": "Spain / Latin America", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Gå bananas", "literal": "Go bananas", "country": "Norway", "approxPeriod": "modern slang / loan idiom", "confidence": "high" },
+    "la": { "saying": "In bananas ire", "literal": "Go into bananas", "country": "Modern Latin", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "zh": { "saying": "变成香蕉", "literal": "Become bananas", "country": "China", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "ja": { "saying": "バナナになる", "literal": "Become bananas", "country": "Japan", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Andare a banane", "literal": "Go bananas", "country": "Italy", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "hi": { "saying": "केले जैसा पागल हो जाना", "literal": "Go mad like bananas", "country": "India", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "el": { "saying": "Πηγαίνω μπανάνες", "literal": "Go bananas", "country": "Greece", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "fr": { "saying": "Devenir bananes", "literal": "Become bananas", "country": "France", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "ar": { "saying": "يذهب موزاً", "literal": "Go bananas", "country": "Arab world", "approxPeriod": "direct image-preserving calque", "confidence": "low" }
   },
   "armed-to-teeth": {
     "de": {
@@ -6048,29 +5982,84 @@ function migrateVariant(variant, fallbackExplanation = '') {
 
 
 const imagePreservingOverridesById = {
+  "go-bananas": {
+    "de": { "saying": "Bananen gehen", "literal": "Go bananas", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "es": { "saying": "Irse bananas", "literal": "Go bananas", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "no": { "saying": "Gå bananas", "literal": "Go bananas", "approxPeriod": "modern slang / loan idiom", "confidence": "high" },
+    "la": { "saying": "Ad bananas ire", "literal": "Go bananas", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Andare bananas", "literal": "Go bananas", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "fr": { "saying": "Partir en bananes", "literal": "Go into bananas", "approxPeriod": "direct image-preserving calque", "confidence": "low" }
+  },
   "pick-your-brain": {
-    "fo": { "saying": "Kann eg plukka eitt sindur í heilanum hjá tær?", "literal": "May I pick a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "de": { "saying": "Darf ich dein Gehirn pflücken?", "literal": "May I pick your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
     "es": { "saying": "¿Puedo hurgar un poco en tu cerebro?", "literal": "May I poke a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Kan jeg plukke litt i hjernen din?", "literal": "May I pick a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
     "la": { "saying": "Cerebrum tuum paululum carpere possum?", "literal": "May I pick your brain a little?", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
-    "zh": { "saying": "我可以摘一点你的脑子吗？", "literal": "May I pick a little of your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "ja": { "saying": "少し君の脳をつついてもいい？", "literal": "May I poke your brain a little?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
     "it": { "saying": "Posso pescare un po’ nel tuo cervello?", "literal": "May I fish a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "hi": { "saying": "क्या मैं तुम्हारा दिमाग़ थोड़ा टटोल सकता हूँ?", "literal": "May I feel around your brain a little?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "el": { "saying": "Μπορώ να σκαλίσω λίγο το μυαλό σου;", "literal": "May I dig a little in your mind?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
     "fr": { "saying": "Je peux picorer un peu dans ton cerveau ?", "literal": "May I peck a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "ar": { "saying": "هل يمكنني أن ألتقط قليلاً من دماغك؟", "literal": "May I pick a little from your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+    "fo": { "saying": "Kann eg plukka eitt sindur í heilanum hjá tær?", "literal": "May I pick a little in your brain?", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "bone-to-pick": {
+    "de": { "saying": "Ich habe einen Knochen mit dir zu pflücken", "literal": "I have a bone to pick with you", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "es": { "saying": "Tengo un hueso que roer contigo", "literal": "I have a bone to gnaw with you", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "no": { "saying": "Jeg har et bein å plukke med deg", "literal": "I have a bone to pick with you", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Os tecum carpere habeo", "literal": "I have a bone to pick with you", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Ho un osso da spolpare con te", "literal": "I have a bone to pick with you", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "fr": { "saying": "J’ai un os à ronger avec toi", "literal": "I have a bone to gnaw with you", "approxPeriod": "direct image-preserving calque", "confidence": "low" }
   },
   "under-the-weather": {
-    "fo": { "saying": "Undir veðrinum", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "de": { "saying": "Unter dem Wetter", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
     "es": { "saying": "Bajo el tiempo", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
     "no": { "saying": "Under været", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
     "la": { "saying": "Sub tempestate", "literal": "Under the weather/storm", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
-    "zh": { "saying": "在天气下面", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
-    "ja": { "saying": "天気の下にいる", "literal": "Be under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
     "it": { "saying": "Sotto il tempo", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
-    "hi": { "saying": "मौसम के नीचे", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
-    "el": { "saying": "Κάτω από τον καιρό", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
-    "ar": { "saying": "تحت الطقس", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" }
+    "fr": { "saying": "Sous le temps", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "fo": { "saying": "Undir veðrinum", "literal": "Under the weather", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "elephant-room": {
+    "la": { "saying": "Elephantus in cubiculo", "literal": "The elephant in the room", "approxPeriod": "direct image-preserving calque", "confidence": "low" }
+  },
+  "look-before-leap": {
+    "de": { "saying": "Schau, bevor du springst", "literal": "Look before you leap", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "es": { "saying": "Mira antes de saltar", "literal": "Look before you leap", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Se før du hopper", "literal": "Look before you leap", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Aspice antequam salias", "literal": "Look before you leap", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "fr": { "saying": "Regarde avant de sauter", "literal": "Look before you leap", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "many-hands-light-work": {
+    "fr": { "saying": "Beaucoup de mains rendent le travail léger", "literal": "Many hands make the work light", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "bite-the-bullet": {
+    "de": { "saying": "In die Kugel beißen", "literal": "Bite into the bullet", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "es": { "saying": "Morder la bala", "literal": "Bite the bullet", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Bite i kula", "literal": "Bite the bullet", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Glans mordere", "literal": "Bite the bullet", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Mordere il proiettile", "literal": "Bite the bullet", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "fr": { "saying": "Mordre la balle", "literal": "Bite the bullet", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "no-brainer": {
+    "de": { "saying": "Ohne Hirn", "literal": "Without brain", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "es": { "saying": "Sin cerebro", "literal": "Without brain", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Uten hjerne", "literal": "Without brain", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Sine cerebro", "literal": "Without brain", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Senza cervello", "literal": "Without brain", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "fr": { "saying": "Sans cerveau", "literal": "Without brain", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "push-envelope": {
+    "de": { "saying": "Den Umschlag schieben", "literal": "Push the envelope", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "es": { "saying": "Empujar el sobre", "literal": "Push the envelope", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Skyve konvolutten", "literal": "Push the envelope", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Involucrum pellere", "literal": "Push the envelope", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Spingere la busta", "literal": "Push the envelope", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "fr": { "saying": "Pousser l’enveloppe", "literal": "Push the envelope", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+  },
+  "wet-blanket": {
+    "de": { "saying": "Eine nasse Decke", "literal": "A wet blanket", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "es": { "saying": "Una manta mojada", "literal": "A wet blanket", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "no": { "saying": "Et vått teppe", "literal": "A wet blanket", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "la": { "saying": "Stragulum madidum", "literal": "A wet blanket", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
+    "it": { "saying": "Una coperta bagnata", "literal": "A wet blanket", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
+    "fr": { "saying": "Une couverture mouillée", "literal": "A wet blanket", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
   },
   "silver-lining": {
     "de": { "saying": "Jede Wolke hat einen Silberrand", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
@@ -6078,10 +6067,7 @@ const imagePreservingOverridesById = {
     "no": { "saying": "Hver sky har en sølvkant", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
     "la": { "saying": "Omnis nubes marginem argenteum habet", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "low" },
     "it": { "saying": "Ogni nuvola ha un bordo d’argento", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "hi": { "saying": "हर बादल की चाँदी की किनारी होती है", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "el": { "saying": "Κάθε σύννεφο έχει ασημένια άκρη", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "fr": { "saying": "Chaque nuage a une bordure d’argent", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" },
-    "ar": { "saying": "لكل سحابة حافة فضية", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
+    "fr": { "saying": "Chaque nuage a une bordure d’argent", "literal": "Every cloud has a silver edge", "approxPeriod": "direct image-preserving calque", "confidence": "medium" }
   }
 };
 
@@ -6101,13 +6087,8 @@ export const languages = [
   { key: 'es', label: 'ES', name: 'Español' },
   { key: 'no', label: 'NO', name: 'Norsk' },
   { key: 'la', label: 'LA', name: 'Latin' },
-  { key: 'zh', label: 'ZH', name: '中文' },
-  { key: 'ja', label: 'JA', name: '日本語' },
   { key: 'it', label: 'IT', name: 'Italiano' },
-  { key: 'hi', label: 'HI', name: 'Hindi' },
-  { key: 'el', label: 'EL', name: 'Ελληνικά' },
   { key: 'fr', label: 'FR', name: 'Français' },
-  { key: 'ar', label: 'AR', name: 'العربية' },
   { key: 'fo', label: 'FO', name: 'Føroyskt' }
 ];
 
