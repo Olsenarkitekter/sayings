@@ -6086,10 +6086,7 @@ const languageEquivalentsById = {
 };
 
 function makeOriginText(variant = {}) {
-  const parts = [variant.country, variant.approxPeriod].filter(Boolean);
-  if (!parts.length) return variant.origin || '';
-  const confidence = variant.confidence ? `confidence: ${variant.confidence}` : null;
-  return [parts.join(' · '), confidence, variant.note].filter(Boolean).join(' · ');
+  return variant.origin || variant.approxPeriod || variant.note || '';
 }
 
 function migrateVariant(variant, fallbackExplanation = '') {

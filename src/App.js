@@ -279,6 +279,7 @@ export default function App() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [readMoreOpen, setReadMoreOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [edits, setEdits] = useState({});
@@ -304,13 +305,14 @@ export default function App() {
   const englishCopy = getProverbVariant(current, 'en');
   const showEnglishPair = language !== 'en' && englishCopy?.saying && englishCopy.saying !== copy.saying;
   const infoIntro = copy.explanation;
-  const infoMoreText = [
+  const originDetails = [
     copy.origin ? `${ORIGIN_LABEL}: ${copy.origin}` : null,
     showEnglishPair ? `English equivalent: ${englishCopy.saying}` : null,
     showEnglishPair && englishCopy.explanation ? englishCopy.explanation : null,
     showEnglishPair && englishCopy.origin ? `${ORIGIN_LABEL}: ${englishCopy.origin}` : null
   ].filter(Boolean).join('\n\n');
-  const infoText = readMoreOpen && infoMoreText ? `${infoIntro}\n\n${infoMoreText}` : infoIntro;
+  const hasLongOriginDetails = originDetails.length > 90;
+  const infoText = readMoreOpen && originDetails ? `${infoIntro}\n\n${originDetails}` : infoIntro;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -329,6 +331,7 @@ export default function App() {
     setReadMoreOpen(false);
     setEditOpen(false);
     setLanguageOpen(false);
+    setShareOpen(false);
   }, [index, language]);
 
   useEffect(() => {
@@ -545,7 +548,7 @@ export default function App() {
 
   async function shareProverb() {
     const url = 'https://olsenarkitekter.github.io/sayings/';
-    const shareText = `${infoText}\n\n${url}`;
+    const shareText = `${copy.saying}\n\n${infoIntro}\n\n${url}`;
 
     try {
       const imageFile = await createShareImageFile(copy.saying, backgroundImageUri, backgroundImageFit, backgroundImagePosition, backgroundImageScale);
@@ -561,22 +564,35 @@ export default function App() {
         return;
       }
 
-      if (imageFile) {
-        await downloadShareImage(imageFile);
-        await Share.share({ title: copy.saying, message: shareText, url });
-        return;
-      }
-
-      if (shareCardRef.current && await Sharing.isAvailableAsync()) {
-        const imageUri = await captureRef(shareCardRef, { format: 'png', quality: 1 });
-        await Sharing.shareAsync(imageUri, { mimeType: 'image/png', dialogTitle: copy.saying });
-        await Share.share({ title: copy.saying, message: shareText, url });
-        return;
-      }
-
-      await Share.share({ title: copy.saying, message: `${copy.saying}\n\n${shareText}`, url });
+      if (imageFile) await downloadShareImage(imageFile);
+      await Share.share({ title: copy.saying, message: shareText, url });
     } catch {
       Alert.alert('Share unavailable', 'Sharing is not available on this device right now.');
+    }
+  }
+
+  async function shareToNetwork(network) {
+    const url = 'https://olsenarkitekter.github.io/sayings/';
+    const text = `${copy.saying} — ${infoIntro}`;
+    const encodedUrl = encodeURIComponent(url);
+    const encodedText = encodeURIComponent(text);
+    const targets = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
+      messenger: `https://www.facebook.com/dialog/send?link=${encodedUrl}&redirect_uri=${encodedUrl}`,
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
+    };
+
+    if (network === 'instagram' || (network === 'messenger' && Platform.OS !== 'web')) {
+      await shareProverb();
+      return;
+    }
+
+    const target = targets[network];
+    if (!target) return;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.open(target, '_blank', 'noopener,noreferrer');
+    } else {
+      await Linking.openURL(target);
     }
   }
 
@@ -638,12 +654,14 @@ export default function App() {
 
         {languageOpen && (
           <View style={styles.languageDropdown}>
-            {languages.map((item) => (
-              <Pressable key={item.key} onPress={() => { changeLanguage(item.key); setLanguageOpen(false); }} style={[styles.dropdownLanguageOption, language === item.key && styles.activeDropdownLanguageOption]}>
-                <Text style={[styles.dropdownLanguageLabel, language === item.key && styles.activeText]}>{item.label}</Text>
-                <Text style={styles.dropdownLanguageName}>{item.name}</Text>
-              </Pressable>
-            ))}
+            <ScrollView showsVerticalScrollIndicator contentContainerStyle={styles.languageDropdownContent}>
+              {languages.map((item) => (
+                <Pressable key={item.key} onPress={() => { changeLanguage(item.key); setLanguageOpen(false); }} style={[styles.dropdownLanguageOption, language === item.key && styles.activeDropdownLanguageOption]}>
+                  <Text style={[styles.dropdownLanguageLabel, language === item.key && styles.activeText]}>{item.label}</Text>
+                  <Text style={styles.dropdownLanguageName}>{item.name}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
         )}
 
@@ -706,19 +724,27 @@ export default function App() {
         </View>
 
         {backgroundImageUri ? (
-          <View style={styles.imageEditBar}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.imageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
-              <Text style={styles.imageEditButtonText}>Full screen</Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.imageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
-              <Text style={styles.imageEditButtonText}>See whole image</Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Toggle extra text" onPress={() => setShowCardDetails((value) => !value)} style={styles.imageEditButton}>
-              <Text style={styles.imageEditButtonText}>{showCardDetails ? 'Hide details' : 'Show details'}</Text>
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.imageEditButton}>
-              <Text style={styles.imageEditButtonText}>Remove</Text>
-            </Pressable>
+          <View style={styles.imageEditorPanel}>
+            <View style={styles.imageEditorHeader}>
+              <View>
+                <Text style={styles.imageEditorTitle}>Image editor</Text>
+                <Text style={styles.imageEditorHint}>Drag the image. Pinch/scroll to zoom.</Text>
+              </View>
+              <Pressable accessibilityRole="button" accessibilityLabel="Exit image editor" onPress={clearBackgroundImage} style={styles.imageEditCloseButton}>
+                <Text style={styles.imageEditCloseText}>×</Text>
+              </Pressable>
+            </View>
+            <View style={styles.imageEditBar}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.imageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
+                <Text style={styles.imageEditButtonText}>Full screen</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.imageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
+                <Text style={styles.imageEditButtonText}>See whole image</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Toggle extra text" onPress={() => setShowCardDetails((value) => !value)} style={styles.imageEditButton}>
+                <Text style={styles.imageEditButtonText}>{showCardDetails ? 'Hide text' : 'Show text'}</Text>
+              </Pressable>
+            </View>
           </View>
         ) : (
           <View style={styles.actionBar}>
@@ -730,8 +756,8 @@ export default function App() {
             >
               <Text style={styles.bottomIconText}>i</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={shareProverb} style={styles.bottomIconButton}>
-              <Text style={styles.bottomIconText}>◎</Text>
+            <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={() => setShareOpen((value) => !value)} style={styles.bottomIconButton}>
+              <Text style={styles.bottomIconText}>□↑</Text>
             </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.bottomIconButton}>
               <Text style={styles.bottomIconText}>✎</Text>
@@ -751,6 +777,16 @@ export default function App() {
           </View>
         )}
 
+        {shareOpen && (
+          <View style={styles.shareMenu}>
+            <Pressable onPress={shareProverb} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>System share</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('facebook')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Facebook</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('instagram')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Instagram</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('linkedin')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>LinkedIn</Text></Pressable>
+          </View>
+        )}
+
         {infoOpen && (
           <View style={styles.infoOverlay}>
             <View style={styles.infoPanel}>
@@ -762,7 +798,7 @@ export default function App() {
               </View>
               <ScrollView contentContainerStyle={styles.infoScrollContent} showsVerticalScrollIndicator>
                 <Text style={styles.explanation}>{infoText}</Text>
-                {!!infoMoreText && !readMoreOpen && (
+                {hasLongOriginDetails && !readMoreOpen && (
                   <Pressable onPress={() => setReadMoreOpen(true)} style={styles.readMoreButton}>
                     <Text style={styles.readMoreText}>Læs mere</Text>
                   </Pressable>
@@ -876,7 +912,8 @@ const styles = StyleSheet.create({
   topLanguageDivider: { color: '#555555', fontSize: 13, fontWeight: '900' },
   topLanguageArrow: { color: '#777777', fontSize: 18, lineHeight: 20, fontWeight: '700', marginLeft: 2 },
   topLanguageText: { color: '#777777', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
-  languageDropdown: { position: 'absolute', top: 104, right: 22, zIndex: 30, width: 220, maxHeight: 420, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8, gap: 4 },
+  languageDropdown: { position: 'absolute', top: 104, right: 22, zIndex: 30, width: 220, maxHeight: 330, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8 },
+  languageDropdownContent: { gap: 4, paddingBottom: 4 },
   dropdownLanguageOption: { minHeight: 42, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 7, flexDirection: 'row', alignItems: 'center', gap: 10 },
   activeDropdownLanguageOption: { backgroundColor: '#111111' },
   dropdownLanguageLabel: { width: 30, color: '#777777', fontSize: 13, fontWeight: '900' },
@@ -914,11 +951,20 @@ const styles = StyleSheet.create({
   actionBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
   bottomIconButton: { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   bottomIconText: { color: '#ffffff', fontSize: 21, lineHeight: 25, fontWeight: '900' },
+  shareMenu: { position: 'absolute', left: 22, right: 22, bottom: 92, zIndex: 25, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8, gap: 4 },
+  shareMenuItem: { minHeight: 42, borderRadius: 12, justifyContent: 'center', paddingHorizontal: 12 },
+  shareMenuText: { color: '#ffffff', fontSize: 15, fontWeight: '800' },
   actionSpacer: { flex: 1 },
-  imageEditBar: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  imageEditorPanel: { marginBottom: 8, borderWidth: 1, borderColor: '#242424', borderRadius: 22, padding: 10, backgroundColor: '#050505', gap: 10 },
+  imageEditorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },
+  imageEditorHint: { color: '#8f8f8f', fontSize: 11, lineHeight: 15, marginTop: 2 },
+  imageEditBar: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
   imageEditButton: { minHeight: 42, flex: 1, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
   imageEditButtonText: { color: '#ffffff', fontSize: 11, lineHeight: 14, fontWeight: '900', textAlign: 'center' },
+  imageEditCloseButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
+  imageEditCloseText: { color: '#ffffff', fontSize: 28, lineHeight: 30, fontWeight: '300' },
   favoriteIcon: { color: '#ffd166' },
   settingsPanel: { position: 'absolute', top: 66, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
   settingsContent: { paddingBottom: 36 },
