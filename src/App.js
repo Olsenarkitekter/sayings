@@ -33,6 +33,7 @@ function BrandLogo() {
     <View style={styles.brandRow}>
       <View style={styles.logoGlobe}>
         <View style={styles.logoShadow} />
+        <View style={styles.logoOutline} />
       </View>
       <Text style={styles.brandText}>World Sayings</Text>
     </View>
@@ -686,25 +687,42 @@ export default function App() {
         </View>
 
         <View style={styles.content}>
-          <View
-            ref={shareCardRef}
-            collapsable={false}
-            style={styles.shareCard}
-            onStartShouldSetResponder={() => !editOpen}
-            onMoveShouldSetResponder={() => !editOpen}
-            onResponderGrant={editOpen ? undefined : startCardGesture}
-            onResponderMove={editOpen ? undefined : moveCardGesture}
-            onResponderRelease={editOpen ? undefined : finishCardGesture}
-            onResponderTerminate={editOpen ? undefined : finishCardGesture}
-          >
-            {backgroundImageUri ? (
-              <ImageBackground
-                source={{ uri: backgroundImageUri }}
-                resizeMode={backgroundImageFit}
-                style={styles.shareCardBackground}
-                imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
-              >
-                <View style={styles.shareCardOverlay}>
+          <View style={styles.cardShell}>
+            {!editOpen && (
+              <Pressable accessibilityRole="button" accessibilityLabel="Previous saying" onPress={() => setCurrentIndex(index - 1)} style={[styles.sideArrowButton, styles.leftArrowButton]}>
+                <Text style={styles.sideArrowText}>‹</Text>
+              </Pressable>
+            )}
+            <View
+              ref={shareCardRef}
+              collapsable={false}
+              style={styles.shareCard}
+              onStartShouldSetResponder={() => !editOpen}
+              onMoveShouldSetResponder={() => !editOpen}
+              onResponderGrant={editOpen ? undefined : startCardGesture}
+              onResponderMove={editOpen ? undefined : moveCardGesture}
+              onResponderRelease={editOpen ? undefined : finishCardGesture}
+              onResponderTerminate={editOpen ? undefined : finishCardGesture}
+            >
+              {backgroundImageUri ? (
+                <ImageBackground
+                  source={{ uri: backgroundImageUri }}
+                  resizeMode={backgroundImageFit}
+                  style={styles.shareCardBackground}
+                  imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
+                >
+                  <View style={styles.shareCardOverlay}>
+                    {editOpen ? (
+                      <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
+                    ) : (
+                      <Text style={styles.saying}>{copy.saying}</Text>
+                    )}
+                    {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
+                    {!editOpen && showCardDetails && primaryOrigin && <Text style={styles.originLine}>{primaryOrigin}</Text>}
+                  </View>
+                </ImageBackground>
+              ) : (
+                <>
                   {editOpen ? (
                     <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
                   ) : (
@@ -712,18 +730,13 @@ export default function App() {
                   )}
                   {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
                   {!editOpen && showCardDetails && primaryOrigin && <Text style={styles.originLine}>{primaryOrigin}</Text>}
-                </View>
-              </ImageBackground>
-            ) : (
-              <>
-                {editOpen ? (
-                  <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
-                ) : (
-                  <Text style={styles.saying}>{copy.saying}</Text>
-                )}
-                {!editOpen && showCardDetails && showEnglishPair && <Text style={styles.englishSaying}>{englishCopy.saying}</Text>}
-                {!editOpen && showCardDetails && primaryOrigin && <Text style={styles.originLine}>{primaryOrigin}</Text>}
-              </>
+                </>
+              )}
+            </View>
+            {!editOpen && (
+              <Pressable accessibilityRole="button" accessibilityLabel="Next saying" onPress={() => setCurrentIndex(index + 1)} style={[styles.sideArrowButton, styles.rightArrowButton]}>
+                <Text style={styles.sideArrowText}>›</Text>
+              </Pressable>
             )}
           </View>
 
@@ -947,8 +960,9 @@ const styles = StyleSheet.create({
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
-  logoGlobe: { width: 26, height: 26, borderRadius: 13, borderWidth: 1.5, borderColor: '#ffffff', overflow: 'hidden', backgroundColor: '#ffffff' },
-  logoShadow: { position: 'absolute', left: -2, bottom: -2, width: 18, height: 18, borderTopRightRadius: 18, backgroundColor: '#000000' },
+  logoGlobe: { width: 28, height: 28, borderRadius: 14, overflow: 'hidden', backgroundColor: '#ffffff' },
+  logoShadow: { position: 'absolute', left: -7, bottom: -5, width: 28, height: 25, borderTopRightRadius: 24, backgroundColor: '#000000', transform: [{ rotate: '-14deg' }] },
+  logoOutline: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 1.6, borderColor: '#ffffff' },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
@@ -957,6 +971,11 @@ const styles = StyleSheet.create({
   headerIcon: { color: '#ffffff', fontSize: 34, lineHeight: 38, fontWeight: '300' },
   closeIcon: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300' },
   content: { flex: 1, justifyContent: 'center', paddingBottom: 20 },
+  cardShell: { position: 'relative', justifyContent: 'center' },
+  sideArrowButton: { position: 'absolute', top: '50%', zIndex: 8, width: 34, height: 52, marginTop: -26, alignItems: 'center', justifyContent: 'center' },
+  leftArrowButton: { left: -10 },
+  rightArrowButton: { right: -10 },
+  sideArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '200', opacity: 0.72 },
   shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 390, borderRadius: 28, overflow: 'hidden' },
   shareCardBackground: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center' },
   shareCardImage: { borderRadius: 28 },
