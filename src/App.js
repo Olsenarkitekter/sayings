@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';
 import { captureRef } from 'react-native-view-shot';
 import { proverbs, languages, categories, getProverbVariant } from './proverbs';
 
@@ -20,7 +21,8 @@ const STORAGE = {
   backgroundImage: 'daily-sayings:backgroundImage',
   backgroundImageFit: 'daily-sayings:backgroundImageFit',
   backgroundImagePosition: 'daily-sayings:backgroundImagePosition',
-  backgroundImageScale: 'daily-sayings:backgroundImageScale'
+  backgroundImageScale: 'daily-sayings:backgroundImageScale',
+  backgroundRounded: 'daily-sayings:backgroundRounded'
 };
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
@@ -315,6 +317,7 @@ export default function App() {
   const [backgroundImageFit, setBackgroundImageFit] = useState('cover');
   const [backgroundImagePosition, setBackgroundImagePosition] = useState({ x: 0, y: 0 });
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
+  const [backgroundRounded, setBackgroundRounded] = useState(true);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [showCardDetails, setShowCardDetails] = useState(true);
   const [ready, setReady] = useState(false);
@@ -337,6 +340,7 @@ export default function App() {
   const detailText = [meaningText, primaryOrigin ? `${ORIGIN_LABEL}: ${primaryOrigin}` : null, englishSayingText].filter(Boolean).join(' ');
   const hasLongDetails = detailText.length > 130;
   const infoText = detailText;
+  const shareText = `${copy.saying}\n\n${detailText}\n\nhttps://olsenarkitekter.github.io/sayings/`;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -365,7 +369,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
@@ -377,7 +381,8 @@ export default function App() {
         AsyncStorage.getItem(STORAGE.backgroundImage),
         AsyncStorage.getItem(STORAGE.backgroundImageFit),
         AsyncStorage.getItem(STORAGE.backgroundImagePosition),
-        AsyncStorage.getItem(STORAGE.backgroundImageScale)
+        AsyncStorage.getItem(STORAGE.backgroundImageScale),
+        AsyncStorage.getItem(STORAGE.backgroundRounded)
       ]);
 
       const lang = storedLanguage || detectPreferredLanguage();
@@ -402,6 +407,7 @@ export default function App() {
       } catch {}
       const parsedScale = Number(storedBackgroundScale);
       if (Number.isFinite(parsedScale) && parsedScale >= 0.5 && parsedScale <= 3) setBackgroundImageScale(parsedScale);
+      if (storedBackgroundRounded === 'off') setBackgroundRounded(false);
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
@@ -483,13 +489,15 @@ export default function App() {
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
+    setBackgroundRounded(true);
     setImageEditorOpen(true);
     setShowCardDetails(true);
     await AsyncStorage.multiSet([
       [STORAGE.backgroundImage, nextUri],
       [STORAGE.backgroundImageFit, 'cover'],
       [STORAGE.backgroundImagePosition, JSON.stringify({ x: 0, y: 0 })],
-      [STORAGE.backgroundImageScale, '1']
+      [STORAGE.backgroundImageScale, '1'],
+      [STORAGE.backgroundRounded, 'on']
     ]);
   }
 
@@ -567,63 +575,119 @@ export default function App() {
     setImageEditorOpen(false);
   }
 
+  async function toggleBackgroundRounded() {
+    const next = !backgroundRounded;
+    setBackgroundRounded(next);
+    await AsyncStorage.setItem(STORAGE.backgroundRounded, next ? 'on' : 'off');
+  }
+
   async function clearBackgroundImage() {
     setBackgroundImageUri(null);
     setImageEditorOpen(false);
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
-    await AsyncStorage.multiRemove([STORAGE.backgroundImage, STORAGE.backgroundImageFit, STORAGE.backgroundImagePosition, STORAGE.backgroundImageScale]);
+    setBackgroundRounded(true);
+    await AsyncStorage.multiRemove([STORAGE.backgroundImage, STORAGE.backgroundImageFit, STORAGE.backgroundImagePosition, STORAGE.backgroundImageScale, STORAGE.backgroundRounded]);
+  }
+
+  async function createCurrentShareImage() {
+    if (Platform.OS === 'web') {
+      return createShareImageFile(copy.saying, backgroundImageUri, backgroundImageFit, backgroundImagePosition, backgroundImageScale);
+    }
+
+    if (!shareCardRef.current) return null;
+    return captureRef(shareCardRef, {
+      format: 'png',
+      quality: 1,
+      result: 'tmpfile'
+    });
   }
 
   async function shareProverb() {
-    const url = 'https://olsenarkitekter.github.io/sayings/';
-    const shareText = `${copy.saying}\n\n${infoIntro}\n\n${url}`;
-
     try {
-      const imageFile = await createShareImageFile(copy.saying, backgroundImageUri, backgroundImageFit, backgroundImagePosition, backgroundImageScale);
-      const webNavigator = typeof navigator !== 'undefined' ? navigator : null;
-      const webSharePayload = imageFile ? {
-        title: copy.saying,
-        text: shareText,
-        files: [imageFile]
-      } : null;
-
-      if (webNavigator?.share && webSharePayload && (!webNavigator.canShare || webNavigator.canShare(webSharePayload))) {
-        await webNavigator.share(webSharePayload);
+      setShareOpen(false);
+      const image = await createCurrentShareImage();
+      if (Platform.OS === 'web') {
+        const webNavigator = typeof navigator !== 'undefined' ? navigator : null;
+        const webSharePayload = image ? { title: copy.saying, text: shareText, files: [image] } : null;
+        if (webNavigator?.share && webSharePayload && (!webNavigator.canShare || webNavigator.canShare(webSharePayload))) {
+          await webNavigator.share(webSharePayload);
+          return;
+        }
+        if (image) await downloadShareImage(image);
+        await Share.share({ title: copy.saying, message: shareText, url: 'https://olsenarkitekter.github.io/sayings/' });
         return;
       }
 
-      if (imageFile) await downloadShareImage(imageFile);
-      await Share.share({ title: copy.saying, message: shareText, url });
+      if (image && await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(image, {
+          mimeType: 'image/png',
+          dialogTitle: 'Share World Saying',
+          UTI: 'public.png'
+        });
+        return;
+      }
+
+      await Share.share({ title: copy.saying, message: shareText, url: 'https://olsenarkitekter.github.io/sayings/' });
     } catch {
       Alert.alert('Share unavailable', 'Sharing is not available on this device right now.');
     }
   }
 
+  async function saveShareImage() {
+    try {
+      setShareOpen(false);
+      const image = await createCurrentShareImage();
+      if (!image) throw new Error('No image created');
+
+      if (Platform.OS === 'web') {
+        await downloadShareImage(image);
+        return;
+      }
+
+      const permission = await MediaLibrary.requestPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Photo access needed', 'Allow photo access to save the saying as an image.');
+        return;
+      }
+      await MediaLibrary.saveToLibraryAsync(image);
+      Alert.alert('Saved', 'The saying image was saved to your photos.');
+    } catch {
+      Alert.alert('Could not save', 'The image could not be saved right now.');
+    }
+  }
+
+  async function shareBySms() {
+    setShareOpen(false);
+    const separator = Platform.OS === 'ios' ? '&' : '?';
+    const smsUrl = `sms:${separator}body=${encodeURIComponent(shareText)}`;
+    if (await Linking.canOpenURL(smsUrl)) await Linking.openURL(smsUrl);
+    else await Share.share({ title: copy.saying, message: shareText });
+  }
+
   async function shareToNetwork(network) {
+    if (network === 'sms') {
+      await shareBySms();
+      return;
+    }
+
+    if (Platform.OS !== 'web' || network === 'instagram' || network === 'messenger') {
+      await shareProverb();
+      return;
+    }
+
     const url = 'https://olsenarkitekter.github.io/sayings/';
-    const text = `${copy.saying} — ${infoIntro}`;
     const encodedUrl = encodeURIComponent(url);
-    const encodedText = encodeURIComponent(text);
+    const encodedText = encodeURIComponent(`${copy.saying} — ${detailText}`);
     const targets = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
       messenger: `https://www.facebook.com/dialog/send?link=${encodedUrl}&redirect_uri=${encodedUrl}`,
       linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
     };
 
-    if (network === 'instagram' || (network === 'messenger' && Platform.OS !== 'web')) {
-      await shareProverb();
-      return;
-    }
-
     const target = targets[network];
-    if (!target) return;
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.open(target, '_blank', 'noopener,noreferrer');
-    } else {
-      await Linking.openURL(target);
-    }
+    if (target && typeof window !== 'undefined') window.open(target, '_blank', 'noopener,noreferrer');
   }
 
   async function toggleFavorite() {
@@ -689,7 +753,7 @@ export default function App() {
             <View
               ref={shareCardRef}
               collapsable={false}
-              style={styles.shareCard}
+              style={[styles.shareCard, !backgroundRounded && styles.shareCardSquare]}
               onStartShouldSetResponder={() => !editOpen}
               onMoveShouldSetResponder={() => !editOpen}
               onResponderGrant={editOpen ? undefined : startCardGesture}
@@ -702,7 +766,7 @@ export default function App() {
                   source={{ uri: backgroundImageUri }}
                   resizeMode={backgroundImageFit}
                   style={styles.shareCardBackground}
-                  imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
+                  imageStyle={[styles.shareCardImage, !backgroundRounded && styles.shareCardImageSquare, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
                 >
                   <View style={styles.shareCardOverlay}>
                     {editOpen ? (
@@ -774,6 +838,9 @@ export default function App() {
               <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.imageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
                 <Text style={styles.imageEditButtonText}>See whole image</Text>
               </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Toggle rounded corners" onPress={toggleBackgroundRounded} style={[styles.imageEditButton, backgroundRounded && styles.activeImageEditButton]}>
+                <Text style={styles.imageEditButtonText}>{backgroundRounded ? 'Rounded corners' : 'Square corners'}</Text>
+              </Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel="Toggle extra text" onPress={() => setShowCardDetails((value) => !value)} style={styles.imageEditButton}>
                 <Text style={styles.imageEditButtonText}>{showCardDetails ? 'Hide text' : 'Show text'}</Text>
               </Pressable>
@@ -814,10 +881,12 @@ export default function App() {
 
         {shareOpen && !editOpen && (
           <View style={styles.shareMenu}>
-            <Pressable onPress={shareProverb} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>System share</Text></Pressable>
+            <Pressable onPress={shareProverb} style={styles.shareMenuPrimaryItem}><Text style={styles.shareMenuPrimaryText}>Share image</Text></Pressable>
+            <Pressable onPress={saveShareImage} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Save image to Photos</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('sms')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>SMS / Messages</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('facebook')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Facebook</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('instagram')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Instagram</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('facebook')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Facebook</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('linkedin')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>LinkedIn</Text></Pressable>
           </View>
         )}
@@ -973,8 +1042,10 @@ const styles = StyleSheet.create({
   rightArrowButton: { right: -10 },
   sideArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '200', opacity: 0.72 },
   shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 390, borderRadius: 28, overflow: 'hidden' },
+  shareCardSquare: { borderRadius: 0 },
   shareCardBackground: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center' },
   shareCardImage: { borderRadius: 28 },
+  shareCardImageSquare: { borderRadius: 0 },
   shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
   originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
@@ -1004,8 +1075,10 @@ const styles = StyleSheet.create({
   shareIconLine: { width: 18, height: 1.5, backgroundColor: '#ffffff', borderRadius: 1 },
   imageIconShape: { width: 21, height: 18, borderWidth: 1.5, borderColor: '#ffffff', borderRadius: 2 },
   shareMenu: { position: 'absolute', left: 22, right: 22, bottom: 92, zIndex: 25, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8, gap: 4 },
+  shareMenuPrimaryItem: { minHeight: 46, borderRadius: 13, justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#ffffff' },
+  shareMenuPrimaryText: { color: '#000000', fontSize: 15, fontWeight: '900', textAlign: 'center' },
   shareMenuItem: { minHeight: 42, borderRadius: 12, justifyContent: 'center', paddingHorizontal: 12 },
-  shareMenuText: { color: '#ffffff', fontSize: 15, fontWeight: '800' },
+  shareMenuText: { color: '#ffffff', fontSize: 15, fontWeight: '800', textAlign: 'center' },
   imageEditorPanel: { marginBottom: 8, borderWidth: 1, borderColor: '#242424', borderRadius: 22, padding: 10, backgroundColor: '#050505', gap: 10 },
   imageEditorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },

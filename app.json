@@ -17,7 +17,8 @@
       "bundleIdentifier": "com.olsen.sayings",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSPhotoLibraryUsageDescription": "Choose a photo to use as the proverb background when sharing."
+        "NSPhotoLibraryUsageDescription": "Choose a photo to use as the proverb background when sharing.",
+        "NSPhotoLibraryAddUsageDescription": "Save proverb images to your photo library."
       }
     },
     "android": {
@@ -35,7 +36,8 @@
     "plugins": [
       "expo-notifications",
       "expo-font",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-media-library"
     ],
     "description": "Culturally adapted proverbs and sayings across languages, with meanings and origin notes.",
     "scheme": "sayings",
