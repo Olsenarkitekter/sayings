@@ -313,6 +313,11 @@ export default function App() {
   const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editText, setEditText] = useState('');
+  const [addSayingOpen, setAddSayingOpen] = useState(false);
+  const [newSaying, setNewSaying] = useState('');
+  const [newSayingName, setNewSayingName] = useState('');
+  const [newSayingMeaning, setNewSayingMeaning] = useState('');
+  const [newSayingOrigin, setNewSayingOrigin] = useState('');
   const [edits, setEdits] = useState({});
   const [ownerMode, setOwnerMode] = useState(false);
   const [backgroundImageUri, setBackgroundImageUri] = useState(null);
@@ -338,7 +343,8 @@ export default function App() {
   const copy = currentEdit ? { ...selectedVariant, saying: currentEdit } : selectedVariant;
   const englishCopy = getProverbVariant(current, 'en');
   const meaningText = englishCopy.explanation || copy.explanation;
-  const primaryOrigin = englishCopy.origin || copy.origin;
+  const rawOrigin = englishCopy.origin || copy.origin || '';
+  const primaryOrigin = /^origin unknown\b/i.test(rawOrigin.trim()) ? null : rawOrigin;
   const englishSayingText = englishCopy.saying ? `English: ${englishCopy.saying}` : null;
   const meaningLine = meaningText ? `Meaning: ${meaningText}` : null;
   const detailText = [primaryOrigin, meaningLine, englishSayingText].filter(Boolean).join('\n\n');
@@ -777,6 +783,25 @@ export default function App() {
     setEditOpen(false);
   }
 
+  async function submitNewSaying() {
+    const saying = newSaying.trim();
+    if (!saying) {
+      Alert.alert('Saying required', 'Write the saying first. The other fields are optional.');
+      return;
+    }
+
+    const subject = encodeURIComponent('World Sayings new saying suggestion');
+    const body = encodeURIComponent(`Saying:\n${saying}\n\nName:\n${newSayingName.trim()}\n\nMeaning in English:\n${newSayingMeaning.trim()}\n\nOrigin story:\n${newSayingOrigin.trim()}`);
+    const mailUrl = `mailto:${EDIT_EMAIL}?subject=${subject}&body=${body}`;
+    Keyboard.dismiss();
+    await Linking.openURL(mailUrl);
+    setNewSaying('');
+    setNewSayingName('');
+    setNewSayingMeaning('');
+    setNewSayingOrigin('');
+    setAddSayingOpen(false);
+  }
+
   if (!ready) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -831,6 +856,20 @@ export default function App() {
         )}
 
         <View style={styles.content}>
+          {editOpen && (
+            <View style={styles.editPanelTop}>
+              <Text style={styles.editTitle}>{ownerMode ? 'Edit saying' : `Suggest edit by email`}</Text>
+              <View style={styles.editActions}>
+                <Pressable onPress={closeEditMode} style={styles.editSecondaryButton}>
+                  <Text style={styles.editSecondaryText}>Cancel</Text>
+                </Pressable>
+                <Pressable onPress={() => { Keyboard.dismiss(); submitEdit(); }} style={styles.editPrimaryButton}>
+                  <Text style={styles.editPrimaryText}>{ownerMode ? 'Save' : 'Send email'}</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
+
           <View style={styles.cardShell}>
             {!editOpen && (
               <Pressable accessibilityRole="button" accessibilityLabel="Previous saying" onPress={() => setCurrentIndex(index - 1)} style={[styles.sideArrowButton, styles.leftArrowButton]}>
@@ -892,22 +931,6 @@ export default function App() {
             )}
           </View>
 
-          {editOpen && (
-            <View style={styles.editPanel}>
-              <Text style={styles.editTitle}>{ownerMode ? 'Edit saying' : `Suggest edit by email`}</Text>
-              <View style={styles.editActions}>
-                <Pressable onPress={closeEditMode} style={styles.editSecondaryButton}>
-                  <Text style={styles.editSecondaryText}>Cancel</Text>
-                </Pressable>
-                <Pressable onPress={Keyboard.dismiss} style={styles.editSecondaryButton}>
-                  <Text style={styles.editSecondaryText}>Hide keyboard</Text>
-                </Pressable>
-                <Pressable onPress={() => { Keyboard.dismiss(); submitEdit(); }} style={styles.editPrimaryButton}>
-                  <Text style={styles.editPrimaryText}>{ownerMode ? 'Save' : 'Send email'}</Text>
-                </Pressable>
-              </View>
-            </View>
-          )}
         </View>
 
         {editOpen ? null : backgroundImageUri && imageEditorOpen ? (
@@ -1064,6 +1087,52 @@ export default function App() {
               )}
 
               <View style={styles.categoryBlock}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Add a saying" onPress={() => setAddSayingOpen((value) => !value)} style={styles.categorySelect}>
+                  <Text style={styles.categorySelectText}>Add a saying</Text>
+                  <View style={styles.toggleIconBox}><Text style={styles.categorySelectArrow}>{addSayingOpen ? '−' : '+'}</Text></View>
+                </Pressable>
+
+                {addSayingOpen && (
+                  <View style={styles.addSayingPanel}>
+                    <TextInput
+                      value={newSaying}
+                      onChangeText={setNewSaying}
+                      placeholder="Saying *"
+                      placeholderTextColor="#777777"
+                      multiline
+                      style={[styles.addSayingInput, styles.addSayingRequiredInput]}
+                    />
+                    <TextInput
+                      value={newSayingName}
+                      onChangeText={setNewSayingName}
+                      placeholder="Your name (optional)"
+                      placeholderTextColor="#777777"
+                      style={styles.addSayingInput}
+                    />
+                    <TextInput
+                      value={newSayingMeaning}
+                      onChangeText={setNewSayingMeaning}
+                      placeholder="Meaning in English (optional)"
+                      placeholderTextColor="#777777"
+                      multiline
+                      style={styles.addSayingInput}
+                    />
+                    <TextInput
+                      value={newSayingOrigin}
+                      onChangeText={setNewSayingOrigin}
+                      placeholder="Origin story (optional)"
+                      placeholderTextColor="#777777"
+                      multiline
+                      style={styles.addSayingInput}
+                    />
+                    <Pressable onPress={submitNewSaying} style={styles.addSayingSubmitButton}>
+                      <Text style={styles.addSayingSubmitText}>Send saying</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+
+              <View style={styles.categoryBlock}>
                 <Text style={styles.settingTitle}>Category</Text>
                 <Pressable accessibilityRole="button" accessibilityLabel="Choose category" onPress={() => setCategoryOpen((value) => !value)} style={styles.categorySelect}>
                   <Text style={styles.categorySelectText}>{selectedCategoryLabel}</Text>
@@ -1156,6 +1225,7 @@ const styles = StyleSheet.create({
   infoScrollContent: { paddingBottom: 12 },
   explanation: { fontSize: 18, lineHeight: 28, textAlign: 'left', color: '#d9d9d9' },
   readMoreText: { color: '#ffffff', fontSize: 13, lineHeight: 18, fontWeight: '900', textAlign: 'center' },
+  editPanelTop: { marginBottom: 12, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 12, backgroundColor: '#080808', zIndex: 12 },
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
   editSayingInput: { width: '100%', minHeight: 170, paddingHorizontal: 8, paddingVertical: 10, textAlignVertical: 'center', borderBottomWidth: 1.5, borderBottomColor: '#ffffff' },
@@ -1168,7 +1238,7 @@ const styles = StyleSheet.create({
   bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   bottomIconText: { color: '#ffffff', fontSize: 23, lineHeight: 27, fontWeight: '300' },
   searchIconText: { color: '#ffffff', fontSize: 31, lineHeight: 35, fontWeight: '300' },
-  penIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center', transform: [{ rotate: '45deg' }] },
+  penIcon: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   penIconLine: { width: 3, height: 21, borderRadius: 2, backgroundColor: '#ffffff' },
   shareIconShape: { width: 22, height: 25, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 3 },
   shareIconArrow: { position: 'absolute', top: -2, color: '#ffffff', fontSize: 24, lineHeight: 25, fontWeight: '300' },
@@ -1202,6 +1272,11 @@ const styles = StyleSheet.create({
   toggleIconBox: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   categorySelectArrow: { color: '#ffffff', fontSize: 26, lineHeight: 30, fontWeight: '300', textAlign: 'center' },
   categoryOptions: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingVertical: 6 },
+  addSayingPanel: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, padding: 10, gap: 10, backgroundColor: '#050505' },
+  addSayingInput: { minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: '#242424', color: '#ffffff', fontSize: 15, lineHeight: 20, fontWeight: '700', paddingHorizontal: 12, paddingVertical: 10, textAlignVertical: 'top' },
+  addSayingRequiredInput: { borderColor: '#555555' },
+  addSayingSubmitButton: { minHeight: 42, borderRadius: 21, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
+  addSayingSubmitText: { color: '#000000', fontSize: 14, fontWeight: '900' },
   categoryOption: { minHeight: 42, justifyContent: 'center', paddingHorizontal: 16 },
   categoryOptionText: { color: '#777777', fontSize: 16, fontWeight: '800' },
   muted: { color: '#8f8f8f', fontSize: 14, lineHeight: 20 },
