@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, ImageBackground, Keyboard, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Image, ImageBackground, Keyboard, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
@@ -32,11 +32,8 @@ const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
 function BrandLogo() {
   return (
     <View style={styles.brandRow}>
-      <View style={styles.logoGlobe}>
-        <View style={styles.logoShadow} />
-        <View style={styles.logoOutline} />
-      </View>
-      <Text style={styles.brandText}>folksay</Text>
+      <Image source={require('../assets/icon.png')} style={styles.logoImage} />
+      <Text style={styles.brandText}>FOLKSAY</Text>
     </View>
   );
 }
@@ -1184,10 +1181,8 @@ const styles = StyleSheet.create({
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
-  logoGlobe: { width: 28, height: 28, borderRadius: 14, overflow: 'hidden', backgroundColor: '#ffffff' },
-  logoShadow: { position: 'absolute', left: -14, top: -2, width: 31, height: 31, borderRadius: 16, backgroundColor: '#000000' },
-  logoOutline: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 14, borderWidth: 1.6, borderColor: '#ffffff' },
-  brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.2 },
+  logoImage: { width: 30, height: 30, borderRadius: 7 },
+  brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.8 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
   activeText: { color: '#ffffff' },
