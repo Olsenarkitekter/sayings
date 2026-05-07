@@ -32,7 +32,7 @@ const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
 function BrandLogo() {
   return (
     <View style={styles.brandRow}>
-      <Image source={require('../assets/icon.png')} style={styles.logoImage} />
+      <Image source={require('../assets/logo.png')} style={styles.logoImage} />
       <Text style={styles.brandText}>FOLKSAY</Text>
     </View>
   );
