@@ -36,7 +36,7 @@ function BrandLogo() {
         <View style={styles.logoShadow} />
         <View style={styles.logoOutline} />
       </View>
-      <Text style={styles.brandText}>World Sayings</Text>
+      <Text style={styles.brandText}>folksay</Text>
     </View>
   );
 }
@@ -509,7 +509,7 @@ export default function App() {
       return;
     }
 
-    const subject = encodeURIComponent(`World Sayings edit suggestion: ${current.id} (${language.toUpperCase()})`);
+    const subject = encodeURIComponent(`folksay edit suggestion: ${current.id} (${language.toUpperCase()})`);
     const body = encodeURIComponent(`Proverb ID: ${current.id}\nLanguage: ${language.toUpperCase()}\n\nCurrent text:\n${copy.saying}\n\nSuggested text:\n${suggestion}`);
     const mailUrl = `mailto:${EDIT_EMAIL}?subject=${subject}&body=${body}`;
     setEditOpen(false);
@@ -790,7 +790,7 @@ export default function App() {
       return;
     }
 
-    const subject = encodeURIComponent('World Sayings new saying suggestion');
+    const subject = encodeURIComponent('folksay new saying suggestion');
     const body = encodeURIComponent(`Saying:\n${saying}\n\nName:\n${newSayingName.trim()}\n\nMeaning in English:\n${newSayingMeaning.trim()}\n\nOrigin story:\n${newSayingOrigin.trim()}`);
     const mailUrl = `mailto:${EDIT_EMAIL}?subject=${subject}&body=${body}`;
     Keyboard.dismiss();

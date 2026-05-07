@@ -1,18 +1,18 @@
-# World Sayings — App Store listing draft
+# folksay — App Store listing draft
 
 ## Subtitle
 Proverbs across cultures
 
 ## Promotional text
-Discover culturally adapted sayings in 13 languages, with meanings, origin notes, and shareable proverb cards.
+Discover 97 culturally adapted sayings in 8 languages, with meanings, origin notes, and shareable proverb cards.
 
 ## Description
-World Sayings helps you explore proverbs and sayings across cultures.
+folksay helps you explore proverbs and sayings across cultures.
 
 Instead of showing literal translations only, the app groups sayings by meaning and presents culturally natural equivalents in different languages. Each saying includes a clear meaning and origin note, with English details available for comparison.
 
 Features:
-- Proverbs and sayings across 13 languages
+- 97 proverbs and sayings across 8 languages
 - Meaning-first equivalents, not just word-for-word translations
 - Origin and history notes
 - Save favorite sayings
@@ -20,7 +20,7 @@ Features:
 - Choose language and categories
 - Add your own background image for sharing
 
-World Sayings is made for language lovers, writers, travelers, culture nerds, and anyone who enjoys the wisdom hidden in everyday expressions.
+folksay is made for language lovers, writers, travelers, culture nerds, and anyone who enjoys the wisdom hidden in everyday expressions.
 
 ## Keywords
 proverbs,sayings,quotes,language,culture,wisdom,idioms,translation,history,learn
