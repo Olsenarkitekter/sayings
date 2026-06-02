@@ -1290,7 +1290,7 @@ export default function App() {
                     <Pressable accessibilityRole="button" accessibilityLabel="Use color background" onPress={() => changeShareBackgroundMode('color')} style={[styles.compactImageEditButton, shareBackgroundMode === 'color' && styles.activeImageEditButton]}>
                       <Text style={styles.imageEditButtonText}>Color</Text>
                     </Pressable>
-                    <Pressable accessibilityRole="button" accessibilityLabel="Use image background" onPress={() => changeShareBackgroundMode('image')} style={[styles.compactImageEditButton, shareBackgroundMode === 'image' && styles.activeImageEditButton]}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Choose image background" onPress={chooseBackgroundImage} style={[styles.compactImageEditButton, shareBackgroundMode === 'image' && styles.activeImageEditButton]}>
                       <Text style={styles.imageEditButtonText}>Image</Text>
                     </Pressable>
                   </View>
