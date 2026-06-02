@@ -151,15 +151,12 @@ function ActionIcon({ name, active, size = 22 }) {
 
 function YinYangIcon({ active }) {
   return (
-    <Text
-      allowFontScaling={false}
-      style={[
-        styles.yinYangIcon,
-        active ? styles.activeYinYangIcon : null
-      ]}
-    >
-      ☯
-    </Text>
+    <View style={styles.yinYangFrame}>
+      <View style={[styles.yinYangHalf, styles.yinYangLeft, active && styles.activeYinYangLeft]} />
+      <View style={[styles.yinYangHalf, styles.yinYangRight, active && styles.activeYinYangRight]} />
+      <View style={[styles.yinYangDot, styles.yinYangTopDot, active && styles.activeYinYangTopDot]} />
+      <View style={[styles.yinYangDot, styles.yinYangBottomDot, active && styles.activeYinYangBottomDot]} />
+    </View>
   );
 }
 
@@ -266,9 +263,9 @@ async function createShareImageFile({
   context.textBaseline = 'middle';
   const textSizing = getShareTextStyle(text, textSizeMode, 'export');
   context.font = `${fontStyle} ${fontWeight} ${textSizing.fontSize}px ${fontFamily}`;
-  context.shadowColor = 'rgba(0, 0, 0, 0.65)';
-  context.shadowBlur = 18;
-  context.shadowOffsetY = 6;
+  context.shadowColor = 'transparent';
+  context.shadowBlur = 0;
+  context.shadowOffsetY = 0;
 
   let lines = wrapCanvasText(context, text, 820);
   if (lines.length > 7) {
@@ -471,6 +468,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [savedListOpen, setSavedListOpen] = useState(false);
   const [oppositeOpen, setOppositeOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [addSayingOpen, setAddSayingOpen] = useState(false);
@@ -584,6 +582,7 @@ export default function App() {
     setLanguageOpen(false);
     setShareOpen(false);
     setOppositeOpen(false);
+    setSavedListOpen(false);
   }, [index, language]);
 
   useEffect(() => {
@@ -1020,10 +1019,28 @@ export default function App() {
   }
 
   function openSavedList() {
-    setSettingsOpen(true);
+    setSavedListOpen(true);
+    setSettingsOpen(false);
     setSavedOpen(true);
     setSearchOpen(false);
     setShareOpen(false);
+    setImageEditorOpen(false);
+  }
+
+  function selectSavedProverb(item) {
+    const savedIndex = filteredProverbs.findIndex((p) => p.id === item.id);
+    if (savedIndex >= 0) {
+      setCurrentIndex(savedIndex);
+    } else {
+      const allIndex = proverbs.findIndex((p) => p.id === item.id);
+      setSelectedCategories([]);
+      setCategoryOpen(false);
+      setIndex(allIndex);
+      persistSelectedCategories([]).catch(() => {});
+      AsyncStorage.setItem(STORAGE.index, String(allIndex)).catch(() => {});
+    }
+    setSettingsOpen(false);
+    setSavedListOpen(false);
   }
 
   async function toggleFavorite() {
@@ -1092,10 +1109,10 @@ export default function App() {
           <BrandLogo />
 
           <View style={styles.topRightActions}>
-            <Pressable accessibilityLabel="Search sayings" onPress={() => { setSearchOpen((value) => !value); setSettingsOpen(false); }} hitSlop={14} style={styles.iconTap}>
-              <ActionIcon name="search" size={23} />
+            <Pressable accessibilityLabel="Search sayings" onPress={() => { setSearchOpen((value) => !value); setSettingsOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
+              <ActionIcon name="search" size={27} />
             </Pressable>
-            <Pressable accessibilityLabel="Settings" onPress={() => { setSettingsOpen((value) => !value); setSearchOpen(false); }} hitSlop={14} style={styles.iconTap}>
+            <Pressable accessibilityLabel="Settings" onPress={() => { setSettingsOpen((value) => !value); setSearchOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
               <ActionIcon name="menu" size={25} />
             </Pressable>
           </View>
@@ -1166,13 +1183,13 @@ export default function App() {
                   </View>
                 </ImageBackground>
               ) : (
-                <>
+                <View style={styles.shareCardTextBox}>
                     {editOpen ? (
                       <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
                     ) : (
                       <Text style={[styles.saying, shareFontStyle, sayingTextStyle]}>{displaySaying}</Text>
                     )}
-                </>
+                </View>
               )}
             </View>
             {!editOpen && (
@@ -1371,6 +1388,34 @@ export default function App() {
           </View>
         )}
 
+        {savedListOpen && (
+          <View style={styles.savedOverlay}>
+            <View style={styles.savedPanel}>
+              <View style={styles.savedHeader}>
+                <View>
+                  <Text style={styles.savedTitle}>Saved proverbs</Text>
+                  <Text style={styles.savedSubtitle}>{savedProverbs.length} saved</Text>
+                </View>
+                <Pressable onPress={() => setSavedListOpen(false)} hitSlop={12}>
+                  <ActionIcon name="x" size={24} />
+                </Pressable>
+              </View>
+              <ScrollView contentContainerStyle={styles.savedOverlayList} showsVerticalScrollIndicator>
+                {savedProverbs.length === 0 ? (
+                  <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
+                ) : (
+                  savedProverbs.map((item) => (
+                    <Pressable key={item.id} onPress={() => selectSavedProverb(item)} style={styles.savedOverlayItem}>
+                      <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
+                      <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
+                    </Pressable>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        )}
+
         {settingsOpen && (
           <View style={styles.settingsPanel}>
             <ScrollView contentContainerStyle={styles.settingsContent}>
@@ -1421,20 +1466,7 @@ export default function App() {
                         savedProverbs.map((item) => (
                           <Pressable
                             key={item.id}
-                            onPress={() => {
-                              const savedIndex = filteredProverbs.findIndex((p) => p.id === item.id);
-                              if (savedIndex >= 0) {
-                                setCurrentIndex(savedIndex);
-                              } else {
-                                const allIndex = proverbs.findIndex((p) => p.id === item.id);
-                                setSelectedCategories([]);
-                                setCategoryOpen(false);
-                                setIndex(allIndex);
-                                persistSelectedCategories([]).catch(() => {});
-                                AsyncStorage.setItem(STORAGE.index, String(allIndex)).catch(() => {});
-                              }
-                              setSettingsOpen(false);
-                            }}
+                            onPress={() => selectSavedProverb(item)}
                             style={styles.savedItem}
                           >
                             <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
@@ -1543,15 +1575,15 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#000000' },
-  container: { flex: 1, width: '100%', paddingHorizontal: 18, paddingTop: 8, paddingBottom: 14, position: 'relative' },
+  container: { flex: 1, width: '100%', paddingHorizontal: 10, paddingTop: 8, paddingBottom: 14, position: 'relative' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
-  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 10 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1, minWidth: 0 },
+  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 1, minWidth: 0 },
   logoImage: { width: 76, height: 76, resizeMode: 'contain' },
-  brandCopy: { minWidth: 0, flexShrink: 1 },
+  brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 7, flexWrap: 'wrap' },
   brandText: { color: '#ffffff', fontSize: 23, lineHeight: 25, fontWeight: '900', letterSpacing: 0 },
-  brandTagline: { color: '#8f8f8f', fontSize: 11, lineHeight: 14, fontWeight: '800', marginTop: 1 },
+  brandTagline: { color: '#8f8f8f', fontSize: 12, lineHeight: 14, fontWeight: '800' },
   symbolIcon: { fontWeight: '900', textAlign: 'center', includeFontPadding: false },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   activeText: { color: '#ffffff' },
@@ -1567,25 +1599,35 @@ const styles = StyleSheet.create({
   searchEmpty: { color: '#8f8f8f', fontSize: 14, fontWeight: '800', textAlign: 'center', paddingVertical: 18 },
   content: { flex: 1, justifyContent: 'flex-start', paddingBottom: 8 },
   cardShell: { flex: 1, position: 'relative', justifyContent: 'flex-start' },
-  shareCard: { flexGrow: 1, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 360, overflow: 'hidden' },
-  shareCardBackground: { flexGrow: 1, width: '100%', minHeight: 360, alignItems: 'center', justifyContent: 'center' },
+  shareCard: { width: '100%', aspectRatio: 1, flexGrow: 0, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  shareCardBackground: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   shareCardImage: {},
-  shareCardOverlay: { flexGrow: 1, width: '100%', minHeight: 360, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 24, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
+  shareCardOverlay: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 38, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
+  shareCardTextBox: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 38 },
   cardFooter: { marginTop: 8, alignItems: 'stretch', gap: 8, paddingHorizontal: 0 },
   cardMetaRow: { maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', gap: 5 },
   cardMetaText: { color: '#8f8f8f', fontSize: 10, lineHeight: 13, fontWeight: '900', textAlign: 'left', textTransform: 'uppercase' },
   cardMetaDot: { color: '#777777', fontSize: 13, lineHeight: 16, fontWeight: '900' },
-  saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
+  saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
   originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
   cardReadMoreButton: { alignSelf: 'center', marginTop: 8 },
   cardNavControlRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   navArrowButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
   navArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300', opacity: 0.9 },
   cardControlRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  oppositeButton: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' },
-  activeOppositeButton: { backgroundColor: '#000000' },
-  yinYangIcon: { color: '#000000', fontSize: 28, lineHeight: 31, fontWeight: '900', textAlign: 'center', includeFontPadding: false },
-  activeYinYangIcon: { color: '#ffffff', transform: [{ rotate: '180deg' }] },
+  oppositeButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080808' },
+  activeOppositeButton: { borderColor: '#ffffff', backgroundColor: '#ffffff' },
+  yinYangFrame: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#ffffff', overflow: 'hidden', position: 'relative', backgroundColor: '#080808' },
+  yinYangHalf: { position: 'absolute', top: 0, bottom: 0, width: 11 },
+  yinYangLeft: { left: 0, backgroundColor: '#ffffff' },
+  yinYangRight: { right: 0, backgroundColor: '#080808' },
+  activeYinYangLeft: { backgroundColor: '#080808' },
+  activeYinYangRight: { backgroundColor: '#ffffff' },
+  yinYangDot: { position: 'absolute', left: 6, width: 8, height: 8, borderRadius: 4 },
+  yinYangTopDot: { top: 2, backgroundColor: '#080808' },
+  yinYangBottomDot: { bottom: 2, backgroundColor: '#ffffff' },
+  activeYinYangTopDot: { backgroundColor: '#ffffff' },
+  activeYinYangBottomDot: { backgroundColor: '#080808' },
   inlineInfoButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080808' },
   activeInlineIconButton: { borderColor: '#ffd166', backgroundColor: '#17120a' },
   inlineInfoText: { color: '#ffffff', fontSize: 15, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
@@ -1593,7 +1635,7 @@ const styles = StyleSheet.create({
   exportCardFill: { width: '100%', height: '100%' },
   exportOverlay: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 86, paddingVertical: 90 },
   exportImageOverlay: { backgroundColor: 'rgba(0, 0, 0, 0.42)' },
-  exportSaying: { color: '#ffffff', fontSize: 76, lineHeight: 92, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0, 0, 0, 0.65)', textShadowOffset: { width: 0, height: 6 }, textShadowRadius: 18 },
+  exportSaying: { color: '#ffffff', fontSize: 76, lineHeight: 92, fontWeight: '900', textAlign: 'center' },
   exportWatermark: { position: 'absolute', left: 58, bottom: 58, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: 0.82 },
   exportLogo: { width: 58, height: 58, resizeMode: 'contain' },
   exportBrand: { color: '#ffffff', fontSize: 28, lineHeight: 34, fontWeight: '900' },
@@ -1623,6 +1665,13 @@ const styles = StyleSheet.create({
   shareMenuPrimaryText: { color: '#000000', fontSize: 15, fontWeight: '900', textAlign: 'center' },
   shareMenuItem: { minHeight: 42, borderRadius: 12, justifyContent: 'center', paddingHorizontal: 12 },
   shareMenuText: { color: '#ffffff', fontSize: 15, fontWeight: '800', textAlign: 'center' },
+  savedOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 21, backgroundColor: '#000000', paddingHorizontal: 18, paddingTop: 72, paddingBottom: 86 },
+  savedPanel: { flex: 1, borderWidth: 1, borderColor: '#242424', borderRadius: 20, backgroundColor: '#050505', padding: 14 },
+  savedHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 8 },
+  savedTitle: { color: '#ffffff', fontSize: 20, lineHeight: 24, fontWeight: '900' },
+  savedSubtitle: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '800', marginTop: 2 },
+  savedOverlayList: { paddingBottom: 18 },
+  savedOverlayItem: { borderTopWidth: 1, borderTopColor: '#171717', paddingVertical: 14 },
   imageEditorPanel: { marginBottom: 8, borderWidth: 1, borderColor: '#242424', borderRadius: 22, padding: 10, backgroundColor: '#050505', gap: 10 },
   imageEditorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },
