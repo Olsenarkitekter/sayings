@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "folksay",
+    "name": "Visay",
     "slug": "sayings",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -39,7 +39,7 @@
       "expo-image-picker",
       "expo-media-library"
     ],
-    "description": "Culturally adapted proverbs and sayings across languages, with meanings and origin notes.",
+    "description": "Visual sayings worth sharing.",
     "scheme": "sayings",
     "extra": {
       "eas": {

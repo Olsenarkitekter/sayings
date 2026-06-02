@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
+import * as Font from 'expo-font';
 import { captureRef } from 'react-native-view-shot';
 import { Feather } from '@expo/vector-icons';
 import { proverbs, languages, categories, getProverbVariant } from './proverbs';
@@ -33,6 +34,8 @@ const STORAGE = {
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
 const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
+const BRAND_NAME = 'Visay';
+const BRAND_TAGLINE = 'Visual sayings worth sharing.';
 const BRAND_LOGO_SOURCE = require('../assets/logo.png');
 const SHARE_COLORS = [
   { key: '#000000', label: 'Sort' },
@@ -61,7 +64,10 @@ function BrandLogo() {
   return (
     <View style={styles.brandRow}>
       <Image source={BRAND_LOGO_SOURCE} style={styles.logoImage} />
-      <Text style={styles.brandText}>FOLKSAY</Text>
+      <View style={styles.brandCopy}>
+        <Text style={styles.brandText}>{BRAND_NAME}</Text>
+        <Text style={styles.brandTagline}>{BRAND_TAGLINE}</Text>
+      </View>
     </View>
   );
 }
@@ -197,16 +203,18 @@ async function createShareImageFile({
         img.onerror = reject;
         img.src = logoUri;
       });
-      context.drawImage(logo, 58, size - 106, 38, 38);
+      context.drawImage(logo, 54, size - 112, 48, 48);
     } catch {
       // The wordmark still carries the brand if the browser cannot load the logo asset.
     }
   }
   context.fillStyle = '#ffffff';
   context.textAlign = 'left';
-  context.textBaseline = 'middle';
+  context.textBaseline = 'alphabetic';
   context.font = '900 28px Arial, Helvetica, sans-serif';
-  context.fillText('FOLKSAY', 108, size - 87);
+  context.fillText(BRAND_NAME.toUpperCase(), 112, size - 92);
+  context.font = '700 14px Arial, Helvetica, sans-serif';
+  context.fillText(BRAND_TAGLINE, 112, size - 70);
   context.globalAlpha = 1;
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
@@ -486,6 +494,7 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
+      await Font.loadAsync(Feather.font).catch(() => {});
       await ensureInstallId();
       const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded, storedShareBackgroundMode, storedShareBackgroundColor, storedShareFont, storedShareUppercase] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
@@ -591,7 +600,7 @@ export default function App() {
       return;
     }
 
-    const subject = encodeURIComponent(`folksay edit suggestion: ${current.id} (${language.toUpperCase()})`);
+    const subject = encodeURIComponent(`Visay edit suggestion: ${current.id} (${language.toUpperCase()})`);
     const body = encodeURIComponent(`Proverb ID: ${current.id}\nLanguage: ${language.toUpperCase()}\n\nCurrent text:\n${copy.saying}\n\nSuggested text:\n${suggestion}`);
     const mailUrl = `mailto:${EDIT_EMAIL}?subject=${subject}&body=${body}`;
     setEditOpen(false);
@@ -809,7 +818,7 @@ export default function App() {
       if (image && await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(image, {
           mimeType: 'image/png',
-          dialogTitle: 'Share World Saying',
+          dialogTitle: `Share ${BRAND_NAME}`,
           UTI: 'public.png'
         });
         return;
@@ -920,7 +929,7 @@ export default function App() {
       return;
     }
 
-    const subject = encodeURIComponent('folksay new saying suggestion');
+    const subject = encodeURIComponent('Visay new saying suggestion');
     const body = encodeURIComponent(`Saying:\n${saying}\n\nName:\n${newSayingName.trim()}\n\nMeaning in English:\n${newSayingMeaning.trim()}\n\nOrigin story:\n${newSayingOrigin.trim()}`);
     const mailUrl = `mailto:${EDIT_EMAIL}?subject=${subject}&body=${body}`;
     Keyboard.dismiss();
@@ -1078,13 +1087,13 @@ export default function App() {
                   >
                     <View style={[styles.exportOverlay, styles.exportImageOverlay]}>
                       <Text style={[styles.exportSaying, shareFontStyle]}>{displaySaying}</Text>
-                      <View style={styles.exportWatermark}><Image source={BRAND_LOGO_SOURCE} style={styles.exportLogo} /><Text style={styles.exportBrand}>FOLKSAY</Text></View>
+                      <View style={styles.exportWatermark}><Image source={BRAND_LOGO_SOURCE} style={styles.exportLogo} /><View><Text style={styles.exportBrand}>{BRAND_NAME.toUpperCase()}</Text><Text style={styles.exportTagline}>{BRAND_TAGLINE}</Text></View></View>
                     </View>
                   </ImageBackground>
                 ) : (
                   <View style={styles.exportOverlay}>
                     <Text style={[styles.exportSaying, shareFontStyle]}>{displaySaying}</Text>
-                    <View style={styles.exportWatermark}><Image source={BRAND_LOGO_SOURCE} style={styles.exportLogo} /><Text style={styles.exportBrand}>FOLKSAY</Text></View>
+                    <View style={styles.exportWatermark}><Image source={BRAND_LOGO_SOURCE} style={styles.exportLogo} /><View><Text style={styles.exportBrand}>{BRAND_NAME.toUpperCase()}</Text><Text style={styles.exportTagline}>{BRAND_TAGLINE}</Text></View></View>
                   </View>
                 )}
               </View>
@@ -1385,9 +1394,11 @@ const styles = StyleSheet.create({
   loading: { fontSize: 18, color: '#ffffff' },
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
-  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
-  logoImage: { width: 30, height: 30 },
-  brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.8 },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1, minWidth: 0 },
+  logoImage: { width: 48, height: 32, resizeMode: 'contain' },
+  brandCopy: { minWidth: 0, flexShrink: 1 },
+  brandText: { color: '#ffffff', fontSize: 20, lineHeight: 22, fontWeight: '900', letterSpacing: 0 },
+  brandTagline: { color: '#8f8f8f', fontSize: 10, lineHeight: 13, fontWeight: '800', marginTop: 1 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
   activeText: { color: '#ffffff' },
@@ -1431,8 +1442,9 @@ const styles = StyleSheet.create({
   exportImageOverlay: { backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   exportSaying: { color: '#ffffff', fontSize: 76, lineHeight: 92, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0, 0, 0, 0.65)', textShadowOffset: { width: 0, height: 6 }, textShadowRadius: 18 },
   exportWatermark: { position: 'absolute', left: 58, bottom: 58, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: 0.82 },
-  exportLogo: { width: 38, height: 38 },
+  exportLogo: { width: 50, height: 38, resizeMode: 'contain' },
   exportBrand: { color: '#ffffff', fontSize: 28, lineHeight: 34, fontWeight: '900' },
+  exportTagline: { color: '#ffffff', fontSize: 14, lineHeight: 17, fontWeight: '700', opacity: 0.82 },
   activeIconButton: { borderColor: '#ffffff' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },

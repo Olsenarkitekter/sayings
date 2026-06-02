@@ -1,18 +1,18 @@
-# folksay — App Store listing draft
+# Visay — App Store listing draft
 
 ## Subtitle
-Proverbs across cultures
+Visual sayings worth sharing
 
 ## Promotional text
-Discover 97 culturally adapted sayings in 8 languages, with meanings, origin notes, and shareable proverb cards.
+Discover 81 curated sayings in 9 languages, with meanings, origin notes, and shareable visual cards.
 
 ## Description
-folksay helps you explore proverbs and sayings across cultures.
+Visay helps you explore visual proverbs and sayings across cultures.
 
 Instead of showing literal translations only, the app groups sayings by meaning and presents culturally natural equivalents in different languages. Each saying includes a clear meaning and origin note, with English details available for comparison.
 
 Features:
-- 97 proverbs and sayings across 8 languages
+- 81 curated proverbs and sayings across 9 languages
 - Meaning-first equivalents, not just word-for-word translations
 - Origin and history notes
 - Save favorite sayings
@@ -20,7 +20,7 @@ Features:
 - Choose language and categories
 - Add your own background image for sharing
 
-folksay is made for language lovers, writers, travelers, culture nerds, and anyone who enjoys the wisdom hidden in everyday expressions.
+Visay is made for language lovers, writers, travelers, culture nerds, and anyone who enjoys the wisdom hidden in everyday expressions.
 
 ## Keywords
 proverbs,sayings,quotes,language,culture,wisdom,idioms,translation,history,learn
