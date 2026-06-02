@@ -1289,50 +1289,58 @@ export default function App() {
             {!editOpen && imageEditorOpen && (
               <View style={styles.imageEditorPanel}>
                 <ScrollView showsVerticalScrollIndicator contentContainerStyle={styles.imageEditorScrollContent}>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Accept image changes" onPress={acceptImageEdit} style={styles.compactImageEditButton}>
-                    <ActionIcon name="check" size={20} />
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Use color background" onPress={() => changeShareBackgroundMode('color')} style={[styles.compactImageEditButton, shareBackgroundMode === 'color' && styles.activeImageEditButton]}>
-                    <Text style={styles.imageEditButtonText}>Color</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Use image background" onPress={() => changeShareBackgroundMode('image')} style={[styles.compactImageEditButton, shareBackgroundMode === 'image' && styles.activeImageEditButton]}>
-                    <Text style={styles.imageEditButtonText}>Image</Text>
-                  </Pressable>
-                  {shareBackgroundMode === 'color' && (
-                    <>
-                      {SHARE_COLORS.map((item) => (
-                        <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} background`} onPress={() => changeShareBackgroundColor(item.key)} style={[styles.compactSwatchButton, shareBackgroundColor === item.key && styles.activeSwatchButton]}>
-                          <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
-                        </Pressable>
-                      ))}
-                    </>
-                  )}
-                  {SHARE_FONTS.map((item) => (
-                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} font`} onPress={() => changeShareFont(item.key)} style={[styles.compactImageEditButton, shareFont === item.key && styles.activeImageEditButton]}>
-                      <Text style={[styles.imageEditButtonText, item.family ? { fontFamily: item.family } : null]}>{item.label}</Text>
+                  <View style={styles.editorControlRow}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Accept image changes" onPress={acceptImageEdit} style={styles.compactImageEditButton}>
+                      <ActionIcon name="check" size={20} />
                     </Pressable>
-                  ))}
-                  <Pressable accessibilityRole="button" accessibilityLabel="Toggle uppercase text" onPress={toggleShareUppercase} style={[styles.compactImageEditButton, shareUppercase && styles.activeImageEditButton]}>
-                    <Text style={styles.imageEditButtonText}>ALL CAPS</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Toggle bold text" onPress={toggleShareBold} style={[styles.compactImageEditButton, shareBold && styles.activeImageEditButton]}>
-                    <Text style={[styles.imageEditButtonText, styles.boldChoiceText]}>Fed</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Toggle italic text" onPress={toggleShareItalic} style={[styles.compactImageEditButton, shareItalic && styles.activeImageEditButton]}>
-                    <Text style={[styles.imageEditButtonText, styles.italicChoiceText]}>Kursiv</Text>
-                  </Pressable>
-                  {SHARE_TEXT_COLORS.map((item) => (
-                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text color`} onPress={() => changeShareTextColor(item.key)} style={[styles.compactSwatchButton, shareTextColor === item.key && styles.activeSwatchButton]}>
-                      <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
+                    <Pressable accessibilityRole="button" accessibilityLabel="Use color background" onPress={() => changeShareBackgroundMode('color')} style={[styles.compactImageEditButton, shareBackgroundMode === 'color' && styles.activeImageEditButton]}>
+                      <Text style={styles.imageEditButtonText}>Color</Text>
                     </Pressable>
-                  ))}
-                  {SHARE_TEXT_SIZES.map((item) => (
-                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text size`} onPress={() => changeShareTextSize(item.key)} style={[styles.compactImageEditButton, shareTextSize === item.key && styles.activeImageEditButton]}>
-                      <Text style={styles.imageEditButtonText}>{item.label}</Text>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Use image background" onPress={() => changeShareBackgroundMode('image')} style={[styles.compactImageEditButton, shareBackgroundMode === 'image' && styles.activeImageEditButton]}>
+                      <Text style={styles.imageEditButtonText}>Image</Text>
                     </Pressable>
-                  ))}
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.editorHorizontalRow}>
+                    {SHARE_COLORS.map((item) => (
+                      <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} background`} onPress={() => changeShareBackgroundColor(item.key)} style={[styles.compactSwatchButton, shareBackgroundColor === item.key && styles.activeSwatchButton]}>
+                        <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                  <View style={styles.editorControlRow}>
+                    {SHARE_FONTS.map((item) => (
+                      <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} font`} onPress={() => changeShareFont(item.key)} style={[styles.compactImageEditButton, styles.fontChoiceButton, shareFont === item.key && styles.activeImageEditButton]}>
+                        <Text style={[styles.imageEditButtonText, item.family ? { fontFamily: item.family } : null]}>{item.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                  <View style={styles.editorControlRow}>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Toggle uppercase text" onPress={toggleShareUppercase} style={[styles.compactImageEditButton, shareUppercase && styles.activeImageEditButton]}>
+                      <Text style={styles.imageEditButtonText}>ALL CAPS</Text>
+                    </Pressable>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Toggle bold text" onPress={toggleShareBold} style={[styles.compactImageEditButton, shareBold && styles.activeImageEditButton]}>
+                      <Text style={[styles.imageEditButtonText, styles.boldChoiceText]}>Fed</Text>
+                    </Pressable>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Toggle italic text" onPress={toggleShareItalic} style={[styles.compactImageEditButton, shareItalic && styles.activeImageEditButton]}>
+                      <Text style={[styles.imageEditButtonText, styles.italicChoiceText]}>Kursiv</Text>
+                    </Pressable>
+                  </View>
+                  <View style={styles.editorControlRow}>
+                    {SHARE_TEXT_COLORS.map((item) => (
+                      <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text color`} onPress={() => changeShareTextColor(item.key)} style={[styles.compactSwatchButton, shareTextColor === item.key && styles.activeSwatchButton]}>
+                        <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
+                      </Pressable>
+                    ))}
+                  </View>
+                  <View style={styles.editorControlRow}>
+                    {SHARE_TEXT_SIZES.map((item) => (
+                      <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text size`} onPress={() => changeShareTextSize(item.key)} style={[styles.compactImageEditButton, shareTextSize === item.key && styles.activeImageEditButton]}>
+                        <Text style={styles.imageEditButtonText}>{item.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
                   {hasImageBackground && (
-                    <>
+                    <View style={styles.editorControlRow}>
                       <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.compactImageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
                         <Text style={styles.imageEditButtonText}>Full</Text>
                       </Pressable>
@@ -1342,7 +1350,7 @@ export default function App() {
                       <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.compactImageEditButton}>
                         <Text style={styles.imageEditButtonText}>Remove</Text>
                       </Pressable>
-                    </>
+                    </View>
                   )}
                 </ScrollView>
               </View>
@@ -1619,10 +1627,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, width: '100%', paddingHorizontal: 10, paddingTop: 8, paddingBottom: 14, position: 'relative' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
-  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, marginBottom: 8 },
+  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 16, marginBottom: 8 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 0, flexShrink: 1, minWidth: 0 },
-  logoImage: { width: 76, height: 76, resizeMode: 'contain' },
-  brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 3, flexWrap: 'wrap' },
+  logoImage: { width: 76, height: 76, resizeMode: 'contain', transform: [{ translateY: 5 }] },
+  brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', paddingTop: 5 },
   brandText: { color: '#ffffff', fontSize: 23, lineHeight: 25, fontWeight: '900', letterSpacing: 0 },
   brandTagline: { color: '#8f8f8f', fontSize: 12, lineHeight: 14, fontWeight: '800' },
   symbolIcon: { fontWeight: '900', textAlign: 'center', textAlignVertical: 'center', includeFontPadding: false },
@@ -1711,7 +1719,9 @@ const styles = StyleSheet.create({
   savedOverlayList: { paddingBottom: 18 },
   savedOverlayItem: { borderTopWidth: 1, borderTopColor: '#171717', paddingVertical: 14 },
   imageEditorPanel: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 9, height: 268, maxHeight: '48%', borderWidth: 1, borderColor: '#242424', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 10, paddingVertical: 12, backgroundColor: '#050505' },
-  imageEditorScrollContent: { minHeight: 244, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 2, paddingBottom: 12 },
+  imageEditorScrollContent: { minHeight: 244, alignItems: 'stretch', justifyContent: 'center', gap: 5, paddingHorizontal: 2, paddingBottom: 8 },
+  editorControlRow: { width: '100%', minHeight: 34, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  editorHorizontalRow: { minHeight: 34, alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 6 },
   imageEditorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },
   imageEditorHint: { color: '#8f8f8f', fontSize: 11, lineHeight: 15, marginTop: 2 },
@@ -1722,12 +1732,13 @@ const styles = StyleSheet.create({
   colorSwatchButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
   activeSwatchButton: { borderColor: '#ffffff' },
   colorSwatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#777777' },
-  compactImageEditButton: { height: 42, minWidth: 52, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
-  compactSwatchButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
-  compactSwatch: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: '#777777' },
+  compactImageEditButton: { height: 34, minWidth: 56, borderRadius: 17, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 11 },
+  compactSwatchButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
+  compactSwatch: { width: 23, height: 23, borderRadius: 11.5, borderWidth: 1, borderColor: '#777777' },
+  fontChoiceButton: { minWidth: 78 },
   imageEditButton: { minHeight: 42, minWidth: 92, flexGrow: 1, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
-  imageEditButtonText: { color: '#ffffff', fontSize: 11, lineHeight: 14, fontWeight: '900', textAlign: 'center' },
+  imageEditButtonText: { color: '#ffffff', fontSize: 10, lineHeight: 13, fontWeight: '900', textAlign: 'center' },
   boldChoiceText: { fontWeight: '900' },
   italicChoiceText: { fontStyle: 'italic' },
   imageEditCloseButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
