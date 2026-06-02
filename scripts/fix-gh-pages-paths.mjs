@@ -7,6 +7,7 @@ const html = readFileSync(indexPath, 'utf8')
   .replaceAll('href="/_expo/', 'href="./_expo/');
 
 writeFileSync(indexPath, html);
+writeFileSync('dist/.nojekyll', '');
 
 const jsDir = 'dist/_expo/static/js/web';
 for (const file of readdirSync(jsDir).filter((name) => name.endsWith('.js'))) {
