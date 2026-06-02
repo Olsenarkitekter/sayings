@@ -199,7 +199,7 @@ function wrapCanvasText(context, text, maxWidth) {
 }
 
 function clampImageScale(value) {
-  return Math.max(0.5, Math.min(3, Math.round((Number(value) || 1) * 100) / 100));
+  return Math.max(0.25, Math.min(4, Math.round((Number(value) || 1) * 100) / 100));
 }
 
 function eventPoint(nativeEvent) {
@@ -498,10 +498,9 @@ export default function App() {
   const [edits, setEdits] = useState({});
   const [ownerMode, setOwnerMode] = useState(false);
   const [backgroundImageUri, setBackgroundImageUri] = useState(null);
-  const [backgroundImageFit, setBackgroundImageFit] = useState('cover');
+  const [backgroundImageFit, setBackgroundImageFit] = useState('contain');
   const [backgroundImagePosition, setBackgroundImagePosition] = useState({ x: 0, y: 0 });
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
-  const [backgroundRounded, setBackgroundRounded] = useState(false);
   const [shareBackgroundMode, setShareBackgroundMode] = useState('color');
   const [shareBackgroundColor, setShareBackgroundColor] = useState('#000000');
   const [pageBackgroundColor, setPageBackgroundColor] = useState('#000000');
@@ -509,8 +508,6 @@ export default function App() {
   const [shareUppercase, setShareUppercase] = useState(false);
   const [shareTextSize, setShareTextSize] = useState('medium');
   const [shareTextColor, setShareTextColor] = useState('#ffffff');
-  const [shareBold, setShareBold] = useState(true);
-  const [shareItalic, setShareItalic] = useState(false);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [detailLineCount, setDetailLineCount] = useState(0);
   const [ready, setReady] = useState(false);
@@ -583,8 +580,8 @@ export default function App() {
   const shareFontStyle = {
     ...(selectedShareFont.family ? { fontFamily: selectedShareFont.family } : {}),
     color: shareTextColor,
-    fontWeight: shareBold ? '900' : '600',
-    fontStyle: shareItalic ? 'italic' : 'normal'
+    fontWeight: '500',
+    fontStyle: shareFont === 'script' ? 'italic' : 'normal'
   };
   const hasImageBackground = shareBackgroundMode === 'image' && !!backgroundImageUri;
   const cardBackgroundStyle = shareBackgroundMode === 'color' ? { backgroundColor: shareBackgroundColor } : null;
@@ -615,7 +612,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded, storedShareBackgroundMode, storedShareBackgroundColor, storedShareFont, storedShareUppercase, storedShareTextSize, storedShareTextColor, storedShareBold, storedShareItalic] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded, storedShareBackgroundMode, storedShareBackgroundColor, storedShareFont, storedShareUppercase, storedShareTextSize, storedShareTextColor, storedShareBold, storedShareItalic] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
@@ -625,7 +622,6 @@ export default function App() {
         AsyncStorage.getItem(STORAGE.edits),
         AsyncStorage.getItem(STORAGE.ownerMode),
         AsyncStorage.getItem(STORAGE.backgroundImage),
-        AsyncStorage.getItem(STORAGE.backgroundImageFit),
         AsyncStorage.getItem(STORAGE.backgroundImagePosition),
         AsyncStorage.getItem(STORAGE.backgroundImageScale),
         AsyncStorage.getItem(STORAGE.backgroundRounded),
@@ -652,7 +648,7 @@ export default function App() {
       setOwnerMode(owner);
       setNotificationTime(time);
       if (storedBackgroundImage) setBackgroundImageUri(storedBackgroundImage);
-      if (storedBackgroundFit === 'contain' || storedBackgroundFit === 'cover') setBackgroundImageFit(storedBackgroundFit);
+      if (storedBackgroundImage) await AsyncStorage.setItem(STORAGE.backgroundImageFit, 'contain');
       try {
         const parsedPosition = storedBackgroundPosition ? JSON.parse(storedBackgroundPosition) : null;
         if (parsedPosition && Number.isFinite(parsedPosition.x) && Number.isFinite(parsedPosition.y)) {
@@ -660,21 +656,23 @@ export default function App() {
         }
       } catch {}
       const parsedScale = Number(storedBackgroundScale);
-      if (Number.isFinite(parsedScale) && parsedScale >= 0.5 && parsedScale <= 3) setBackgroundImageScale(parsedScale);
+      if (Number.isFinite(parsedScale) && parsedScale >= 0.25 && parsedScale <= 4) setBackgroundImageScale(parsedScale);
       if (storedBackgroundRounded === 'on') {
         await AsyncStorage.setItem(STORAGE.backgroundRounded, 'off');
       }
       if (storedShareBackgroundMode === 'image' || storedShareBackgroundMode === 'color') setShareBackgroundMode(storedShareBackgroundMode);
       if (SHARE_COLORS.some((item) => item.key === storedShareBackgroundColor)) {
         setShareBackgroundColor(storedShareBackgroundColor);
-        setPageBackgroundColor(PAGE_BACKGROUND_COLORS.includes(storedShareBackgroundColor) ? storedShareBackgroundColor : '#000000');
+        setPageBackgroundColor(storedShareBackgroundMode === 'image' ? '#000000' : storedShareBackgroundColor);
+      } else if (storedShareBackgroundMode === 'image') {
+        setPageBackgroundColor('#000000');
       }
       if (SHARE_FONTS.some((item) => item.key === storedShareFont)) setShareFont(storedShareFont);
       if (storedShareUppercase === 'on') setShareUppercase(true);
       if (SHARE_TEXT_SIZES.some((item) => item.key === storedShareTextSize)) setShareTextSize(storedShareTextSize);
       if (SHARE_TEXT_COLORS.some((item) => item.key === storedShareTextColor)) setShareTextColor(storedShareTextColor);
-      if (storedShareBold === 'off') setShareBold(false);
-      if (storedShareItalic === 'on') setShareItalic(true);
+      if (storedShareBold !== 'off') await AsyncStorage.setItem(STORAGE.shareBold, 'off');
+      if (storedShareItalic === 'on') await AsyncStorage.setItem(STORAGE.shareItalic, 'off');
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
@@ -819,15 +817,15 @@ export default function App() {
     if (result.canceled || !result.assets?.[0]?.uri) return;
     const nextUri = result.assets[0].uri;
     setBackgroundImageUri(nextUri);
-    setBackgroundImageFit('cover');
+    setBackgroundImageFit('contain');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
-    setBackgroundRounded(false);
     setShareBackgroundMode('image');
+    setPageBackgroundColor('#000000');
     setImageEditorOpen(true);
     await AsyncStorage.multiSet([
       [STORAGE.backgroundImage, nextUri],
-      [STORAGE.backgroundImageFit, 'cover'],
+      [STORAGE.backgroundImageFit, 'contain'],
       [STORAGE.backgroundImagePosition, JSON.stringify({ x: 0, y: 0 })],
       [STORAGE.backgroundImageScale, '1'],
       [STORAGE.backgroundRounded, 'off'],
@@ -900,19 +898,8 @@ export default function App() {
     }
   }
 
-  async function changeBackgroundImageFit(nextFit) {
-    setBackgroundImageFit(nextFit);
-    await AsyncStorage.setItem(STORAGE.backgroundImageFit, nextFit);
-  }
-
   function acceptImageEdit() {
     setImageEditorOpen(false);
-  }
-
-  async function toggleBackgroundRounded() {
-    const next = !backgroundRounded;
-    setBackgroundRounded(next);
-    await AsyncStorage.setItem(STORAGE.backgroundRounded, next ? 'on' : 'off');
   }
 
   async function selectSearchResult(item) {
@@ -937,10 +924,9 @@ export default function App() {
     setBackgroundImageUri(null);
     setImageEditorOpen(false);
     setShareBackgroundMode('color');
-    setBackgroundImageFit('cover');
+    setBackgroundImageFit('contain');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
-    setBackgroundRounded(false);
     await AsyncStorage.multiRemove([STORAGE.backgroundImage, STORAGE.backgroundImageFit, STORAGE.backgroundImagePosition, STORAGE.backgroundImageScale, STORAGE.backgroundRounded]);
     await AsyncStorage.setItem(STORAGE.shareBackgroundMode, 'color');
   }
@@ -951,13 +937,14 @@ export default function App() {
       return;
     }
     setShareBackgroundMode(nextMode);
+    if (nextMode === 'image') setPageBackgroundColor('#000000');
     await AsyncStorage.setItem(STORAGE.shareBackgroundMode, nextMode);
   }
 
   async function changeShareBackgroundColor(nextColor) {
     setShareBackgroundMode('color');
     setShareBackgroundColor(nextColor);
-    setPageBackgroundColor(PAGE_BACKGROUND_COLORS.includes(nextColor) ? nextColor : pageBackgroundColor);
+    setPageBackgroundColor(nextColor);
     await AsyncStorage.multiSet([
       [STORAGE.shareBackgroundMode, 'color'],
       [STORAGE.shareBackgroundColor, nextColor]
@@ -979,18 +966,6 @@ export default function App() {
     await AsyncStorage.setItem(STORAGE.shareTextColor, nextColor);
   }
 
-  async function toggleShareBold() {
-    const next = !shareBold;
-    setShareBold(next);
-    await AsyncStorage.setItem(STORAGE.shareBold, next ? 'on' : 'off');
-  }
-
-  async function toggleShareItalic() {
-    const next = !shareItalic;
-    setShareItalic(next);
-    await AsyncStorage.setItem(STORAGE.shareItalic, next ? 'on' : 'off');
-  }
-
   async function toggleShareUppercase() {
     const next = !shareUppercase;
     setShareUppercase(next);
@@ -1009,8 +984,8 @@ export default function App() {
         backgroundColor: shareBackgroundColor,
         textColor: shareTextColor,
         fontFamily: selectedShareFont.family || 'Arial, Helvetica, sans-serif',
-        fontStyle: shareItalic ? 'italic' : 'normal',
-        fontWeight: shareBold ? '900' : '600',
+        fontStyle: shareFont === 'script' ? 'italic' : 'normal',
+        fontWeight: '500',
         textSizeMode: shareTextSize,
         logoUri
       });
@@ -1318,12 +1293,6 @@ export default function App() {
                     <Pressable accessibilityRole="button" accessibilityLabel="Toggle uppercase text" onPress={toggleShareUppercase} style={[styles.compactImageEditButton, shareUppercase && styles.activeImageEditButton]}>
                       <Text style={styles.imageEditButtonText}>ALL CAPS</Text>
                     </Pressable>
-                    <Pressable accessibilityRole="button" accessibilityLabel="Toggle bold text" onPress={toggleShareBold} style={[styles.compactImageEditButton, shareBold && styles.activeImageEditButton]}>
-                      <Text style={[styles.imageEditButtonText, styles.boldChoiceText]}>Fed</Text>
-                    </Pressable>
-                    <Pressable accessibilityRole="button" accessibilityLabel="Toggle italic text" onPress={toggleShareItalic} style={[styles.compactImageEditButton, shareItalic && styles.activeImageEditButton]}>
-                      <Text style={[styles.imageEditButtonText, styles.italicChoiceText]}>Kursiv</Text>
-                    </Pressable>
                   </View>
                   <View style={styles.editorControlRow}>
                     {SHARE_TEXT_COLORS.map((item) => (
@@ -1341,12 +1310,6 @@ export default function App() {
                   </View>
                   {hasImageBackground && (
                     <View style={styles.editorControlRow}>
-                      <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.compactImageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
-                        <Text style={styles.imageEditButtonText}>Full</Text>
-                      </Pressable>
-                      <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.compactImageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
-                        <Text style={styles.imageEditButtonText}>Whole</Text>
-                      </Pressable>
                       <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.compactImageEditButton}>
                         <Text style={styles.imageEditButtonText}>Remove</Text>
                       </Pressable>
@@ -1624,12 +1587,12 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#000000' },
-  container: { flex: 1, width: '100%', paddingHorizontal: 10, paddingTop: 8, paddingBottom: 14, position: 'relative' },
+  container: { flex: 1, width: '100%', paddingHorizontal: 10, paddingTop: 0, paddingBottom: 14, position: 'relative' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
-  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 16, marginBottom: 8 },
+  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 0, marginBottom: 4 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 0, flexShrink: 1, minWidth: 0 },
-  logoImage: { width: 76, height: 76, resizeMode: 'contain', transform: [{ translateY: 5 }] },
+  logoImage: { width: 76, height: 76, resizeMode: 'contain' },
   brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', paddingTop: 5 },
   brandText: { color: '#ffffff', fontSize: 23, lineHeight: 25, fontWeight: '900', letterSpacing: 0 },
   brandTagline: { color: '#8f8f8f', fontSize: 12, lineHeight: 14, fontWeight: '800' },
@@ -1742,11 +1705,9 @@ const styles = StyleSheet.create({
   activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
   imageEditButtonText: { color: '#ffffff', fontSize: 10, lineHeight: 13, fontWeight: '900', textAlign: 'center' },
   fontChoiceText: { fontSize: 9, lineHeight: 12 },
-  boldChoiceText: { fontWeight: '900' },
-  italicChoiceText: { fontStyle: 'italic' },
   imageEditCloseButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
   imageEditCloseText: { color: '#ffffff', fontSize: 28, lineHeight: 30, fontWeight: '300' },
-  settingsPanel: { position: 'absolute', top: 66, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
+  settingsPanel: { position: 'absolute', top: 56, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
   settingsContent: { paddingBottom: 42 },
   settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
