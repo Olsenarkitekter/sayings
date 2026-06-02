@@ -43,12 +43,12 @@ const ICON_SYMBOLS = {
   'star-active': '★',
   check: '✓',
   'edit-3': '✎',
-  sliders: '☷',
+  sliders: '≡',
   list: '≡',
-  send: '↗',
+  send: '➤',
   x: '×',
-  'chevron-up': '⌃',
-  'chevron-down': '⌄'
+  'chevron-up': '^',
+  'chevron-down': 'v'
 };
 const SHARE_COLORS = [
   { key: '#000000', label: 'Sort' },

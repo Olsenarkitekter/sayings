@@ -35,7 +35,6 @@
     },
     "plugins": [
       "expo-notifications",
-      "expo-font",
       "expo-image-picker",
       "expo-media-library"
     ],
