@@ -78,6 +78,20 @@ const SHARE_COLORS = [
   { key: '#b94d3d', label: 'Koral' },
   { key: '#303030', label: 'Grafit' }
 ];
+const PAGE_BACKGROUND_COLORS = [
+  '#000000',
+  '#111827',
+  '#0f172a',
+  '#172554',
+  '#1e1b4b',
+  '#312e81',
+  '#134e4a',
+  '#14532d',
+  '#3f2a12',
+  '#4a1d1f',
+  '#4c1d35',
+  '#2f2a45'
+];
 const SHARE_FONTS = [
   { key: 'system', label: 'Helvetica', family: Platform.select({ web: 'Helvetica, Arial, sans-serif', default: undefined }) },
   { key: 'serif', label: 'Times New Roman', family: Platform.select({ web: '"Times New Roman", Times, serif', default: 'serif' }) },
@@ -116,6 +130,11 @@ function getShareTextStyle(text, mode, target = 'screen') {
     fontSize,
     lineHeight: Math.round(fontSize * lineRatio)
   };
+}
+
+function randomPageBackgroundColor(previousColor = '#000000') {
+  const candidates = PAGE_BACKGROUND_COLORS.filter((color) => color !== previousColor);
+  return candidates[Math.floor(Math.random() * candidates.length)] || PAGE_BACKGROUND_COLORS[0];
 }
 
 function BrandLogo() {
@@ -485,6 +504,7 @@ export default function App() {
   const [backgroundRounded, setBackgroundRounded] = useState(false);
   const [shareBackgroundMode, setShareBackgroundMode] = useState('color');
   const [shareBackgroundColor, setShareBackgroundColor] = useState('#000000');
+  const [pageBackgroundColor, setPageBackgroundColor] = useState('#000000');
   const [shareFont, setShareFont] = useState('system');
   const [shareUppercase, setShareUppercase] = useState(false);
   const [shareTextSize, setShareTextSize] = useState('medium');
@@ -645,7 +665,10 @@ export default function App() {
         await AsyncStorage.setItem(STORAGE.backgroundRounded, 'off');
       }
       if (storedShareBackgroundMode === 'image' || storedShareBackgroundMode === 'color') setShareBackgroundMode(storedShareBackgroundMode);
-      if (SHARE_COLORS.some((item) => item.key === storedShareBackgroundColor)) setShareBackgroundColor(storedShareBackgroundColor);
+      if (SHARE_COLORS.some((item) => item.key === storedShareBackgroundColor)) {
+        setShareBackgroundColor(storedShareBackgroundColor);
+        setPageBackgroundColor(PAGE_BACKGROUND_COLORS.includes(storedShareBackgroundColor) ? storedShareBackgroundColor : '#000000');
+      }
       if (SHARE_FONTS.some((item) => item.key === storedShareFont)) setShareFont(storedShareFont);
       if (storedShareUppercase === 'on') setShareUppercase(true);
       if (SHARE_TEXT_SIZES.some((item) => item.key === storedShareTextSize)) setShareTextSize(storedShareTextSize);
@@ -687,10 +710,26 @@ export default function App() {
     if (notificationsEnabled) scheduleDailyProverbs(nextLanguage, notificationTime).catch(() => {});
   }
 
+  async function rotateProverbBackground() {
+    const nextColor = randomPageBackgroundColor(shareBackgroundColor);
+    setPageBackgroundColor(nextColor);
+    setShareBackgroundMode('color');
+    setShareBackgroundColor(nextColor);
+    setShareTextColor('#ffffff');
+    await AsyncStorage.multiSet([
+      [STORAGE.shareBackgroundMode, 'color'],
+      [STORAGE.shareBackgroundColor, nextColor],
+      [STORAGE.shareTextColor, '#ffffff']
+    ]);
+  }
+
   async function setCurrentIndex(next) {
     const normalized = ((next % filteredProverbs.length) + filteredProverbs.length) % filteredProverbs.length;
     setIndex(normalized);
-    await AsyncStorage.setItem(STORAGE.index, String(normalized));
+    await Promise.all([
+      rotateProverbBackground(),
+      AsyncStorage.setItem(STORAGE.index, String(normalized))
+    ]);
   }
 
   async function showProverbById(proverbId) {
@@ -710,6 +749,7 @@ export default function App() {
     setOppositeOpen(false);
     setIndex(globalIndex);
     await Promise.all([
+      rotateProverbBackground(),
       persistSelectedCategories([]),
       AsyncStorage.setItem(STORAGE.index, String(globalIndex))
     ]);
@@ -731,6 +771,7 @@ export default function App() {
     setSelectedCategories(nextCategories);
     setIndex(0);
     await Promise.all([
+      rotateProverbBackground(),
       persistSelectedCategories(nextCategories),
       AsyncStorage.setItem(STORAGE.index, '0')
     ]);
@@ -883,7 +924,10 @@ export default function App() {
       await persistSelectedCategories([]);
       const globalIndex = proverbs.findIndex((proverb) => proverb.id === item.id);
       setIndex(globalIndex);
-      await AsyncStorage.setItem(STORAGE.index, String(globalIndex));
+      await Promise.all([
+        rotateProverbBackground(),
+        AsyncStorage.setItem(STORAGE.index, String(globalIndex))
+      ]);
     }
     setSearchOpen(false);
     setSearchQuery('');
@@ -913,6 +957,7 @@ export default function App() {
   async function changeShareBackgroundColor(nextColor) {
     setShareBackgroundMode('color');
     setShareBackgroundColor(nextColor);
+    setPageBackgroundColor(PAGE_BACKGROUND_COLORS.includes(nextColor) ? nextColor : pageBackgroundColor);
     await AsyncStorage.multiSet([
       [STORAGE.shareBackgroundMode, 'color'],
       [STORAGE.shareBackgroundColor, nextColor]
@@ -1056,6 +1101,7 @@ export default function App() {
       setSelectedCategories([]);
       setCategoryOpen(false);
       setIndex(allIndex);
+      rotateProverbBackground().catch(() => {});
       persistSelectedCategories([]).catch(() => {});
       AsyncStorage.setItem(STORAGE.index, String(allIndex)).catch(() => {});
     }
@@ -1122,9 +1168,9 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: pageBackgroundColor }]}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: pageBackgroundColor }]}>
         <View style={styles.topActions}>
           <BrandLogo />
 
@@ -1242,6 +1288,67 @@ export default function App() {
                 </View>
               </View>
             )}
+            {!editOpen && imageEditorOpen && (
+              <View style={styles.imageEditorPanel}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imageEditorScrollContent}>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Accept image changes" onPress={acceptImageEdit} style={styles.compactImageEditButton}>
+                    <ActionIcon name="check" size={20} />
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Use color background" onPress={() => changeShareBackgroundMode('color')} style={[styles.compactImageEditButton, shareBackgroundMode === 'color' && styles.activeImageEditButton]}>
+                    <Text style={styles.imageEditButtonText}>Color</Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Use image background" onPress={() => changeShareBackgroundMode('image')} style={[styles.compactImageEditButton, shareBackgroundMode === 'image' && styles.activeImageEditButton]}>
+                    <Text style={styles.imageEditButtonText}>Image</Text>
+                  </Pressable>
+                  {shareBackgroundMode === 'color' && (
+                    <>
+                      {SHARE_COLORS.map((item) => (
+                        <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} background`} onPress={() => changeShareBackgroundColor(item.key)} style={[styles.compactSwatchButton, shareBackgroundColor === item.key && styles.activeSwatchButton]}>
+                          <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
+                        </Pressable>
+                      ))}
+                    </>
+                  )}
+                  {SHARE_FONTS.map((item) => (
+                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} font`} onPress={() => changeShareFont(item.key)} style={[styles.compactImageEditButton, shareFont === item.key && styles.activeImageEditButton]}>
+                      <Text style={[styles.imageEditButtonText, item.family ? { fontFamily: item.family } : null]}>{item.label}</Text>
+                    </Pressable>
+                  ))}
+                  <Pressable accessibilityRole="button" accessibilityLabel="Toggle uppercase text" onPress={toggleShareUppercase} style={[styles.compactImageEditButton, shareUppercase && styles.activeImageEditButton]}>
+                    <Text style={styles.imageEditButtonText}>ALL CAPS</Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Toggle bold text" onPress={toggleShareBold} style={[styles.compactImageEditButton, shareBold && styles.activeImageEditButton]}>
+                    <Text style={[styles.imageEditButtonText, styles.boldChoiceText]}>Fed</Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel="Toggle italic text" onPress={toggleShareItalic} style={[styles.compactImageEditButton, shareItalic && styles.activeImageEditButton]}>
+                    <Text style={[styles.imageEditButtonText, styles.italicChoiceText]}>Kursiv</Text>
+                  </Pressable>
+                  {SHARE_TEXT_COLORS.map((item) => (
+                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text color`} onPress={() => changeShareTextColor(item.key)} style={[styles.compactSwatchButton, shareTextColor === item.key && styles.activeSwatchButton]}>
+                      <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
+                    </Pressable>
+                  ))}
+                  {SHARE_TEXT_SIZES.map((item) => (
+                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text size`} onPress={() => changeShareTextSize(item.key)} style={[styles.compactImageEditButton, shareTextSize === item.key && styles.activeImageEditButton]}>
+                      <Text style={styles.imageEditButtonText}>{item.label}</Text>
+                    </Pressable>
+                  ))}
+                  {hasImageBackground && (
+                    <>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.compactImageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
+                        <Text style={styles.imageEditButtonText}>Full</Text>
+                      </Pressable>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.compactImageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
+                        <Text style={styles.imageEditButtonText}>Whole</Text>
+                      </Pressable>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.compactImageEditButton}>
+                        <Text style={styles.imageEditButtonText}>Remove</Text>
+                      </Pressable>
+                    </>
+                  )}
+                </ScrollView>
+              </View>
+            )}
             {Platform.OS !== 'web' && (
               <View
                 ref={shareCardRef}
@@ -1272,67 +1379,7 @@ export default function App() {
 
         </View>
 
-        {editOpen ? null : imageEditorOpen ? (
-          <View style={styles.imageEditorPanel}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imageEditorScrollContent}>
-              <Pressable accessibilityRole="button" accessibilityLabel="Accept image changes" onPress={acceptImageEdit} style={styles.compactImageEditButton}>
-                <ActionIcon name="check" size={20} />
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Use color background" onPress={() => changeShareBackgroundMode('color')} style={[styles.compactImageEditButton, shareBackgroundMode === 'color' && styles.activeImageEditButton]}>
-                <Text style={styles.imageEditButtonText}>Color</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Use image background" onPress={() => changeShareBackgroundMode('image')} style={[styles.compactImageEditButton, shareBackgroundMode === 'image' && styles.activeImageEditButton]}>
-                <Text style={styles.imageEditButtonText}>Image</Text>
-              </Pressable>
-              {shareBackgroundMode === 'color' && (
-                <>
-                  {SHARE_COLORS.map((item) => (
-                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} background`} onPress={() => changeShareBackgroundColor(item.key)} style={[styles.compactSwatchButton, shareBackgroundColor === item.key && styles.activeSwatchButton]}>
-                      <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
-                    </Pressable>
-                  ))}
-                </>
-              )}
-              {SHARE_FONTS.map((item) => (
-                <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} font`} onPress={() => changeShareFont(item.key)} style={[styles.compactImageEditButton, shareFont === item.key && styles.activeImageEditButton]}>
-                  <Text style={[styles.imageEditButtonText, item.family ? { fontFamily: item.family } : null]}>{item.label}</Text>
-                </Pressable>
-              ))}
-              <Pressable accessibilityRole="button" accessibilityLabel="Toggle uppercase text" onPress={toggleShareUppercase} style={[styles.compactImageEditButton, shareUppercase && styles.activeImageEditButton]}>
-                <Text style={styles.imageEditButtonText}>ALL CAPS</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Toggle bold text" onPress={toggleShareBold} style={[styles.compactImageEditButton, shareBold && styles.activeImageEditButton]}>
-                <Text style={[styles.imageEditButtonText, styles.boldChoiceText]}>Fed</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Toggle italic text" onPress={toggleShareItalic} style={[styles.compactImageEditButton, shareItalic && styles.activeImageEditButton]}>
-                <Text style={[styles.imageEditButtonText, styles.italicChoiceText]}>Kursiv</Text>
-              </Pressable>
-              {SHARE_TEXT_COLORS.map((item) => (
-                <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text color`} onPress={() => changeShareTextColor(item.key)} style={[styles.compactSwatchButton, shareTextColor === item.key && styles.activeSwatchButton]}>
-                  <View style={[styles.compactSwatch, { backgroundColor: item.key }]} />
-                </Pressable>
-              ))}
-              {SHARE_TEXT_SIZES.map((item) => (
-                <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text size`} onPress={() => changeShareTextSize(item.key)} style={[styles.compactImageEditButton, shareTextSize === item.key && styles.activeImageEditButton]}>
-                  <Text style={styles.imageEditButtonText}>{item.label}</Text>
-                </Pressable>
-              ))}
-              {hasImageBackground && (
-                <>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.compactImageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
-                    <Text style={styles.imageEditButtonText}>Full</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.compactImageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
-                    <Text style={styles.imageEditButtonText}>Whole</Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.compactImageEditButton}>
-                    <Text style={styles.imageEditButtonText}>Remove</Text>
-                  </Pressable>
-                </>
-              )}
-            </ScrollView>
-          </View>
-        ) : (
+        {editOpen ? null : (
           <View style={styles.actionBar}>
             <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
               <ActionIcon name="edit-3" />
@@ -1355,14 +1402,17 @@ export default function App() {
         )}
 
         {shareOpen && !editOpen && (
-          <View style={styles.shareMenu}>
-            <Pressable onPress={saveShareImage} style={styles.shareMenuPrimaryItem}><Text style={styles.shareMenuPrimaryText}>Save image to Photos</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('instagram')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Instagram</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('facebook')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Facebook</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('linkedin')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>LinkedIn</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('sms')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>SMS / Messages</Text></Pressable>
-          </View>
+          <>
+            <Pressable accessibilityLabel="Close share menu" onPress={() => setShareOpen(false)} style={styles.shareDismissLayer} />
+            <View style={styles.shareMenu}>
+              <Pressable onPress={saveShareImage} style={styles.shareMenuPrimaryItem}><Text style={styles.shareMenuPrimaryText}>Save image to Photos</Text></Pressable>
+              <Pressable onPress={() => shareToNetwork('instagram')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Instagram</Text></Pressable>
+              <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
+              <Pressable onPress={() => shareToNetwork('facebook')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Facebook</Text></Pressable>
+              <Pressable onPress={() => shareToNetwork('linkedin')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>LinkedIn</Text></Pressable>
+              <Pressable onPress={() => shareToNetwork('sms')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>SMS / Messages</Text></Pressable>
+            </View>
+          </>
         )}
 
         {infoOpen && (
@@ -1649,6 +1699,7 @@ const styles = StyleSheet.create({
   editPrimaryText: { color: '#000000', fontSize: 14, fontWeight: '900' },
   actionBar: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, width: '100%' },
   bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  shareDismissLayer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 24 },
   shareMenu: { position: 'absolute', left: 18, right: 18, bottom: 72, zIndex: 25, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8, gap: 4 },
   shareMenuPrimaryItem: { minHeight: 46, borderRadius: 13, justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#ffffff' },
   shareMenuPrimaryText: { color: '#000000', fontSize: 15, fontWeight: '900', textAlign: 'center' },
@@ -1661,8 +1712,8 @@ const styles = StyleSheet.create({
   savedSubtitle: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '800', marginTop: 2 },
   savedOverlayList: { paddingBottom: 18 },
   savedOverlayItem: { borderTopWidth: 1, borderTopColor: '#171717', paddingVertical: 14 },
-  imageEditorPanel: { height: 56, marginBottom: 0, borderWidth: 1, borderColor: '#242424', borderRadius: 28, paddingHorizontal: 6, backgroundColor: '#050505', justifyContent: 'center' },
-  imageEditorScrollContent: { minHeight: 54, alignItems: 'center', gap: 8, paddingHorizontal: 2 },
+  imageEditorPanel: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 9, height: 108, borderWidth: 1, borderColor: '#242424', borderRadius: 26, paddingHorizontal: 8, paddingVertical: 10, backgroundColor: '#050505', justifyContent: 'center' },
+  imageEditorScrollContent: { minHeight: 86, alignItems: 'center', gap: 8, paddingHorizontal: 2 },
   imageEditorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },
   imageEditorHint: { color: '#8f8f8f', fontSize: 11, lineHeight: 15, marginTop: 2 },
