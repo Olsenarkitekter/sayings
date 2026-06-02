@@ -1309,8 +1309,8 @@ export default function App() {
                   </ScrollView>
                   <View style={styles.editorControlRow}>
                     {SHARE_FONTS.map((item) => (
-                      <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} font`} onPress={() => changeShareFont(item.key)} style={[styles.compactImageEditButton, styles.fontChoiceButton, shareFont === item.key && styles.activeImageEditButton]}>
-                        <Text style={[styles.imageEditButtonText, item.family ? { fontFamily: item.family } : null]}>{item.label}</Text>
+                      <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} font`} onPress={() => changeShareFont(item.key)} style={[styles.compactImageEditButton, styles.fontChoiceButton, item.key === 'serif' && styles.serifChoiceButton, item.key === 'script' && styles.scriptChoiceButton, shareFont === item.key && styles.activeImageEditButton]}>
+                        <Text style={[styles.imageEditButtonText, styles.fontChoiceText, item.family ? { fontFamily: item.family } : null]}>{item.label}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -1735,10 +1735,13 @@ const styles = StyleSheet.create({
   compactImageEditButton: { height: 34, minWidth: 56, borderRadius: 17, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 11 },
   compactSwatchButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
   compactSwatch: { width: 23, height: 23, borderRadius: 11.5, borderWidth: 1, borderColor: '#777777' },
-  fontChoiceButton: { minWidth: 78 },
+  fontChoiceButton: { width: 92, minWidth: 0 },
+  serifChoiceButton: { width: 130 },
+  scriptChoiceButton: { width: 74 },
   imageEditButton: { minHeight: 42, minWidth: 92, flexGrow: 1, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
   imageEditButtonText: { color: '#ffffff', fontSize: 10, lineHeight: 13, fontWeight: '900', textAlign: 'center' },
+  fontChoiceText: { fontSize: 9, lineHeight: 12 },
   boldChoiceText: { fontWeight: '900' },
   italicChoiceText: { fontStyle: 'italic' },
   imageEditCloseButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
