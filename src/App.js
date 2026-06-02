@@ -5,9 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
-import * as Font from 'expo-font';
 import { captureRef } from 'react-native-view-shot';
-import { Feather } from '@expo/vector-icons';
 import { proverbs, languages, categories, getProverbVariant } from './proverbs';
 
 const STORAGE = {
@@ -35,8 +33,23 @@ const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
 const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
 const BRAND_NAME = 'Visay';
-const BRAND_TAGLINE = 'Visual sayings worth sharing.';
+const BRAND_TAGLINE = 'Visual sayings.';
 const BRAND_LOGO_SOURCE = require('../assets/logo.png');
+const ICON_SYMBOLS = {
+  search: '⌕',
+  menu: '☰',
+  info: 'i',
+  star: '☆',
+  'star-active': '★',
+  check: '✓',
+  'edit-3': '✎',
+  sliders: '☷',
+  list: '≡',
+  send: '↗',
+  x: '×',
+  'chevron-up': '⌃',
+  'chevron-down': '⌄'
+};
 const SHARE_COLORS = [
   { key: '#000000', label: 'Sort' },
   { key: '#16302b', label: 'Grøn' },
@@ -73,7 +86,22 @@ function BrandLogo() {
 }
 
 function ActionIcon({ name, active, size = 22 }) {
-  return <Feather name={name} size={size} color={active ? '#ffd166' : '#ffffff'} />;
+  const symbol = ICON_SYMBOLS[active && name === 'star' ? 'star-active' : name] || '•';
+  return (
+    <Text
+      allowFontScaling={false}
+      style={[
+        styles.symbolIcon,
+        {
+          color: active ? '#ffd166' : '#ffffff',
+          fontSize: size,
+          lineHeight: size + 3
+        }
+      ]}
+    >
+      {symbol}
+    </Text>
+  );
 }
 
 function wrapCanvasText(context, text, maxWidth) {
@@ -203,7 +231,7 @@ async function createShareImageFile({
         img.onerror = reject;
         img.src = logoUri;
       });
-      context.drawImage(logo, 54, size - 112, 48, 48);
+      context.drawImage(logo, 50, size - 122, 64, 64);
     } catch {
       // The wordmark still carries the brand if the browser cannot load the logo asset.
     }
@@ -212,9 +240,9 @@ async function createShareImageFile({
   context.textAlign = 'left';
   context.textBaseline = 'alphabetic';
   context.font = '900 28px Arial, Helvetica, sans-serif';
-  context.fillText(BRAND_NAME.toUpperCase(), 112, size - 92);
+  context.fillText(BRAND_NAME.toUpperCase(), 130, size - 92);
   context.font = '700 14px Arial, Helvetica, sans-serif';
-  context.fillText(BRAND_TAGLINE, 112, size - 70);
+  context.fillText(BRAND_TAGLINE, 130, size - 70);
   context.globalAlpha = 1;
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
@@ -494,7 +522,6 @@ export default function App() {
 
   useEffect(() => {
     (async () => {
-      await Font.loadAsync(Feather.font).catch(() => {});
       await ensureInstallId();
       const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded, storedShareBackgroundMode, storedShareBackgroundColor, storedShareFont, storedShareUppercase] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
@@ -1395,10 +1422,11 @@ const styles = StyleSheet.create({
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1, minWidth: 0 },
-  logoImage: { width: 48, height: 32, resizeMode: 'contain' },
+  logoImage: { width: 52, height: 52, resizeMode: 'contain' },
   brandCopy: { minWidth: 0, flexShrink: 1 },
   brandText: { color: '#ffffff', fontSize: 20, lineHeight: 22, fontWeight: '900', letterSpacing: 0 },
   brandTagline: { color: '#8f8f8f', fontSize: 10, lineHeight: 13, fontWeight: '800', marginTop: 1 },
+  symbolIcon: { fontWeight: '900', textAlign: 'center', includeFontPadding: false },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
   activeText: { color: '#ffffff' },
@@ -1442,7 +1470,7 @@ const styles = StyleSheet.create({
   exportImageOverlay: { backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   exportSaying: { color: '#ffffff', fontSize: 76, lineHeight: 92, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0, 0, 0, 0.65)', textShadowOffset: { width: 0, height: 6 }, textShadowRadius: 18 },
   exportWatermark: { position: 'absolute', left: 58, bottom: 58, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: 0.82 },
-  exportLogo: { width: 50, height: 38, resizeMode: 'contain' },
+  exportLogo: { width: 58, height: 58, resizeMode: 'contain' },
   exportBrand: { color: '#ffffff', fontSize: 28, lineHeight: 34, fontWeight: '900' },
   exportTagline: { color: '#ffffff', fontSize: 14, lineHeight: 17, fontWeight: '700', opacity: 0.82 },
   activeIconButton: { borderColor: '#ffffff' },

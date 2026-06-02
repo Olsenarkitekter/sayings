@@ -1,7 +1,7 @@
 # Visay — App Store listing draft
 
 ## Subtitle
-Visual sayings worth sharing
+Visual sayings
 
 ## Promotional text
 Discover 81 curated sayings in 9 languages, with meanings, origin notes, and shareable visual cards.

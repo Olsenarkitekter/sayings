@@ -39,7 +39,7 @@
       "expo-image-picker",
       "expo-media-library"
     ],
-    "description": "Visual sayings worth sharing.",
+    "description": "Visual sayings.",
     "scheme": "sayings",
     "extra": {
       "eas": {
