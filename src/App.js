@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, ImageBackground, Keyboard, Linking, Platform, Pressable, SafeAreaView, ScrollView, Share, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Image, ImageBackground, Keyboard, Linking, Platform, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
@@ -549,7 +549,6 @@ export default function App() {
         })
     : [];
   const displaySaying = shareUppercase ? copy.saying.toUpperCase() : copy.saying;
-  const shareText = displaySaying;
   const sayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'screen');
   const exportSayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'export');
   const isFavorite = favorites.includes(displayedProverb.id);
@@ -980,34 +979,35 @@ export default function App() {
     });
   }
 
-  async function shareProverb() {
+  async function shareImage(destination = 'share') {
     try {
       setShareOpen(false);
       const image = await createCurrentShareImage();
+      if (!image) throw new Error('No image created');
+
       if (Platform.OS === 'web') {
         const webNavigator = typeof navigator !== 'undefined' ? navigator : null;
-        const webSharePayload = image ? { title: displaySaying, text: shareText, files: [image] } : null;
+        const webSharePayload = { title: `${BRAND_NAME} image`, files: [image] };
         if (webNavigator?.share && webSharePayload && (!webNavigator.canShare || webNavigator.canShare(webSharePayload))) {
           await webNavigator.share(webSharePayload);
           return;
         }
-        if (image) await downloadShareImage(image);
-        await Share.share({ title: displaySaying, message: shareText });
+        await downloadShareImage(image);
         return;
       }
 
-      if (image && await Sharing.isAvailableAsync()) {
+      if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(image, {
           mimeType: 'image/png',
-          dialogTitle: `Share ${BRAND_NAME}`,
+          dialogTitle: `Share ${BRAND_NAME} image${destination === 'share' ? '' : ` to ${destination}`}`,
           UTI: 'public.png'
         });
         return;
       }
 
-      await Share.share({ title: displaySaying, message: shareText });
+      Alert.alert('Image sharing unavailable', 'This device cannot share image files right now.');
     } catch {
-      Alert.alert('Share unavailable', 'Sharing is not available on this device right now.');
+      Alert.alert('Share unavailable', 'The image could not be shared right now.');
     }
   }
 
@@ -1034,36 +1034,8 @@ export default function App() {
     }
   }
 
-  async function shareBySms() {
-    setShareOpen(false);
-    const separator = Platform.OS === 'ios' ? '&' : '?';
-    const smsUrl = `sms:${separator}body=${encodeURIComponent(shareText)}`;
-    if (await Linking.canOpenURL(smsUrl)) await Linking.openURL(smsUrl);
-    else await Share.share({ title: displaySaying, message: shareText });
-  }
-
   async function shareToNetwork(network) {
-    if (network === 'sms') {
-      await shareBySms();
-      return;
-    }
-
-    if (Platform.OS !== 'web' || network === 'instagram' || network === 'messenger') {
-      await shareProverb();
-      return;
-    }
-
-    const url = 'https://olsenarkitekter.github.io/sayings/';
-    const encodedUrl = encodeURIComponent(url);
-    const encodedText = encodeURIComponent(displaySaying);
-    const targets = {
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
-      messenger: `https://www.facebook.com/dialog/send?link=${encodedUrl}&redirect_uri=${encodedUrl}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`
-    };
-
-    const target = targets[network];
-    if (target && typeof window !== 'undefined') window.open(target, '_blank', 'noopener,noreferrer');
+    await shareImage(network);
   }
 
   function openSavedList() {
@@ -1384,13 +1356,12 @@ export default function App() {
 
         {shareOpen && !editOpen && (
           <View style={styles.shareMenu}>
-            <Pressable onPress={shareProverb} style={styles.shareMenuPrimaryItem}><Text style={styles.shareMenuPrimaryText}>Send image</Text></Pressable>
-            <Pressable onPress={saveShareImage} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Save image to Photos</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('sms')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>SMS / Messages</Text></Pressable>
-            <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
+            <Pressable onPress={saveShareImage} style={styles.shareMenuPrimaryItem}><Text style={styles.shareMenuPrimaryText}>Save image to Photos</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('instagram')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Instagram</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('facebook')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Facebook</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('linkedin')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>LinkedIn</Text></Pressable>
+            <Pressable onPress={() => shareToNetwork('sms')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>SMS / Messages</Text></Pressable>
           </View>
         )}
 
