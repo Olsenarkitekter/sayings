@@ -1262,8 +1262,6 @@ export default function App() {
               <View style={styles.cardFooter}>
                 <View style={styles.cardMetaRow}>
                   <Text style={styles.cardMetaText}>{currentCategory?.label || 'Ordsprog'}</Text>
-                  <Text style={styles.cardMetaDot}>·</Text>
-                  <Text style={styles.cardMetaText}>{currentKindLabel}</Text>
                 </View>
                 <View style={styles.cardNavControlRow}>
                   <Pressable accessibilityRole="button" accessibilityLabel="Previous saying" onPress={() => setCurrentIndex(index - 1)} style={styles.navArrowButton}>
@@ -1627,7 +1625,7 @@ const styles = StyleSheet.create({
   brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 3, flexWrap: 'wrap' },
   brandText: { color: '#ffffff', fontSize: 23, lineHeight: 25, fontWeight: '900', letterSpacing: 0 },
   brandTagline: { color: '#8f8f8f', fontSize: 12, lineHeight: 14, fontWeight: '800' },
-  symbolIcon: { fontWeight: '900', textAlign: 'center', includeFontPadding: false },
+  symbolIcon: { fontWeight: '900', textAlign: 'center', textAlignVertical: 'center', includeFontPadding: false },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   activeText: { color: '#ffffff' },
   iconTap: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
@@ -1642,14 +1640,14 @@ const styles = StyleSheet.create({
   searchEmpty: { color: '#8f8f8f', fontSize: 14, fontWeight: '800', textAlign: 'center', paddingVertical: 18 },
   content: { flex: 1, justifyContent: 'flex-start', paddingBottom: 8 },
   cardShell: { flex: 1, position: 'relative', justifyContent: 'flex-start' },
-  shareCard: { width: '100%', aspectRatio: 1, flexGrow: 0, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  shareCard: { width: '100%', aspectRatio: 1, flexGrow: 0, marginTop: 18, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.42)', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   shareCardBackground: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   shareCardImage: {},
   shareCardOverlay: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 38, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   shareCardTextBox: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 38 },
   cardFooter: { marginTop: 8, alignItems: 'stretch', gap: 8, paddingHorizontal: 0 },
-  cardMetaRow: { maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', gap: 5 },
-  cardMetaText: { color: '#8f8f8f', fontSize: 10, lineHeight: 13, fontWeight: '900', textAlign: 'left', textTransform: 'uppercase' },
+  cardMetaRow: { maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 5 },
+  cardMetaText: { width: '100%', color: '#8f8f8f', fontSize: 10, lineHeight: 13, fontWeight: '900', textAlign: 'center', textTransform: 'uppercase' },
   cardMetaDot: { color: '#777777', fontSize: 13, lineHeight: 16, fontWeight: '900' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
   originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
@@ -1658,8 +1656,8 @@ const styles = StyleSheet.create({
   navArrowButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
   navArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300', opacity: 0.9 },
   cardControlRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  oppositeButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080808' },
-  activeOppositeButton: { borderColor: '#ffffff', borderWidth: 2.5, backgroundColor: '#080808' },
+  oppositeButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.55)', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
+  activeOppositeButton: { borderColor: '#ffffff', borderWidth: 2.5, backgroundColor: 'transparent' },
   yinYangFrame: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#ffffff', overflow: 'hidden', position: 'relative', backgroundColor: '#080808' },
   yinYangHalf: { position: 'absolute', top: 0, bottom: 0, width: 11 },
   yinYangLeft: { left: 0, backgroundColor: '#ffffff' },
@@ -1667,8 +1665,8 @@ const styles = StyleSheet.create({
   yinYangDot: { position: 'absolute', left: 6, width: 8, height: 8, borderRadius: 4 },
   yinYangTopDot: { top: 2, backgroundColor: '#080808' },
   yinYangBottomDot: { bottom: 2, backgroundColor: '#ffffff' },
-  inlineInfoButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080808' },
-  activeInlineIconButton: { borderColor: '#ffd166', backgroundColor: '#17120a' },
+  inlineInfoButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.55)', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
+  activeInlineIconButton: { borderColor: '#ffd166', backgroundColor: 'transparent' },
   inlineInfoText: { color: '#ffffff', fontSize: 15, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
   exportCard: { position: 'absolute', left: -1200, top: 0, width: 1080, height: 1080, overflow: 'hidden' },
   exportCardFill: { width: '100%', height: '100%' },
