@@ -27,7 +27,10 @@ const STORAGE = {
   shareBackgroundColor: 'daily-sayings:shareBackgroundColor',
   shareFont: 'daily-sayings:shareFont',
   shareUppercase: 'daily-sayings:shareUppercase',
-  shareTextSize: 'daily-sayings:shareTextSize'
+  shareTextSize: 'daily-sayings:shareTextSize',
+  shareTextColor: 'daily-sayings:shareTextColor',
+  shareBold: 'daily-sayings:shareBold',
+  shareItalic: 'daily-sayings:shareItalic'
 };
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
@@ -51,6 +54,16 @@ const ICON_SYMBOLS = {
   'chevron-up': '^',
   'chevron-down': 'v'
 };
+const SHARE_TEXT_COLORS = [
+  { key: '#ffffff', label: 'Hvid' },
+  { key: '#000000', label: 'Sort' },
+  { key: '#f1eee6', label: 'Lys' },
+  { key: '#ffd166', label: 'Guld' },
+  { key: '#ef476f', label: 'Pink' },
+  { key: '#5eead4', label: 'Turkis' },
+  { key: '#93c5fd', label: 'Blå' },
+  { key: '#a7f3d0', label: 'Grøn' }
+];
 const SHARE_COLORS = [
   { key: '#000000', label: 'Sort' },
   { key: '#16302b', label: 'Grøn' },
@@ -66,27 +79,26 @@ const SHARE_COLORS = [
   { key: '#303030', label: 'Grafit' }
 ];
 const SHARE_FONTS = [
-  { key: 'system', label: 'Klassisk', family: undefined },
-  { key: 'serif', label: 'Bog', family: Platform.select({ web: 'Georgia, serif', default: 'serif' }) },
-  { key: 'italic', label: 'Skrå', family: Platform.select({ web: 'Georgia, serif', default: 'serif' }), fontStyle: 'italic' },
-  { key: 'hand', label: 'Hånd', family: Platform.select({ web: '"Bradley Hand", "Segoe Print", cursive', default: 'casual' }) },
-  { key: 'script', label: 'Script', family: Platform.select({ web: '"Brush Script MT", "Snell Roundhand", cursive', default: 'cursive' }) },
-  { key: 'mono', label: 'Mono', family: Platform.select({ web: 'Menlo, monospace', default: 'monospace' }) }
+  { key: 'system', label: 'Helvetica', family: Platform.select({ web: 'Helvetica, Arial, sans-serif', default: undefined }) },
+  { key: 'serif', label: 'Times New Roman', family: Platform.select({ web: '"Times New Roman", Times, serif', default: 'serif' }) },
+  { key: 'script', label: 'Script', family: Platform.select({ web: '"Brush Script MT", "Snell Roundhand", cursive', default: 'cursive' }) }
 ];
 const SHARE_TEXT_SIZES = [
   { key: 'small', label: 'Lille', base: 32, min: 25, lineRatio: 1.16, exportBase: 60, exportMin: 46, exportLineRatio: 1.18 },
   { key: 'medium', label: 'Mellem', base: 42, min: 29, lineRatio: 1.14, exportBase: 76, exportMin: 52, exportLineRatio: 1.18 },
-  { key: 'large', label: 'Stor', base: 54, min: 34, lineRatio: 1.1, exportBase: 94, exportMin: 58, exportLineRatio: 1.12, uppercase: true }
+  { key: 'large', label: 'Stor', base: 54, min: 32, lineRatio: 1.08, exportBase: 96, exportMin: 54, exportLineRatio: 1.1 }
 ];
 
 function getTextLengthScale(text) {
   const length = text.trim().length;
-  if (length > 170) return 0.6;
-  if (length > 140) return 0.68;
-  if (length > 110) return 0.76;
-  if (length > 82) return 0.86;
-  if (length > 58) return 0.94;
-  return 1;
+  const hasManyCaps = text.replace(/[^A-ZÆØÅ]/g, '').length > text.replace(/[^A-Za-zÆØÅæøå]/g, '').length * 0.72;
+  let scale = 1;
+  if (length > 170) scale = 0.56;
+  else if (length > 140) scale = 0.64;
+  else if (length > 110) scale = 0.72;
+  else if (length > 82) scale = 0.82;
+  else if (length > 58) scale = 0.92;
+  return hasManyCaps ? scale * 0.9 : scale;
 }
 
 function resolveShareTextSize(mode) {
@@ -133,6 +145,20 @@ function ActionIcon({ name, active, size = 22 }) {
       ]}
     >
       {symbol}
+    </Text>
+  );
+}
+
+function YinYangIcon({ active }) {
+  return (
+    <Text
+      allowFontScaling={false}
+      style={[
+        styles.yinYangIcon,
+        active ? styles.activeYinYangIcon : null
+      ]}
+    >
+      ☯
     </Text>
   );
 }
@@ -191,8 +217,10 @@ async function createShareImageFile({
   imageScale = 1,
   backgroundMode = 'image',
   backgroundColor = '#000000',
+  textColor = '#ffffff',
   fontFamily = 'Arial, Helvetica, sans-serif',
   fontStyle = 'normal',
+  fontWeight = '900',
   textSizeMode = 'medium',
   logoUri
 }) {
@@ -233,11 +261,11 @@ async function createShareImageFile({
     context.fillRect(0, 0, size, size);
   }
 
-  context.fillStyle = '#ffffff';
+  context.fillStyle = textColor || '#ffffff';
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   const textSizing = getShareTextStyle(text, textSizeMode, 'export');
-  context.font = `${fontStyle} 900 ${textSizing.fontSize}px ${fontFamily}`;
+  context.font = `${fontStyle} ${fontWeight} ${textSizing.fontSize}px ${fontFamily}`;
   context.shadowColor = 'rgba(0, 0, 0, 0.65)';
   context.shadowBlur = 18;
   context.shadowOffsetY = 6;
@@ -245,7 +273,7 @@ async function createShareImageFile({
   let lines = wrapCanvasText(context, text, 820);
   if (lines.length > 7) {
     const compactSize = Math.max(resolveShareTextSize(textSizeMode).exportMin, Math.round(textSizing.fontSize * 0.82));
-    context.font = `${fontStyle} 900 ${compactSize}px ${fontFamily}`;
+    context.font = `${fontStyle} ${fontWeight} ${compactSize}px ${fontFamily}`;
     lines = wrapCanvasText(context, text, 860);
     textSizing.fontSize = compactSize;
     textSizing.lineHeight = Math.round(compactSize * resolveShareTextSize(textSizeMode).exportLineRatio);
@@ -462,6 +490,9 @@ export default function App() {
   const [shareFont, setShareFont] = useState('system');
   const [shareUppercase, setShareUppercase] = useState(false);
   const [shareTextSize, setShareTextSize] = useState('medium');
+  const [shareTextColor, setShareTextColor] = useState('#ffffff');
+  const [shareBold, setShareBold] = useState(true);
+  const [shareItalic, setShareItalic] = useState(false);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [detailLineCount, setDetailLineCount] = useState(0);
   const [ready, setReady] = useState(false);
@@ -519,8 +550,7 @@ export default function App() {
           return aStarts - bStarts || aSaying.localeCompare(bSaying);
         })
     : [];
-  const selectedShareTextSize = resolveShareTextSize(shareTextSize);
-  const displaySaying = (shareUppercase || selectedShareTextSize.uppercase) ? copy.saying.toUpperCase() : copy.saying;
+  const displaySaying = shareUppercase ? copy.saying.toUpperCase() : copy.saying;
   const shareText = displaySaying;
   const sayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'screen');
   const exportSayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'export');
@@ -535,7 +565,9 @@ export default function App() {
   const selectedShareFont = SHARE_FONTS.find((item) => item.key === shareFont) || SHARE_FONTS[0];
   const shareFontStyle = {
     ...(selectedShareFont.family ? { fontFamily: selectedShareFont.family } : {}),
-    ...(selectedShareFont.fontStyle ? { fontStyle: selectedShareFont.fontStyle } : {})
+    color: shareTextColor,
+    fontWeight: shareBold ? '900' : '600',
+    fontStyle: shareItalic ? 'italic' : 'normal'
   };
   const hasImageBackground = shareBackgroundMode === 'image' && !!backgroundImageUri;
   const cardBackgroundStyle = shareBackgroundMode === 'color' ? { backgroundColor: shareBackgroundColor } : null;
@@ -565,7 +597,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded, storedShareBackgroundMode, storedShareBackgroundColor, storedShareFont, storedShareUppercase, storedShareTextSize] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded, storedShareBackgroundMode, storedShareBackgroundColor, storedShareFont, storedShareUppercase, storedShareTextSize, storedShareTextColor, storedShareBold, storedShareItalic] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
@@ -583,7 +615,10 @@ export default function App() {
         AsyncStorage.getItem(STORAGE.shareBackgroundColor),
         AsyncStorage.getItem(STORAGE.shareFont),
         AsyncStorage.getItem(STORAGE.shareUppercase),
-        AsyncStorage.getItem(STORAGE.shareTextSize)
+        AsyncStorage.getItem(STORAGE.shareTextSize),
+        AsyncStorage.getItem(STORAGE.shareTextColor),
+        AsyncStorage.getItem(STORAGE.shareBold),
+        AsyncStorage.getItem(STORAGE.shareItalic)
       ]);
 
       const lang = storedLanguage || detectPreferredLanguage();
@@ -616,6 +651,9 @@ export default function App() {
       if (SHARE_FONTS.some((item) => item.key === storedShareFont)) setShareFont(storedShareFont);
       if (storedShareUppercase === 'on') setShareUppercase(true);
       if (SHARE_TEXT_SIZES.some((item) => item.key === storedShareTextSize)) setShareTextSize(storedShareTextSize);
+      if (SHARE_TEXT_COLORS.some((item) => item.key === storedShareTextColor)) setShareTextColor(storedShareTextColor);
+      if (storedShareBold === 'off') setShareBold(false);
+      if (storedShareItalic === 'on') setShareItalic(true);
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
@@ -845,6 +883,23 @@ export default function App() {
     await AsyncStorage.setItem(STORAGE.shareTextSize, nextSize);
   }
 
+  async function changeShareTextColor(nextColor) {
+    setShareTextColor(nextColor);
+    await AsyncStorage.setItem(STORAGE.shareTextColor, nextColor);
+  }
+
+  async function toggleShareBold() {
+    const next = !shareBold;
+    setShareBold(next);
+    await AsyncStorage.setItem(STORAGE.shareBold, next ? 'on' : 'off');
+  }
+
+  async function toggleShareItalic() {
+    const next = !shareItalic;
+    setShareItalic(next);
+    await AsyncStorage.setItem(STORAGE.shareItalic, next ? 'on' : 'off');
+  }
+
   async function toggleShareUppercase() {
     const next = !shareUppercase;
     setShareUppercase(next);
@@ -861,8 +916,10 @@ export default function App() {
         imageScale: backgroundImageScale,
         backgroundMode: shareBackgroundMode,
         backgroundColor: shareBackgroundColor,
+        textColor: shareTextColor,
         fontFamily: selectedShareFont.family || 'Arial, Helvetica, sans-serif',
-        fontStyle: selectedShareFont.fontStyle || 'normal',
+        fontStyle: shareItalic ? 'italic' : 'normal',
+        fontWeight: shareBold ? '900' : '600',
         textSizeMode: shareTextSize,
         logoUri
       });
@@ -1132,7 +1189,7 @@ export default function App() {
                   <View style={styles.cardControlRow}>
                     {oppositeCopy && (
                       <Pressable accessibilityRole="button" accessibilityLabel="Toggle opposite proverb" onPress={() => setOppositeOpen((value) => !value)} style={[styles.oppositeButton, oppositeOpen && styles.activeOppositeButton]}>
-                        <Text style={styles.oppositeButtonText}>Modsigelse</Text>
+                        <YinYangIcon active={oppositeOpen} />
                       </Pressable>
                     )}
                     <Pressable accessibilityRole="button" accessibilityLabel="Show proverb information" onPress={() => setInfoOpen(true)} style={styles.inlineInfoButton}>
@@ -1222,6 +1279,22 @@ export default function App() {
                 <Pressable accessibilityRole="button" accessibilityLabel="Toggle uppercase text" onPress={toggleShareUppercase} style={[styles.imageEditButton, shareUppercase && styles.activeImageEditButton]}>
                   <Text style={styles.imageEditButtonText}>ALL CAPS</Text>
                 </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Toggle bold text" onPress={toggleShareBold} style={[styles.imageEditButton, shareBold && styles.activeImageEditButton]}>
+                  <Text style={[styles.imageEditButtonText, styles.boldChoiceText]}>Fed</Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Toggle italic text" onPress={toggleShareItalic} style={[styles.imageEditButton, shareItalic && styles.activeImageEditButton]}>
+                  <Text style={[styles.imageEditButtonText, styles.italicChoiceText]}>Kursiv</Text>
+                </Pressable>
+              </View>
+            </View>
+            <View style={styles.styleSection}>
+              <Text style={styles.styleSectionTitle}>Text color</Text>
+              <View style={styles.colorRow}>
+                {SHARE_TEXT_COLORS.map((item) => (
+                  <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} text color`} onPress={() => changeShareTextColor(item.key)} style={[styles.colorSwatchButton, shareTextColor === item.key && styles.activeSwatchButton]}>
+                    <View style={[styles.colorSwatch, { backgroundColor: item.key }]} />
+                  </Pressable>
+                ))}
               </View>
             </View>
             <View style={styles.styleSection}>
@@ -1506,12 +1579,13 @@ const styles = StyleSheet.create({
   originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
   cardReadMoreButton: { alignSelf: 'center', marginTop: 8 },
   cardNavControlRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  navArrowButton: { width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080808' },
-  navArrowText: { color: '#ffffff', fontSize: 30, lineHeight: 32, fontWeight: '300', opacity: 0.88 },
+  navArrowButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
+  navArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300', opacity: 0.9 },
   cardControlRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  oppositeButton: { minHeight: 36, borderRadius: 18, borderWidth: 1, borderColor: '#555555', justifyContent: 'center', paddingHorizontal: 15, backgroundColor: '#080808' },
-  activeOppositeButton: { borderColor: '#ffffff', backgroundColor: 'rgba(255, 255, 255, 0.12)' },
-  oppositeButtonText: { color: '#ffffff', fontSize: 12, lineHeight: 16, fontWeight: '900', textAlign: 'center' },
+  oppositeButton: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff' },
+  activeOppositeButton: { backgroundColor: '#000000' },
+  yinYangIcon: { color: '#000000', fontSize: 28, lineHeight: 31, fontWeight: '900', textAlign: 'center', includeFontPadding: false },
+  activeYinYangIcon: { color: '#ffffff', transform: [{ rotate: '180deg' }] },
   inlineInfoButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', backgroundColor: '#080808' },
   activeInlineIconButton: { borderColor: '#ffd166', backgroundColor: '#17120a' },
   inlineInfoText: { color: '#ffffff', fontSize: 15, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
@@ -1563,6 +1637,8 @@ const styles = StyleSheet.create({
   imageEditButton: { minHeight: 42, minWidth: 92, flexGrow: 1, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
   imageEditButtonText: { color: '#ffffff', fontSize: 11, lineHeight: 14, fontWeight: '900', textAlign: 'center' },
+  boldChoiceText: { fontWeight: '900' },
+  italicChoiceText: { fontStyle: 'italic' },
   imageEditCloseButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
   imageEditCloseText: { color: '#ffffff', fontSize: 28, lineHeight: 30, fontWeight: '300' },
   settingsPanel: { position: 'absolute', top: 66, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
