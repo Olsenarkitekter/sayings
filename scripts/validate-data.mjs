@@ -35,7 +35,7 @@ const categoryKeys = categories.map((item) => item.key);
 for (const removed of ['wisdom', 'weather', 'sea']) {
   if (categoryKeys.includes(removed)) throw new Error(`Removed category still present: ${removed}`);
 }
-for (const category of ['all', 'life', 'love', 'work', 'biblical', 'slang', 'humour']) {
+for (const category of ['all', 'time', 'work-results', 'truth', 'relations', 'risk', 'images-humour', 'origin-stories', 'experience']) {
   if (!categoryKeys.includes(category)) throw new Error(`Missing category: ${category}`);
 }
 

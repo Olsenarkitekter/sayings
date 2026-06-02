@@ -22,17 +22,32 @@ const STORAGE = {
   backgroundImageFit: 'daily-sayings:backgroundImageFit',
   backgroundImagePosition: 'daily-sayings:backgroundImagePosition',
   backgroundImageScale: 'daily-sayings:backgroundImageScale',
-  backgroundRounded: 'daily-sayings:backgroundRounded'
+  backgroundRounded: 'daily-sayings:backgroundRounded',
+  shareBackgroundMode: 'daily-sayings:shareBackgroundMode',
+  shareBackgroundColor: 'daily-sayings:shareBackgroundColor',
+  shareFont: 'daily-sayings:shareFont'
 };
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
 
 const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
+const BRAND_LOGO_SOURCE = require('../assets/logo.png');
+const SHARE_COLORS = [
+  { key: '#000000', label: 'Sort' },
+  { key: '#16302b', label: 'Grøn' },
+  { key: '#40231d', label: 'Rødbrun' },
+  { key: '#f1eee6', label: 'Lys' }
+];
+const SHARE_FONTS = [
+  { key: 'system', label: 'Klassisk', family: undefined },
+  { key: 'serif', label: 'Bog', family: Platform.select({ web: 'Georgia, serif', default: 'serif' }) },
+  { key: 'mono', label: 'Mono', family: Platform.select({ web: 'Menlo, monospace', default: 'monospace' }) }
+];
 
 function BrandLogo() {
   return (
     <View style={styles.brandRow}>
-      <Image source={require('../assets/logo.png')} style={styles.logoImage} />
+      <Image source={BRAND_LOGO_SOURCE} style={styles.logoImage} />
       <Text style={styles.brandText}>FOLKSAY</Text>
     </View>
   );
@@ -91,7 +106,26 @@ function touchDistance(touches = []) {
   return Math.hypot((a.pageX || 0) - (b.pageX || 0), (a.pageY || 0) - (b.pageY || 0));
 }
 
-async function createShareImageFile(text, backgroundImageUri, imageFit = 'cover', imagePosition = { x: 0, y: 0 }, imageScale = 1) {
+function getBrandLogoUri() {
+  const resolved = Image.resolveAssetSource?.(BRAND_LOGO_SOURCE);
+  if (resolved?.uri) return resolved.uri;
+  if (typeof BRAND_LOGO_SOURCE === 'string') return BRAND_LOGO_SOURCE;
+  if (typeof BRAND_LOGO_SOURCE?.uri === 'string') return BRAND_LOGO_SOURCE.uri;
+  if (typeof BRAND_LOGO_SOURCE?.default === 'string') return BRAND_LOGO_SOURCE.default;
+  return null;
+}
+
+async function createShareImageFile({
+  text,
+  backgroundImageUri,
+  imageFit = 'cover',
+  imagePosition = { x: 0, y: 0 },
+  imageScale = 1,
+  backgroundMode = 'image',
+  backgroundColor = '#000000',
+  fontFamily = 'Arial, Helvetica, sans-serif',
+  logoUri
+}) {
   if (Platform.OS !== 'web' || typeof document === 'undefined') return null;
 
   const canvas = document.createElement('canvas');
@@ -101,7 +135,7 @@ async function createShareImageFile(text, backgroundImageUri, imageFit = 'cover'
   const context = canvas.getContext('2d');
   if (!context) return null;
 
-  if (backgroundImageUri) {
+  if (backgroundMode === 'image' && backgroundImageUri) {
     try {
       const image = await new Promise((resolve, reject) => {
         const img = new Image();
@@ -125,21 +159,21 @@ async function createShareImageFile(text, backgroundImageUri, imageFit = 'cover'
       context.fillRect(0, 0, size, size);
     }
   } else {
-    context.fillStyle = '#000000';
+    context.fillStyle = backgroundColor || '#000000';
     context.fillRect(0, 0, size, size);
   }
 
   context.fillStyle = '#ffffff';
   context.textAlign = 'center';
   context.textBaseline = 'middle';
-  context.font = '900 76px Arial, Helvetica, sans-serif';
+  context.font = `900 76px ${fontFamily}`;
   context.shadowColor = 'rgba(0, 0, 0, 0.65)';
   context.shadowBlur = 18;
   context.shadowOffsetY = 6;
 
   let lines = wrapCanvasText(context, text, 820);
   if (lines.length > 7) {
-    context.font = '900 62px Arial, Helvetica, sans-serif';
+    context.font = `900 62px ${fontFamily}`;
     lines = wrapCanvasText(context, text, 860);
   }
 
@@ -148,6 +182,30 @@ async function createShareImageFile(text, backgroundImageUri, imageFit = 'cover'
   lines.forEach((line, lineIndex) => {
     context.fillText(line, size / 2, startY + lineIndex * lineHeight);
   });
+
+  context.shadowColor = 'transparent';
+  context.shadowBlur = 0;
+  context.shadowOffsetY = 0;
+  context.globalAlpha = 0.82;
+  if (logoUri) {
+    try {
+      const logo = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = logoUri;
+      });
+      context.drawImage(logo, 58, size - 106, 38, 38);
+    } catch {
+      // The wordmark still carries the brand if the browser cannot load the logo asset.
+    }
+  }
+  context.fillStyle = '#ffffff';
+  context.textAlign = 'left';
+  context.textBaseline = 'middle';
+  context.font = '900 28px Arial, Helvetica, sans-serif';
+  context.fillText('FOLKSAY', 108, size - 87);
+  context.globalAlpha = 1;
 
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
   if (!blob) return null;
@@ -229,7 +287,7 @@ function detectPreferredLanguage() {
     'en'
   ).toLowerCase();
   const languageCode = locale.split('-')[0];
-  const normalized = { nb: 'no', nn: 'no' }[languageCode] || languageCode;
+  const normalized = { da: 'dk', nb: 'no', nn: 'no' }[languageCode] || languageCode;
   return languages.some((item) => item.key === normalized) ? normalized : 'en';
 }
 
@@ -309,6 +367,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [oppositeOpen, setOppositeOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [addSayingOpen, setAddSayingOpen] = useState(false);
   const [newSaying, setNewSaying] = useState('');
@@ -322,6 +381,9 @@ export default function App() {
   const [backgroundImagePosition, setBackgroundImagePosition] = useState({ x: 0, y: 0 });
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
   const [backgroundRounded, setBackgroundRounded] = useState(true);
+  const [shareBackgroundMode, setShareBackgroundMode] = useState('color');
+  const [shareBackgroundColor, setShareBackgroundColor] = useState('#000000');
+  const [shareFont, setShareFont] = useState('system');
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [hideDetailsForImage, setHideDetailsForImage] = useState(false);
   const [detailLineCount, setDetailLineCount] = useState(0);
@@ -335,10 +397,15 @@ export default function App() {
     [selectedCategories]
   );
   const current = filteredProverbs[index % filteredProverbs.length] || proverbs[0];
-  const currentEdit = edits[current.id]?.[language];
-  const selectedVariant = getProverbVariant(current, language);
+  const opposite = current.oppositeId ? proverbs.find((item) => item.id === current.oppositeId) : null;
+  const displayedProverb = oppositeOpen && opposite ? opposite : current;
+  const currentEdit = edits[displayedProverb.id]?.[language];
+  const selectedVariant = getProverbVariant(displayedProverb, language);
   const copy = currentEdit ? { ...selectedVariant, saying: currentEdit } : selectedVariant;
-  const englishCopy = getProverbVariant(current, 'en');
+  const currentCategory = categories.find((item) => item.key === displayedProverb.category);
+  const currentKindLabel = displayedProverb.kind === 'image' ? 'Billede' : 'Dilemma';
+  const oppositeCopy = opposite ? getProverbVariant(opposite, language) : null;
+  const englishCopy = getProverbVariant(displayedProverb, 'en');
   const meaningText = englishCopy.explanation || copy.explanation;
   const rawOrigin = englishCopy.origin || copy.origin || '';
   const primaryOrigin = /^origin unknown\b/i.test(rawOrigin.trim()) ? null : rawOrigin;
@@ -352,7 +419,7 @@ export default function App() {
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   useEffect(() => {
     setDetailLineCount(0);
-  }, [current.id, language, detailText]);
+  }, [displayedProverb.id, language, detailText]);
 
   function handleDetailTextLayout(event) {
     const nextLineCount = event?.nativeEvent?.lines?.length || 0;
@@ -376,7 +443,7 @@ export default function App() {
           return aStarts - bStarts || aSaying.localeCompare(bSaying);
         })
     : [];
-  const shareText = `${copy.saying}\n\n${detailText}\n\nhttps://olsenarkitekter.github.io/sayings/`;
+  const shareText = copy.saying;
   const isFavorite = favorites.includes(current.id);
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
@@ -385,6 +452,11 @@ export default function App() {
       .filter(Boolean)
       .join(', ');
   const selectedLanguageLabel = languages.find((item) => item.key === language)?.name || 'English';
+  const selectedShareFont = SHARE_FONTS.find((item) => item.key === shareFont) || SHARE_FONTS[0];
+  const shareFontStyle = selectedShareFont.family ? { fontFamily: selectedShareFont.family } : null;
+  const hasImageBackground = shareBackgroundMode === 'image' && !!backgroundImageUri;
+  const cardBackgroundStyle = shareBackgroundMode === 'color' ? { backgroundColor: shareBackgroundColor } : null;
+  const logoUri = getBrandLogoUri();
 
   const savedProverbs = useMemo(
     () => favorites.map((id) => proverbs.find((item) => item.id === id)).filter(Boolean),
@@ -396,14 +468,14 @@ export default function App() {
     setEditOpen(false);
     setLanguageOpen(false);
     setShareOpen(false);
+    setOppositeOpen(false);
   }, [index, language]);
 
   useEffect(() => {
-    if (!backgroundImageUri) {
+    if (!backgroundImageUri && shareBackgroundMode === 'image') {
       setHideDetailsForImage(false);
-      setImageEditorOpen(false);
     }
-  }, [backgroundImageUri]);
+  }, [backgroundImageUri, shareBackgroundMode]);
 
   useEffect(() => {
     if (editOpen) setEditText(copy.saying);
@@ -412,7 +484,7 @@ export default function App() {
   useEffect(() => {
     (async () => {
       await ensureInstallId();
-      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded] = await Promise.all([
+      const [storedLanguage, storedIndex, storedFavorites, storedNotifications, storedTime, storedCategory, storedEdits, storedOwnerMode, storedBackgroundImage, storedBackgroundFit, storedBackgroundPosition, storedBackgroundScale, storedBackgroundRounded, storedShareBackgroundMode, storedShareBackgroundColor, storedShareFont] = await Promise.all([
         AsyncStorage.getItem(STORAGE.language),
         AsyncStorage.getItem(STORAGE.index),
         AsyncStorage.getItem(STORAGE.favorites),
@@ -425,7 +497,10 @@ export default function App() {
         AsyncStorage.getItem(STORAGE.backgroundImageFit),
         AsyncStorage.getItem(STORAGE.backgroundImagePosition),
         AsyncStorage.getItem(STORAGE.backgroundImageScale),
-        AsyncStorage.getItem(STORAGE.backgroundRounded)
+        AsyncStorage.getItem(STORAGE.backgroundRounded),
+        AsyncStorage.getItem(STORAGE.shareBackgroundMode),
+        AsyncStorage.getItem(STORAGE.shareBackgroundColor),
+        AsyncStorage.getItem(STORAGE.shareFont)
       ]);
 
       const lang = storedLanguage || detectPreferredLanguage();
@@ -451,6 +526,9 @@ export default function App() {
       const parsedScale = Number(storedBackgroundScale);
       if (Number.isFinite(parsedScale) && parsedScale >= 0.5 && parsedScale <= 3) setBackgroundImageScale(parsedScale);
       if (storedBackgroundRounded === 'off') setBackgroundRounded(false);
+      if (storedShareBackgroundMode === 'image' || storedShareBackgroundMode === 'color') setShareBackgroundMode(storedShareBackgroundMode);
+      if (SHARE_COLORS.some((item) => item.key === storedShareBackgroundColor)) setShareBackgroundColor(storedShareBackgroundColor);
+      if (SHARE_FONTS.some((item) => item.key === storedShareFont)) setShareFont(storedShareFont);
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
@@ -533,6 +611,7 @@ export default function App() {
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
     setBackgroundRounded(true);
+    setShareBackgroundMode('image');
     setImageEditorOpen(true);
     setHideDetailsForImage(false);
     await AsyncStorage.multiSet([
@@ -540,7 +619,8 @@ export default function App() {
       [STORAGE.backgroundImageFit, 'cover'],
       [STORAGE.backgroundImagePosition, JSON.stringify({ x: 0, y: 0 })],
       [STORAGE.backgroundImageScale, '1'],
-      [STORAGE.backgroundRounded, 'on']
+      [STORAGE.backgroundRounded, 'on'],
+      [STORAGE.shareBackgroundMode, 'image']
     ]);
   }
 
@@ -549,7 +629,7 @@ export default function App() {
     const point = eventPoint(evt.nativeEvent);
     cardGestureRef.current = { startPoint: point, lastPoint: point, didSwipe: false };
 
-    if (backgroundImageUri && imageEditorOpen) {
+    if (hasImageBackground && imageEditorOpen) {
       backgroundGestureRef.current = {
         startPoint: point,
         startPosition: backgroundImagePosition,
@@ -567,7 +647,7 @@ export default function App() {
     if (cardGesture) cardGesture.lastPoint = point;
 
     const gesture = backgroundGestureRef.current;
-    if (!gesture || !backgroundImageUri) return;
+    if (!gesture || !hasImageBackground) return;
     const touches = evt.nativeEvent?.touches || [];
     const nextPosition = {
       x: gesture.startPosition.x + (point.x - gesture.startPoint.x),
@@ -590,7 +670,7 @@ export default function App() {
     const gesture = backgroundGestureRef.current;
     backgroundGestureRef.current = null;
 
-    if (gesture && backgroundImageUri && imageEditorOpen) {
+    if (gesture && hasImageBackground && imageEditorOpen) {
       await AsyncStorage.multiSet([
         [STORAGE.backgroundImagePosition, JSON.stringify(gesture.lastPosition)],
         [STORAGE.backgroundImageScale, String(gesture.lastScale)]
@@ -642,17 +722,52 @@ export default function App() {
   async function clearBackgroundImage() {
     setBackgroundImageUri(null);
     setImageEditorOpen(false);
+    setShareBackgroundMode('color');
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
     setBackgroundRounded(true);
     setHideDetailsForImage(false);
     await AsyncStorage.multiRemove([STORAGE.backgroundImage, STORAGE.backgroundImageFit, STORAGE.backgroundImagePosition, STORAGE.backgroundImageScale, STORAGE.backgroundRounded]);
+    await AsyncStorage.setItem(STORAGE.shareBackgroundMode, 'color');
+  }
+
+  async function changeShareBackgroundMode(nextMode) {
+    if (nextMode === 'image' && !backgroundImageUri) {
+      await chooseBackgroundImage();
+      return;
+    }
+    setShareBackgroundMode(nextMode);
+    await AsyncStorage.setItem(STORAGE.shareBackgroundMode, nextMode);
+  }
+
+  async function changeShareBackgroundColor(nextColor) {
+    setShareBackgroundMode('color');
+    setShareBackgroundColor(nextColor);
+    await AsyncStorage.multiSet([
+      [STORAGE.shareBackgroundMode, 'color'],
+      [STORAGE.shareBackgroundColor, nextColor]
+    ]);
+  }
+
+  async function changeShareFont(nextFont) {
+    setShareFont(nextFont);
+    await AsyncStorage.setItem(STORAGE.shareFont, nextFont);
   }
 
   async function createCurrentShareImage() {
     if (Platform.OS === 'web') {
-      return createShareImageFile(copy.saying, backgroundImageUri, backgroundImageFit, backgroundImagePosition, backgroundImageScale);
+      return createShareImageFile({
+        text: copy.saying,
+        backgroundImageUri,
+        imageFit: backgroundImageFit,
+        imagePosition: backgroundImagePosition,
+        imageScale: backgroundImageScale,
+        backgroundMode: shareBackgroundMode,
+        backgroundColor: shareBackgroundColor,
+        fontFamily: selectedShareFont.family || 'Arial, Helvetica, sans-serif',
+        logoUri
+      });
     }
 
     if (!shareCardRef.current) return null;
@@ -738,7 +853,7 @@ export default function App() {
 
     const url = 'https://olsenarkitekter.github.io/sayings/';
     const encodedUrl = encodeURIComponent(url);
-    const encodedText = encodeURIComponent(`${copy.saying} — ${detailText}`);
+    const encodedText = encodeURIComponent(copy.saying);
     const targets = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`,
       messenger: `https://www.facebook.com/dialog/send?link=${encodedUrl}&redirect_uri=${encodedUrl}`,
@@ -874,9 +989,8 @@ export default function App() {
               </Pressable>
             )}
             <View
-              ref={shareCardRef}
               collapsable={false}
-              style={[styles.shareCard, !backgroundRounded && styles.shareCardSquare]}
+              style={[styles.shareCard, cardBackgroundStyle, !backgroundRounded && styles.shareCardSquare]}
               onStartShouldSetResponder={() => !editOpen}
               onMoveShouldSetResponder={() => !editOpen}
               onResponderGrant={editOpen ? undefined : startCardGesture}
@@ -884,7 +998,7 @@ export default function App() {
               onResponderRelease={editOpen ? undefined : finishCardGesture}
               onResponderTerminate={editOpen ? undefined : finishCardGesture}
             >
-              {backgroundImageUri ? (
+              {hasImageBackground ? (
                 <ImageBackground
                   source={{ uri: backgroundImageUri }}
                   resizeMode={backgroundImageFit}
@@ -895,13 +1009,24 @@ export default function App() {
                     {editOpen ? (
                       <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
                     ) : (
-                      <Text style={styles.saying}>{copy.saying}</Text>
+                      <>
+                        <View style={styles.cardMetaRow}>
+                          <Text style={styles.cardMetaText}>{currentCategory?.label || 'Ordsprog'}</Text>
+                          <Text style={styles.cardMetaDot}>·</Text>
+                          <Text style={styles.cardMetaText}>{currentKindLabel}</Text>
+                        </View>
+                        <Text style={[styles.saying, shareFontStyle]}>{copy.saying}</Text>
+                      </>
                     )}
-                    {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2} onTextLayout={handleDetailTextLayout}>{detailText}</Text>}
-                    {!editOpen && showCardDetails && shouldShowReadMore && (
-                      <Pressable onPress={() => setInfoOpen(true)} style={styles.cardReadMoreButton}>
-                        <Text style={styles.readMoreText}>Read more</Text>
-                      </Pressable>
+                    {!editOpen && oppositeCopy && (
+                      <View style={styles.cardControlRow}>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Toggle opposite proverb" onPress={() => setOppositeOpen((value) => !value)} style={[styles.oppositeButton, oppositeOpen && styles.activeOppositeButton]}>
+                          <Text style={styles.oppositeButtonText}>Modsigelse</Text>
+                        </Pressable>
+                        <Pressable accessibilityRole="button" accessibilityLabel="Show proverb information" onPress={() => setInfoOpen(true)} style={styles.inlineInfoButton}>
+                          <Text style={styles.inlineInfoText}>i</Text>
+                        </Pressable>
+                      </View>
                     )}
                   </View>
                 </ImageBackground>
@@ -910,17 +1035,54 @@ export default function App() {
                   {editOpen ? (
                     <TextInput value={editText} onChangeText={setEditText} multiline autoFocus style={[styles.saying, styles.editSayingInput]} placeholder="Write corrected saying…" placeholderTextColor="#777777" />
                   ) : (
-                    <Text style={styles.saying}>{copy.saying}</Text>
+                    <>
+                      <View style={styles.cardMetaRow}>
+                        <Text style={styles.cardMetaText}>{currentCategory?.label || 'Ordsprog'}</Text>
+                        <Text style={styles.cardMetaDot}>·</Text>
+                        <Text style={styles.cardMetaText}>{currentKindLabel}</Text>
+                      </View>
+                      <Text style={[styles.saying, shareFontStyle]}>{copy.saying}</Text>
+                    </>
                   )}
-                  {!editOpen && showCardDetails && detailText && <Text style={styles.originLine} numberOfLines={2} onTextLayout={handleDetailTextLayout}>{detailText}</Text>}
-                  {!editOpen && showCardDetails && shouldShowReadMore && (
-                    <Pressable onPress={() => setInfoOpen(true)} style={styles.cardReadMoreButton}>
-                      <Text style={styles.readMoreText}>Read more</Text>
-                    </Pressable>
+                  {!editOpen && oppositeCopy && (
+                    <View style={styles.cardControlRow}>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Toggle opposite proverb" onPress={() => setOppositeOpen((value) => !value)} style={[styles.oppositeButton, oppositeOpen && styles.activeOppositeButton]}>
+                        <Text style={styles.oppositeButtonText}>Modsigelse</Text>
+                      </Pressable>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Show proverb information" onPress={() => setInfoOpen(true)} style={styles.inlineInfoButton}>
+                        <Text style={styles.inlineInfoText}>i</Text>
+                      </Pressable>
+                    </View>
                   )}
                 </>
               )}
             </View>
+            {Platform.OS !== 'web' && (
+              <View
+                ref={shareCardRef}
+                collapsable={false}
+                style={[styles.exportCard, { backgroundColor: shareBackgroundColor }]}
+              >
+                {hasImageBackground ? (
+                  <ImageBackground
+                    source={{ uri: backgroundImageUri }}
+                    resizeMode={backgroundImageFit}
+                    style={styles.exportCardFill}
+                    imageStyle={{ transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }}
+                  >
+                    <View style={[styles.exportOverlay, styles.exportImageOverlay]}>
+                      <Text style={[styles.exportSaying, shareFontStyle]}>{copy.saying}</Text>
+                      <View style={styles.exportWatermark}><Image source={BRAND_LOGO_SOURCE} style={styles.exportLogo} /><Text style={styles.exportBrand}>FOLKSAY</Text></View>
+                    </View>
+                  </ImageBackground>
+                ) : (
+                  <View style={styles.exportOverlay}>
+                    <Text style={[styles.exportSaying, shareFontStyle]}>{copy.saying}</Text>
+                    <View style={styles.exportWatermark}><Image source={BRAND_LOGO_SOURCE} style={styles.exportLogo} /><Text style={styles.exportBrand}>FOLKSAY</Text></View>
+                  </View>
+                )}
+              </View>
+            )}
             {!editOpen && (
               <Pressable accessibilityRole="button" accessibilityLabel="Next saying" onPress={() => setCurrentIndex(index + 1)} style={[styles.sideArrowButton, styles.rightArrowButton]}>
                 <Text style={styles.sideArrowText}>›</Text>
@@ -930,17 +1092,48 @@ export default function App() {
 
         </View>
 
-        {editOpen ? null : backgroundImageUri && imageEditorOpen ? (
+        {editOpen ? null : imageEditorOpen ? (
           <View style={styles.imageEditorPanel}>
             <View style={styles.imageEditorHeader}>
               <View>
-                <Text style={styles.imageEditorTitle}>Image editor</Text>
-                <Text style={styles.imageEditorHint}>Drag the image. Pinch/scroll to zoom.</Text>
+                <Text style={styles.imageEditorTitle}>Share style</Text>
+                <Text style={styles.imageEditorHint}>{hasImageBackground ? 'Drag the image. Pinch/scroll to zoom.' : 'Choose what the shared image will use.'}</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="Accept image changes" onPress={acceptImageEdit} style={styles.imageEditCloseButton}>
                 <Text style={styles.imageEditCloseText}>×</Text>
               </Pressable>
             </View>
+            <View style={styles.styleSection}>
+              <Text style={styles.styleSectionTitle}>Background</Text>
+              <View style={styles.imageEditBar}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Use color background" onPress={() => changeShareBackgroundMode('color')} style={[styles.imageEditButton, shareBackgroundMode === 'color' && styles.activeImageEditButton]}>
+                  <Text style={styles.imageEditButtonText}>Color</Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" accessibilityLabel="Use image background" onPress={() => changeShareBackgroundMode('image')} style={[styles.imageEditButton, shareBackgroundMode === 'image' && styles.activeImageEditButton]}>
+                  <Text style={styles.imageEditButtonText}>Image</Text>
+                </Pressable>
+              </View>
+              {shareBackgroundMode === 'color' && (
+                <View style={styles.colorRow}>
+                  {SHARE_COLORS.map((item) => (
+                    <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} background`} onPress={() => changeShareBackgroundColor(item.key)} style={[styles.colorSwatchButton, shareBackgroundColor === item.key && styles.activeSwatchButton]}>
+                      <View style={[styles.colorSwatch, { backgroundColor: item.key }]} />
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
+            <View style={styles.styleSection}>
+              <Text style={styles.styleSectionTitle}>Font</Text>
+              <View style={styles.imageEditBar}>
+                {SHARE_FONTS.map((item) => (
+                  <Pressable key={item.key} accessibilityRole="button" accessibilityLabel={`Use ${item.label} font`} onPress={() => changeShareFont(item.key)} style={[styles.imageEditButton, shareFont === item.key && styles.activeImageEditButton]}>
+                    <Text style={[styles.imageEditButtonText, item.family ? { fontFamily: item.family } : null]}>{item.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+            {hasImageBackground && (
             <View style={styles.imageEditBar}>
               <Pressable accessibilityRole="button" accessibilityLabel="Use full screen image" onPress={() => changeBackgroundImageFit('cover')} style={[styles.imageEditButton, backgroundImageFit === 'cover' && styles.activeImageEditButton]}>
                 <Text style={styles.imageEditButtonText}>Full screen</Text>
@@ -958,27 +1151,20 @@ export default function App() {
                 <Text style={styles.imageEditButtonText}>Remove image</Text>
               </Pressable>
             </View>
+            )}
           </View>
         ) : (
           <View style={styles.actionBar}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={infoOpen ? 'Hide explanation' : 'Show explanation'}
-              onPress={() => setInfoOpen((value) => !value)}
-              style={styles.bottomIconButton}
-            >
-              <ActionIcon type="info" />
-            </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={() => setShareOpen((value) => !value)} style={styles.bottomIconButton}>
               <ActionIcon type="share" />
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => setEditOpen(true)} style={styles.bottomIconButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
               <ActionIcon type="edit" />
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Choose background image"
-              onPress={() => backgroundImageUri ? setImageEditorOpen(true) : chooseBackgroundImage()}
+              accessibilityLabel="Choose share style"
+              onPress={() => setImageEditorOpen(true)}
               style={[styles.bottomIconButton, backgroundImageUri && styles.activeIconButton]}
             >
               <ActionIcon type="image" />
@@ -1029,8 +1215,11 @@ export default function App() {
 
               <View style={styles.categoryBlock}>
                 <Text style={styles.settingTitle}>Language</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.categorySelect}>
-                  <Text style={styles.categorySelectText}>{selectedLanguageLabel}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="Choose language" onPress={() => setLanguageOpen((value) => !value)} style={styles.settingMenuButton}>
+                  <View style={styles.settingMenuTextBlock}>
+                    <Text style={styles.settingMenuTitle}>App language</Text>
+                    <Text style={styles.settingMenuSubtitle}>{selectedLanguageLabel}</Text>
+                  </View>
                   <View style={styles.toggleIconBox}><Text style={styles.categorySelectArrow}>{languageOpen ? '−' : '+'}</Text></View>
                 </Pressable>
 
@@ -1045,47 +1234,54 @@ export default function App() {
                 )}
               </View>
 
-              <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.savedToggle}>
-                <Text style={styles.savedToggleIcon}>☆</Text>
-                <Text style={styles.savedToggleText}>Saved proverbs ({savedProverbs.length})</Text>
-                <View style={styles.toggleIconBox}><Text style={styles.savedToggleArrow}>{savedOpen ? '−' : '+'}</Text></View>
-              </Pressable>
-
-              {savedOpen && (
-                <View style={styles.savedList}>
-                  {savedProverbs.length === 0 ? (
-                    <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
-                  ) : (
-                    savedProverbs.map((item) => (
-                      <Pressable
-                        key={item.id}
-                        onPress={() => {
-                          const savedIndex = filteredProverbs.findIndex((p) => p.id === item.id);
-                          if (savedIndex >= 0) {
-                            setCurrentIndex(savedIndex);
-                          } else {
-                            const allIndex = proverbs.findIndex((p) => p.id === item.id);
-                            setSelectedCategories([]);
-                            setCategoryOpen(false);
-                            setIndex(allIndex);
-                            persistSelectedCategories([]).catch(() => {});
-                            AsyncStorage.setItem(STORAGE.index, String(allIndex)).catch(() => {});
-                          }
-                          setSettingsOpen(false);
-                        }}
-                        style={styles.savedItem}
-                      >
-                        <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
-                        <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
-                      </Pressable>
-                    ))
-                  )}
-                </View>
-              )}
-
               <View style={styles.categoryBlock}>
-                <Pressable accessibilityRole="button" accessibilityLabel="Add a saying" onPress={() => setAddSayingOpen((value) => !value)} style={styles.categorySelect}>
-                  <Text style={styles.categorySelectText}>Add a saying</Text>
+                <Text style={styles.settingTitle}>Library</Text>
+                <View style={styles.settingsStack}>
+                  <Pressable accessibilityLabel="Show saved proverbs" onPress={() => setSavedOpen((value) => !value)} style={styles.settingMenuButton}>
+                    <View style={styles.settingMenuTextBlock}>
+                      <Text style={styles.settingMenuTitle}>Saved proverbs</Text>
+                      <Text style={styles.settingMenuSubtitle}>{savedProverbs.length} saved</Text>
+                    </View>
+                    <View style={styles.toggleIconBox}><Text style={styles.categorySelectArrow}>{savedOpen ? '−' : '+'}</Text></View>
+                  </Pressable>
+
+                  {savedOpen && (
+                    <View style={styles.savedList}>
+                      {savedProverbs.length === 0 ? (
+                        <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
+                      ) : (
+                        savedProverbs.map((item) => (
+                          <Pressable
+                            key={item.id}
+                            onPress={() => {
+                              const savedIndex = filteredProverbs.findIndex((p) => p.id === item.id);
+                              if (savedIndex >= 0) {
+                                setCurrentIndex(savedIndex);
+                              } else {
+                                const allIndex = proverbs.findIndex((p) => p.id === item.id);
+                                setSelectedCategories([]);
+                                setCategoryOpen(false);
+                                setIndex(allIndex);
+                                persistSelectedCategories([]).catch(() => {});
+                                AsyncStorage.setItem(STORAGE.index, String(allIndex)).catch(() => {});
+                              }
+                              setSettingsOpen(false);
+                            }}
+                            style={styles.savedItem}
+                          >
+                            <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
+                            <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
+                          </Pressable>
+                        ))
+                      )}
+                    </View>
+                  )}
+
+                <Pressable accessibilityRole="button" accessibilityLabel="Add a saying" onPress={() => setAddSayingOpen((value) => !value)} style={styles.settingMenuButton}>
+                  <View style={styles.settingMenuTextBlock}>
+                    <Text style={styles.settingMenuTitle}>Add a saying</Text>
+                    <Text style={styles.settingMenuSubtitle}>Suggest one by email</Text>
+                  </View>
                   <View style={styles.toggleIconBox}><Text style={styles.categorySelectArrow}>{addSayingOpen ? '−' : '+'}</Text></View>
                 </Pressable>
 
@@ -1127,12 +1323,16 @@ export default function App() {
                     </Pressable>
                   </View>
                 )}
+                </View>
               </View>
 
               <View style={styles.categoryBlock}>
                 <Text style={styles.settingTitle}>Category</Text>
-                <Pressable accessibilityRole="button" accessibilityLabel="Choose category" onPress={() => setCategoryOpen((value) => !value)} style={styles.categorySelect}>
-                  <Text style={styles.categorySelectText}>{selectedCategoryLabel}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="Choose category" onPress={() => setCategoryOpen((value) => !value)} style={styles.settingMenuButton}>
+                  <View style={styles.settingMenuTextBlock}>
+                    <Text style={styles.settingMenuTitle}>Shown categories</Text>
+                    <Text style={styles.settingMenuSubtitle}>{selectedCategoryLabel}</Text>
+                  </View>
                   <View style={styles.toggleIconBox}><Text style={styles.categorySelectArrow}>{categoryOpen ? '−' : '+'}</Text></View>
                 </Pressable>
 
@@ -1175,7 +1375,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#000000' },
-  container: { flex: 1, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 26, position: 'relative' },
+  container: { flex: 1, width: '100%', maxWidth: 430, alignSelf: 'center', paddingHorizontal: 22, paddingTop: 18, paddingBottom: 26, position: 'relative' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
@@ -1208,9 +1408,26 @@ const styles = StyleSheet.create({
   shareCardImage: { borderRadius: 28 },
   shareCardImageSquare: { borderRadius: 0 },
   shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
+  cardMetaRow: { position: 'absolute', top: 16, left: 16, maxWidth: '74%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', gap: 5, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 12, backgroundColor: 'rgba(0, 0, 0, 0.35)' },
+  cardMetaText: { color: '#d8d8d8', fontSize: 9, lineHeight: 12, fontWeight: '900', textAlign: 'left', textTransform: 'uppercase' },
+  cardMetaDot: { color: '#777777', fontSize: 13, lineHeight: 16, fontWeight: '900' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff', textShadowColor: 'rgba(0, 0, 0, 0.7)', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 10 },
   originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
   cardReadMoreButton: { alignSelf: 'center', marginTop: 8 },
+  cardControlRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 18 },
+  oppositeButton: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: '#555555', justifyContent: 'center', paddingHorizontal: 14, backgroundColor: 'rgba(0, 0, 0, 0.2)' },
+  activeOppositeButton: { borderColor: '#ffffff', backgroundColor: 'rgba(255, 255, 255, 0.12)' },
+  oppositeButtonText: { color: '#ffffff', fontSize: 12, lineHeight: 16, fontWeight: '900', textAlign: 'center' },
+  inlineInfoButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0, 0, 0, 0.2)' },
+  inlineInfoText: { color: '#ffffff', fontSize: 15, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },
+  exportCard: { position: 'absolute', left: -1200, top: 0, width: 1080, height: 1080, overflow: 'hidden' },
+  exportCardFill: { width: '100%', height: '100%' },
+  exportOverlay: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 86, paddingVertical: 90 },
+  exportImageOverlay: { backgroundColor: 'rgba(0, 0, 0, 0.42)' },
+  exportSaying: { color: '#ffffff', fontSize: 76, lineHeight: 92, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0, 0, 0, 0.65)', textShadowOffset: { width: 0, height: 6 }, textShadowRadius: 18 },
+  exportWatermark: { position: 'absolute', left: 58, bottom: 58, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: 0.82 },
+  exportLogo: { width: 38, height: 38, borderRadius: 8 },
+  exportBrand: { color: '#ffffff', fontSize: 28, lineHeight: 34, fontWeight: '900' },
   activeIconButton: { borderColor: '#ffffff' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
   infoPanel: { maxHeight: '78%', borderWidth: 1, borderColor: '#242424', borderRadius: 24, backgroundColor: '#050505', padding: 18 },
@@ -1223,7 +1440,7 @@ const styles = StyleSheet.create({
   editPanelTop: { marginBottom: 12, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 12, backgroundColor: '#080808', zIndex: 12 },
   editPanel: { marginTop: 18, borderWidth: 1, borderColor: '#242424', borderRadius: 18, padding: 14, backgroundColor: '#080808' },
   editTitle: { color: '#ffffff', fontSize: 15, fontWeight: '900', marginBottom: 10, textAlign: 'center' },
-  editSayingInput: { width: '100%', minHeight: 170, paddingHorizontal: 8, paddingVertical: 10, textAlignVertical: 'center', borderBottomWidth: 1.5, borderBottomColor: '#ffffff' },
+  editSayingInput: { width: '100%', minHeight: 300, maxHeight: 340, paddingHorizontal: 14, paddingVertical: 14, textAlign: 'left', textAlignVertical: 'top', fontSize: 24, lineHeight: 32, fontWeight: '800', borderWidth: 1.5, borderColor: '#ffffff', borderRadius: 16, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   editActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginTop: 12 },
   editSecondaryButton: { height: 36, minWidth: 88, borderRadius: 18, borderWidth: 1, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   editSecondaryText: { color: '#d9d9d9', fontSize: 14, fontWeight: '900' },
@@ -1249,6 +1466,12 @@ const styles = StyleSheet.create({
   imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },
   imageEditorHint: { color: '#8f8f8f', fontSize: 11, lineHeight: 15, marginTop: 2 },
   imageEditBar: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  styleSection: { gap: 8 },
+  styleSectionTitle: { color: '#bdbdbd', fontSize: 11, lineHeight: 14, fontWeight: '900', textTransform: 'uppercase' },
+  colorRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  colorSwatchButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center' },
+  activeSwatchButton: { borderColor: '#ffffff' },
+  colorSwatch: { width: 28, height: 28, borderRadius: 14, borderWidth: 1, borderColor: '#777777' },
   imageEditButton: { minHeight: 42, flex: 1, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
   imageEditButtonText: { color: '#ffffff', fontSize: 11, lineHeight: 14, fontWeight: '900', textAlign: 'center' },
@@ -1256,14 +1479,20 @@ const styles = StyleSheet.create({
   imageEditCloseText: { color: '#ffffff', fontSize: 28, lineHeight: 30, fontWeight: '300' },
   favoriteIcon: { color: '#ffd166' },
   settingsPanel: { position: 'absolute', top: 66, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
-  settingsContent: { paddingBottom: 36 },
-  settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  settingsContent: { paddingBottom: 42 },
+  settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
   sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
-  settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingTop: 2 },
   settingTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  categoryBlock: { marginBottom: 24 },
+  categoryBlock: { marginBottom: 26 },
+  settingsStack: { gap: 10, marginTop: 10 },
   categorySelect: { marginTop: 10, minHeight: 48, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  stackSelect: { marginTop: 0 },
   categorySelectText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
+  settingMenuButton: { minHeight: 58, borderWidth: 1, borderColor: '#242424', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#080808', marginTop: 10 },
+  settingMenuTextBlock: { flex: 1, paddingRight: 12 },
+  settingMenuTitle: { color: '#ffffff', fontSize: 16, lineHeight: 20, fontWeight: '900' },
+  settingMenuSubtitle: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '700', marginTop: 2 },
   toggleIconBox: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   categorySelectArrow: { color: '#ffffff', fontSize: 26, lineHeight: 30, fontWeight: '300', textAlign: 'center' },
   categoryOptions: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingVertical: 6 },
@@ -1278,11 +1507,7 @@ const styles = StyleSheet.create({
   timeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginBottom: 24 },
   timeButton: { paddingVertical: 4, paddingRight: 4 },
   timeText: { color: '#777777', fontSize: 16, fontWeight: '800' },
-  savedToggle: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48, marginBottom: 20, borderBottomWidth: 1, borderBottomColor: '#1d1d1d' },
-  savedToggleIcon: { color: '#ffffff', fontSize: 28, lineHeight: 32, fontWeight: '300' },
-  savedToggleText: { flex: 1, color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  savedToggleArrow: { color: '#ffffff', fontSize: 26, lineHeight: 30, fontWeight: '300', textAlign: 'center' },
-  savedList: { marginBottom: 24, gap: 14 },
+  savedList: { borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, gap: 12, backgroundColor: '#050505' },
   savedItem: { paddingVertical: 8 },
   savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
   savedExplanation: { color: '#a6a6a6', fontSize: 14, marginTop: 3, lineHeight: 20 }

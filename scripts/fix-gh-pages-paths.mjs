@@ -12,7 +12,8 @@ const jsDir = 'dist/_expo/static/js/web';
 for (const file of readdirSync(jsDir).filter((name) => name.endsWith('.js'))) {
   const filePath = join(jsDir, file);
   const js = readFileSync(filePath, 'utf8')
-    .replaceAll('uri:"/assets/', 'uri:"/sayings/assets/');
+    .replaceAll('uri:"/assets/assets/', 'uri:"./assets/assets/')
+    .replaceAll('uri:"/assets/', 'uri:"./assets/');
   writeFileSync(filePath, js);
 }
 

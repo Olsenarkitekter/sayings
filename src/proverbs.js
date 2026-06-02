@@ -207,6 +207,113 @@ const removedCategoryFallbacks = {
   sea: 'life'
 };
 
+const bookMetaById = {
+  'better-late-than-never': { category: 'time', kind: 'dilemma', order: 1, dkSaying: 'Bedre sent end aldrig', oppositeId: 'haste-makes-waste' },
+  'early-bird': { category: 'time', kind: 'dilemma', order: 2, dkSaying: 'Morgenstund har guld i mund', oppositeId: 'patience-virtue' },
+  'time-flies': { category: 'time', kind: 'image', order: 3, dkSaying: 'Tiden flyver', oppositeId: 'slow-steady' },
+  'slow-steady': { category: 'time', kind: 'dilemma', order: 4, dkSaying: 'Langsomt men sikkert vinder løbet', oppositeId: 'strike-iron-hot' },
+  'patience-virtue': { category: 'time', kind: 'dilemma', order: 5, dkSaying: 'Tålmodighed er en dyd', oppositeId: 'make-hay-sun-shines' },
+  'haste-makes-waste': { category: 'time', kind: 'dilemma', order: 6, dkSaying: 'Hastværk er lastværk', oppositeId: 'better-late-than-never' },
+  'make-hay-sun-shines': { category: 'time', kind: 'image', order: 7, dkSaying: 'Hø skal bjærges mens solen skinner', oppositeId: 'patience-virtue' },
+  'falling-knife': { category: 'time', kind: 'image', order: 8, dkSaying: 'En faldende kniv har intet håndtag', oppositeId: 'strike-iron-hot' },
+  'only-way-out-through': { category: 'time', kind: 'dilemma', order: 9, dkSaying: 'Den eneste vej ud er igennem', oppositeId: 'better-safe-than-sorry' },
+  'hell-keep-going': { category: 'time', kind: 'dilemma', order: 10, dkSaying: 'Hvis du går gennem helvede, så bliv ved med at gå', oppositeId: 'better-safe-than-sorry' },
+
+  'actions-speak-louder': { category: 'work-results', kind: 'dilemma', order: 11, dkSaying: 'Handlinger taler højere end ord', oppositeId: 'look-before-leap' },
+  'practice-perfect': { category: 'work-results', kind: 'dilemma', order: 12, dkSaying: 'Øvelse gør mester', oppositeId: 'perfect-enemy-good' },
+  'motion-not-action': { category: 'work-results', kind: 'dilemma', order: 13, dkSaying: 'Forveksl aldrig bevægelse med handling', oppositeId: 'actions-speak-louder' },
+  'opportunity-overalls': { category: 'work-results', kind: 'image', order: 14, dkSaying: 'Muligheden bliver overset, fordi den har overalls på og ligner arbejde', oppositeId: 'better-safe-than-sorry' },
+  'perfect-enemy-good': { category: 'work-results', kind: 'dilemma', order: 15, dkSaying: 'Det perfekte er det godes fjende', oppositeId: 'practice-perfect' },
+  'wish-in-one-hand': { category: 'work-results', kind: 'image', order: 16, dkSaying: 'Ønsk i den ene hånd og skidt i den anden — se hvilken der fyldes først', oppositeId: 'where-theres-will' },
+  'where-theres-will': { category: 'work-results', kind: 'dilemma', order: 17, dkSaying: 'Hvor der er vilje, er der vej', oppositeId: 'wish-in-one-hand' },
+  'nothing-ventured': { category: 'work-results', kind: 'dilemma', order: 18, dkSaying: 'Hvo intet vover, intet vinder', oppositeId: 'better-one-bird' },
+  'strike-iron-hot': { category: 'work-results', kind: 'dilemma', order: 19, dkSaying: 'Smed mens jernet er varmt', oppositeId: 'look-before-leap' },
+  'rome-not-built-day': { category: 'work-results', kind: 'dilemma', order: 20, dkSaying: 'Rom blev ikke bygget på én dag', oppositeId: 'make-hay-sun-shines' },
+  'push-envelope': { category: 'work-results', kind: 'image', order: 21, dkSaying: 'Skubbe konvolutten', oppositeId: 'better-safe-than-sorry' },
+
+  'honesty-best-policy': { category: 'truth', kind: 'dilemma', order: 22, dkSaying: 'Ærlighed varer længst', oppositeId: 'silence-golden' },
+  'truth-will-out': { category: 'truth', kind: 'dilemma', order: 23, dkSaying: 'Sandheden kommer for en dag', oppositeId: 'turn-blind-eye' },
+  'no-smoke-without-fire': { category: 'truth', kind: 'image', order: 24, dkSaying: 'Ingen røg uden ild', oppositeId: 'dont-judge-book' },
+  'elephant-room': { category: 'truth', kind: 'image', order: 25, dkSaying: 'Elefanten i rummet', oppositeId: 'silence-golden' },
+  'beat-around-bush': { category: 'truth', kind: 'image', order: 26, dkSaying: 'Gå som katten om den varme grød', oppositeId: 'honesty-best-policy' },
+  'horses-mouth': { category: 'truth', kind: 'image', order: 27, dkSaying: 'Fra hestens mund', oppositeId: 'walls-have-ears' },
+  'turn-blind-eye': { category: 'truth', kind: 'image', order: 28, dkSaying: 'Vende det blinde øje til', oppositeId: 'truth-will-out' },
+  'walls-have-ears': { category: 'truth', kind: 'image', order: 29, dkSaying: 'Væggene har ører', oppositeId: 'honesty-best-policy' },
+  'cat-got-tongue': { category: 'truth', kind: 'image', order: 30, dkSaying: 'Har katten taget din tunge?', oppositeId: 'honesty-best-policy' },
+
+  'not-my-circus': { category: 'relations', kind: 'image', order: 31, dkSaying: 'Ikke mit cirkus, ikke mine aber', oppositeId: 'many-hands-light-work' },
+  'shows-you-believe': { category: 'relations', kind: 'dilemma', order: 32, dkSaying: 'Når nogen viser dig hvem de er, så tro på dem', oppositeId: 'dont-judge-book' },
+  'fool-experience': { category: 'relations', kind: 'dilemma', order: 33, dkSaying: 'En tåbe trækker dig ned på sit niveau og slår dig med erfaring', oppositeId: 'many-hands-light-work' },
+  'grudge-poison': { category: 'relations', kind: 'image', order: 34, dkSaying: 'At bære nag er som at drikke gift og vente på at den anden dør', oppositeId: 'bury-hatchet' },
+  'free-rent-head': { category: 'relations', kind: 'image', order: 35, dkSaying: 'Giv ikke nogen gratis husleje inde i dit hoved', oppositeId: 'bury-hatchet' },
+  'judge-insides-outsides': { category: 'relations', kind: 'dilemma', order: 36, dkSaying: 'Døm ikke dit indre efter andres ydre', oppositeId: 'actions-speak-louder' },
+  'hurt-people-hurt-people': { category: 'relations', kind: 'dilemma', order: 37, dkSaying: 'Sårede mennesker sårer mennesker', oppositeId: 'compassion-self-friend' },
+  'compassion-self-friend': { category: 'relations', kind: 'dilemma', order: 38, dkSaying: 'Vær lige så omsorgsfuld mod dig selv som mod en god ven', oppositeId: 'hurt-people-hurt-people' },
+  'blood-thicker-water': { category: 'relations', kind: 'dilemma', order: 39, dkSaying: 'Blod er tykkere end vand', oppositeId: 'birds-feather' },
+  'birds-feather': { category: 'relations', kind: 'dilemma', order: 40, dkSaying: 'Lige børn leger bedst', oppositeId: 'opposites-attract' },
+  'opposites-attract': { category: 'relations', kind: 'dilemma', order: 41, dkSaying: 'Modsætninger mødes', oppositeId: 'birds-feather' },
+  'love-blind': { category: 'relations', kind: 'dilemma', order: 42, dkSaying: 'Kærlighed gør blind', oppositeId: 'shows-you-believe' },
+
+  'all-eggs-one-basket': { category: 'risk', kind: 'image', order: 43, dkSaying: 'Læg ikke alle æg i én kurv', oppositeId: 'where-theres-will' },
+  'look-before-leap': { category: 'risk', kind: 'dilemma', order: 44, dkSaying: 'Se dig for, før du springer', oppositeId: 'nothing-ventured' },
+  'better-safe-than-sorry': { category: 'risk', kind: 'dilemma', order: 45, dkSaying: 'Hellere være på den sikre side', oppositeId: 'nothing-ventured' },
+  'better-one-bird': { category: 'risk', kind: 'image', order: 46, dkSaying: 'Hellere én fugl i hånden end ti på taget', oppositeId: 'nothing-ventured' },
+  'bite-the-bullet': { category: 'risk', kind: 'image', order: 47, dkSaying: 'Bide i kuglen', oppositeId: 'better-safe-than-sorry' },
+  'cold-feet': { category: 'risk', kind: 'image', order: 48, dkSaying: 'Få kolde fødder', oppositeId: 'bite-the-bullet' },
+  'put-on-spot': { category: 'risk', kind: 'image', order: 49, dkSaying: 'Blive sat på stedet', oppositeId: 'look-before-leap' },
+  'no-brainer': { category: 'risk', kind: 'dilemma', order: 50, dkSaying: 'En no-brainer', oppositeId: 'look-before-leap' },
+  'hold-your-horses': { category: 'risk', kind: 'image', order: 51, dkSaying: 'Hold lige hestene', oppositeId: 'strike-iron-hot' },
+  'running-from-to-why': { category: 'risk', kind: 'dilemma', order: 52, dkSaying: 'Find ud af hvad du løber fra, hvad du løber imod, og hvorfor', oppositeId: 'hell-keep-going' },
+
+  'go-bananas': { category: 'images-humour', kind: 'image', order: 53, dkSaying: 'Gå bananas', oppositeId: 'patience-virtue' },
+  'hangry': { category: 'images-humour', kind: 'image', order: 54, dkSaying: 'Sulten og sur', oppositeId: 'compassion-self-friend' },
+  'ghost-someone': { category: 'images-humour', kind: 'image', order: 55, dkSaying: 'At ghoste nogen', oppositeId: 'honesty-best-policy' },
+  'throw-shade': { category: 'images-humour', kind: 'image', order: 56, dkSaying: 'Kaste skygge', oppositeId: 'honesty-best-policy' },
+  'earworm': { category: 'images-humour', kind: 'image', order: 57, dkSaying: 'Ørehænger', oppositeId: 'out-of-sight' },
+  'hair-of-dog': { category: 'images-humour', kind: 'image', order: 58, dkSaying: 'En reparationsbajer', oppositeId: 'only-way-out-through' },
+  'mad-as-hatter': { category: 'images-humour', kind: 'image', order: 59, dkSaying: 'Skør som en hattemager', oppositeId: 'dont-judge-book' },
+  'wet-blanket': { category: 'images-humour', kind: 'image', order: 60, dkSaying: 'Et vådt tæppe', oppositeId: 'compassion-self-friend' },
+  'time-wounds-heels': { category: 'images-humour', kind: 'image', order: 61, dkSaying: 'Tiden sårer alle skurke', oppositeId: 'grudge-poison' },
+  'under-the-weather': { category: 'images-humour', kind: 'image', order: 62, dkSaying: 'Under vejret', oppositeId: 'no-pain-no-gain' },
+  'bull-china-shop': { category: 'images-humour', kind: 'image', order: 63, dkSaying: 'Som en elefant i en glasbutik', oppositeId: 'look-before-leap' },
+
+  'good-samaritan': { category: 'origin-stories', kind: 'image', order: 64, dkSaying: 'En barmhjertig samaritaner', oppositeId: 'not-my-circus' },
+  'forbidden-fruit': { category: 'origin-stories', kind: 'image', order: 65, dkSaying: 'Forbuden frugt', oppositeId: 'better-safe-than-sorry' },
+  'scapegoat': { category: 'origin-stories', kind: 'image', order: 66, dkSaying: 'Syndebuk', oppositeId: 'honesty-best-policy' },
+  'skin-of-teeth': { category: 'origin-stories', kind: 'image', order: 67, dkSaying: 'Med huden på tænderne', oppositeId: 'better-safe-than-sorry' },
+  'read-riot-act': { category: 'origin-stories', kind: 'image', order: 68, dkSaying: 'Læse nogen teksten', oppositeId: 'compassion-self-friend' },
+  'bury-hatchet': { category: 'origin-stories', kind: 'image', order: 69, dkSaying: 'Begrave stridsøksen', oppositeId: 'grudge-poison' },
+  'bigwig': { category: 'origin-stories', kind: 'image', order: 70, dkSaying: 'En stor paryk', oppositeId: 'empty-vessels' },
+  'armed-to-teeth': { category: 'origin-stories', kind: 'image', order: 71, dkSaying: 'Bevæbnet til tænderne', oppositeId: 'better-safe-than-sorry' },
+  'silver-lining': { category: 'origin-stories', kind: 'image', order: 72, dkSaying: 'Hver sky har en sølvkant', oppositeId: 'falling-knife' },
+
+  'you-live-and-learn': { category: 'experience', kind: 'dilemma', order: 73, dkSaying: 'Man lever og lærer', oppositeId: 'old-habits-die-hard' },
+  'easy-come-easy-go': { category: 'experience', kind: 'dilemma', order: 74, dkSaying: 'Let kommet, let gået', oppositeId: 'better-one-bird' },
+  'no-pain-no-gain': { category: 'experience', kind: 'dilemma', order: 75, dkSaying: 'Ingen smerte, ingen gevinst', oppositeId: 'compassion-self-friend' },
+  'blessing-in-disguise': { category: 'experience', kind: 'image', order: 76, dkSaying: 'Et held i uheld', oppositeId: 'better-safe-than-sorry' },
+  'one-swallow': { category: 'experience', kind: 'image', order: 77, dkSaying: 'Én svale gør ingen sommer', oppositeId: 'where-theres-will' },
+  'all-that-glitters': { category: 'experience', kind: 'image', order: 78, dkSaying: 'Alt der glimter er ikke guld', oppositeId: 'dont-judge-book' },
+  'dont-judge-book': { category: 'experience', kind: 'dilemma', order: 79, dkSaying: 'Døm ikke bogen på omslaget', oppositeId: 'no-smoke-without-fire' },
+  'empty-vessels': { category: 'experience', kind: 'image', order: 80, dkSaying: 'Tomme tønder buldrer mest', oppositeId: 'silence-golden' },
+  'writers-difficult': { category: 'experience', kind: 'dilemma', order: 81, dkSaying: 'Forfattere er dem, for hvem det er sværere at skrive end for andre', oppositeId: 'practice-perfect' },
+  'necessity-invention': { category: 'experience', kind: 'dilemma', order: 82, dkSaying: 'Nød lærer nøgen kvinde at spinde', oppositeId: 'better-safe-than-sorry' },
+  'out-of-sight': { category: 'experience', kind: 'dilemma', order: 83, dkSaying: 'Ude af øje, ude af sind', oppositeId: 'love-blind' },
+  'two-birds-one-stone': { category: 'experience', kind: 'image', order: 84, dkSaying: 'Slå to fluer med ét smæk', oppositeId: 'too-many-cooks' },
+  'old-habits-die-hard': { category: 'experience', kind: 'dilemma', order: 85, dkSaying: 'Man kan ikke lære en gammel hund nye tricks', oppositeId: 'you-live-and-learn' },
+  'too-many-cooks': { category: 'experience', kind: 'image', order: 86, dkSaying: 'For mange kokke fordærver maden', oppositeId: 'many-hands-light-work' },
+  'many-hands-light-work': { category: 'experience', kind: 'dilemma', order: 87, dkSaying: 'Mange hænder gør arbejdet let', oppositeId: 'too-many-cooks' },
+  'silence-golden': { category: 'experience', kind: 'dilemma', order: 88, dkSaying: 'Tavshed er guld', oppositeId: 'honesty-best-policy' },
+  'knowledge-power': { category: 'experience', kind: 'dilemma', order: 89, dkSaying: 'Viden er magt', oppositeId: 'empty-vessels' },
+  'every-beginning-hard': { category: 'experience', kind: 'dilemma', order: 90, dkSaying: 'Al begyndelse er svær', oppositeId: 'better-late-than-never' },
+  'like-father-son': { category: 'experience', kind: 'image', order: 91, dkSaying: 'Som far, så søn', oppositeId: 'dont-judge-book' },
+  'pick-your-brain': { category: 'experience', kind: 'image', order: 92, dkSaying: 'Må jeg plukke lidt i din hjerne?', oppositeId: 'knowledge-power' },
+  'bone-to-pick': { category: 'experience', kind: 'image', order: 93, dkSaying: 'Jeg har et ben at pille med dig', oppositeId: 'bury-hatchet' },
+  'break-the-ice': { category: 'experience', kind: 'image', order: 94, dkSaying: 'Bryde isen', oppositeId: 'silence-golden' },
+  'let-cat-out-bag': { category: 'experience', kind: 'image', order: 95, dkSaying: 'Lukke katten ud af sækken', oppositeId: 'walls-have-ears' },
+  'go-belly-up': { category: 'experience', kind: 'image', order: 96, dkSaying: 'Med maven opad', oppositeId: 'silver-lining' },
+  'bite-dust': { category: 'experience', kind: 'image', order: 97, dkSaying: 'Bide i støvet', oppositeId: 'you-live-and-learn' }
+};
+
 function normalizeCategory(category) {
   return removedCategoryFallbacks[category] || category || 'life';
 }
@@ -6112,16 +6219,19 @@ const imagePreservingOverridesById = {
 
 export const categories = [
   { key: 'all', label: 'All' },
-  { key: 'life', label: 'Life' },
-  { key: 'love', label: 'Love' },
-  { key: 'work', label: 'Work' },
-  { key: 'biblical', label: 'Biblical' },
-  { key: 'slang', label: 'Slang' },
-  { key: 'humour', label: 'Humour' }
+  { key: 'time', label: 'Tid, tålmodighed og timing' },
+  { key: 'work-results', label: 'Handling, arbejde og resultater' },
+  { key: 'truth', label: 'Sandhed, klarhed og direkte tale' },
+  { key: 'relations', label: 'Mennesker, grænser og relationer' },
+  { key: 'risk', label: 'Mod, risiko og beslutninger' },
+  { key: 'images-humour', label: 'Krop, humor og skarpe billeder' },
+  { key: 'origin-stories', label: 'Historierne bag ordene' },
+  { key: 'experience', label: 'Erfaring, modgang og eftertanke' }
 ];
 
 export const languages = [
   { key: 'en', label: 'EN', name: 'English' },
+  { key: 'dk', label: 'DA', name: 'Dansk' },
   { key: 'de', label: 'DE', name: 'Deutsch' },
   { key: 'es', label: 'ES', name: 'Español' },
   { key: 'no', label: 'NO', name: 'Norsk' },
@@ -6133,38 +6243,49 @@ export const languages = [
 
 const languageKeys = languages.map((item) => item.key);
 
-export const proverbs = rawProverbs.map((proverb) => {
-  const category = normalizeCategory(categoryById[proverb.id]);
-  const meaning = {
-    en: proverb.en?.explanation || '',
-    fo: proverb.fo?.explanation || proverb.en?.explanation || ''
-  };
-  const cultural = { ...(languageEquivalentsById[proverb.id] || {}), ...(imagePreservingOverridesById[proverb.id] || {}) };
-  const variants = Object.fromEntries(
-    languageKeys
-      .map((language) => {
-        const source = language === 'en' ? proverb.en : cultural[language] || (language === 'fo' ? proverb.fo : undefined);
-        const variant = migrateVariant(source, meaning.en);
-        return variant ? [language, variant] : null;
-      })
-      .filter(Boolean)
-  );
-  const englishVariant = variants.en || migrateVariant(proverb.en, meaning.en);
-  const englishOrigin = englishVariant?.origin || makeFallbackOriginText(englishVariant || proverb.en, meaning.en);
-  if (variants.en) variants.en.origin = englishOrigin;
+export const proverbs = rawProverbs
+  .filter((proverb) => bookMetaById[proverb.id])
+  .sort((a, b) => bookMetaById[a.id].order - bookMetaById[b.id].order)
+  .map((proverb) => {
+    const bookMeta = bookMetaById[proverb.id] || {};
+    const category = bookMeta.category || normalizeCategory(categoryById[proverb.id]);
+    const meaning = {
+      en: proverb.en?.explanation || '',
+      fo: proverb.fo?.explanation || proverb.en?.explanation || ''
+    };
+    const bookDanish = bookMeta.dkSaying
+      ? { ...(proverb.dk || {}), saying: bookMeta.dkSaying }
+      : proverb.dk;
+    const cultural = { ...(languageEquivalentsById[proverb.id] || {}), ...(imagePreservingOverridesById[proverb.id] || {}) };
+    const variants = Object.fromEntries(
+      languageKeys
+        .map((language) => {
+          const source = language === 'en' ? proverb.en : cultural[language] || (language === 'fo' ? proverb.fo : language === 'dk' ? bookDanish : undefined);
+          const variant = migrateVariant(source, meaning.en);
+          return variant ? [language, variant] : null;
+        })
+        .filter(Boolean)
+    );
+    const englishVariant = variants.en || migrateVariant(proverb.en, meaning.en);
+    const englishOrigin = englishVariant?.origin || makeFallbackOriginText(englishVariant || proverb.en, meaning.en);
+    if (variants.en) variants.en.origin = englishOrigin;
 
-  languageKeys.forEach((language) => {
-    if (!variants[language] && englishVariant) variants[language] = { ...englishVariant, origin: englishOrigin };
-    if (variants[language] && !variants[language].origin) variants[language].origin = englishOrigin;
+    languageKeys.forEach((language) => {
+      if (!variants[language] && englishVariant) variants[language] = { ...englishVariant, origin: englishOrigin };
+      if (variants[language] && !variants[language].origin) variants[language].origin = englishOrigin;
+    });
+
+    return {
+      ...proverb,
+      dk: bookDanish,
+      category,
+      kind: bookMeta.kind || 'dilemma',
+      oppositeId: bookMeta.oppositeId || null,
+      bookOrder: bookMeta.order,
+      meaning,
+      variants
+    };
   });
-
-  return {
-    ...proverb,
-    category,
-    meaning,
-    variants
-  };
-});
 
 export function getProverbVariant(proverb, language = 'en') {
   return proverb?.variants?.[language] || proverb?.variants?.en || proverb?.en || { saying: '', explanation: '' };
