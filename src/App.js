@@ -93,9 +93,9 @@ const PAGE_BACKGROUND_COLORS = [
   '#2f2a45'
 ];
 const SHARE_FONTS = [
-  { key: 'system', label: 'Helvetica', family: Platform.select({ web: 'Helvetica, Arial, sans-serif', default: undefined }) },
-  { key: 'serif', label: 'Times New Roman', family: Platform.select({ web: '"Times New Roman", Times, serif', default: 'serif' }) },
-  { key: 'script', label: 'Script', family: Platform.select({ web: '"Brush Script MT", "Snell Roundhand", cursive', default: 'cursive' }) }
+  { key: 'system', label: 'Helvetica', family: Platform.select({ web: 'Helvetica, Arial, sans-serif', ios: 'HelveticaNeue', android: 'sans-serif', default: undefined }) },
+  { key: 'serif', label: 'Times New Roman', family: Platform.select({ web: '"Times New Roman", Times, serif', ios: 'TimesNewRomanPSMT', android: 'serif', default: 'serif' }) },
+  { key: 'script', label: 'Script', family: Platform.select({ web: '"Brush Script MT", "Snell Roundhand", cursive', ios: 'SnellRoundhand', android: 'casual', default: 'serif' }) }
 ];
 const SHARE_TEXT_SIZES = [
   { key: 'small', label: 'Lille', base: 32, min: 25, lineRatio: 1.16, exportBase: 60, exportMin: 46, exportLineRatio: 1.18 },
@@ -208,6 +208,18 @@ function eventPoint(nativeEvent) {
     x: Number(touch?.pageX ?? nativeEvent?.pageX ?? nativeEvent?.locationX ?? 0),
     y: Number(touch?.pageY ?? nativeEvent?.pageY ?? nativeEvent?.locationY ?? 0)
   };
+}
+
+function gesturePoint(nativeEvent) {
+  const touches = nativeEvent?.touches || [];
+  if (touches.length >= 2) {
+    const [a, b] = touches;
+    return {
+      x: ((Number(a.pageX) || 0) + (Number(b.pageX) || 0)) / 2,
+      y: ((Number(a.pageY) || 0) + (Number(b.pageY) || 0)) / 2
+    };
+  }
+  return eventPoint(nativeEvent);
 }
 
 function touchDistance(touches = []) {
@@ -580,7 +592,7 @@ export default function App() {
   const shareFontStyle = {
     ...(selectedShareFont.family ? { fontFamily: selectedShareFont.family } : {}),
     color: shareTextColor,
-    fontWeight: '500',
+    fontWeight: '400',
     fontStyle: shareFont === 'script' ? 'italic' : 'normal'
   };
   const hasImageBackground = shareBackgroundMode === 'image' && !!backgroundImageUri;
@@ -835,7 +847,7 @@ export default function App() {
 
   function startCardGesture(evt) {
     const touches = evt.nativeEvent?.touches || [];
-    const point = eventPoint(evt.nativeEvent);
+    const point = gesturePoint(evt.nativeEvent);
     cardGestureRef.current = { startPoint: point, lastPoint: point, didSwipe: false };
 
     if (hasImageBackground && imageEditorOpen) {
@@ -852,17 +864,24 @@ export default function App() {
 
   function moveCardGesture(evt) {
     const cardGesture = cardGestureRef.current;
-    const point = eventPoint(evt.nativeEvent);
+    const point = gesturePoint(evt.nativeEvent);
     if (cardGesture) cardGesture.lastPoint = point;
 
     const gesture = backgroundGestureRef.current;
     if (!gesture || !hasImageBackground) return;
     const touches = evt.nativeEvent?.touches || [];
+    const currentDistance = touchDistance(touches);
+    if (touches.length >= 2 && currentDistance > 0 && gesture.startDistance <= 0) {
+      gesture.startPoint = point;
+      gesture.startPosition = backgroundImagePosition;
+      gesture.startScale = backgroundImageScale;
+      gesture.startDistance = currentDistance;
+    }
+
     const nextPosition = {
       x: gesture.startPosition.x + (point.x - gesture.startPoint.x),
       y: gesture.startPosition.y + (point.y - gesture.startPoint.y)
     };
-    const currentDistance = touchDistance(touches);
     const nextScale = touches.length >= 2 && gesture.startDistance > 0
       ? clampImageScale(gesture.startScale * (currentDistance / gesture.startDistance))
       : gesture.startScale;
@@ -985,7 +1004,7 @@ export default function App() {
         textColor: shareTextColor,
         fontFamily: selectedShareFont.family || 'Arial, Helvetica, sans-serif',
         fontStyle: shareFont === 'script' ? 'italic' : 'normal',
-        fontWeight: '500',
+        fontWeight: '400',
         textSizeMode: shareTextSize,
         logoUri
       });
