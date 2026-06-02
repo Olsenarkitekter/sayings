@@ -1288,7 +1288,7 @@ export default function App() {
             )}
             {!editOpen && imageEditorOpen && (
               <View style={styles.imageEditorPanel}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imageEditorScrollContent}>
+                <ScrollView showsVerticalScrollIndicator contentContainerStyle={styles.imageEditorScrollContent}>
                   <Pressable accessibilityRole="button" accessibilityLabel="Accept image changes" onPress={acceptImageEdit} style={styles.compactImageEditButton}>
                     <ActionIcon name="check" size={20} />
                   </Pressable>
@@ -1377,7 +1377,7 @@ export default function App() {
 
         </View>
 
-        {editOpen ? null : (
+        {editOpen || imageEditorOpen ? null : (
           <View style={styles.actionBar}>
             <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
               <ActionIcon name="edit-3" />
@@ -1619,7 +1619,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, width: '100%', paddingHorizontal: 10, paddingTop: 8, paddingBottom: 14, position: 'relative' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000000' },
   loading: { fontSize: 18, color: '#ffffff' },
-  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 8 },
+  topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, marginBottom: 8 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 0, flexShrink: 1, minWidth: 0 },
   logoImage: { width: 76, height: 76, resizeMode: 'contain' },
   brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 3, flexWrap: 'wrap' },
@@ -1640,7 +1640,7 @@ const styles = StyleSheet.create({
   searchEmpty: { color: '#8f8f8f', fontSize: 14, fontWeight: '800', textAlign: 'center', paddingVertical: 18 },
   content: { flex: 1, justifyContent: 'flex-start', paddingBottom: 8 },
   cardShell: { flex: 1, position: 'relative', justifyContent: 'flex-start' },
-  shareCard: { width: '100%', aspectRatio: 1, flexGrow: 0, marginTop: 18, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.42)', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  shareCard: { width: '100%', aspectRatio: 1, flexGrow: 0, marginTop: 112, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.42)', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   shareCardBackground: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   shareCardImage: {},
   shareCardOverlay: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 38, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
@@ -1710,8 +1710,8 @@ const styles = StyleSheet.create({
   savedSubtitle: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '800', marginTop: 2 },
   savedOverlayList: { paddingBottom: 18 },
   savedOverlayItem: { borderTopWidth: 1, borderTopColor: '#171717', paddingVertical: 14 },
-  imageEditorPanel: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 9, height: 108, borderWidth: 1, borderColor: '#242424', borderRadius: 26, paddingHorizontal: 8, paddingVertical: 10, backgroundColor: '#050505', justifyContent: 'center' },
-  imageEditorScrollContent: { minHeight: 86, alignItems: 'center', gap: 8, paddingHorizontal: 2 },
+  imageEditorPanel: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 9, height: 268, maxHeight: '48%', borderWidth: 1, borderColor: '#242424', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 10, paddingVertical: 12, backgroundColor: '#050505' },
+  imageEditorScrollContent: { minHeight: 244, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 2, paddingBottom: 12 },
   imageEditorHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   imageEditorTitle: { color: '#ffffff', fontSize: 14, fontWeight: '900' },
   imageEditorHint: { color: '#8f8f8f', fontSize: 11, lineHeight: 15, marginTop: 2 },
