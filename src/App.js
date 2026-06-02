@@ -382,7 +382,7 @@ export default function App() {
   const [backgroundImageFit, setBackgroundImageFit] = useState('cover');
   const [backgroundImagePosition, setBackgroundImagePosition] = useState({ x: 0, y: 0 });
   const [backgroundImageScale, setBackgroundImageScale] = useState(1);
-  const [backgroundRounded, setBackgroundRounded] = useState(true);
+  const [backgroundRounded, setBackgroundRounded] = useState(false);
   const [shareBackgroundMode, setShareBackgroundMode] = useState('color');
   const [shareBackgroundColor, setShareBackgroundColor] = useState('#000000');
   const [shareFont, setShareFont] = useState('system');
@@ -529,7 +529,9 @@ export default function App() {
       } catch {}
       const parsedScale = Number(storedBackgroundScale);
       if (Number.isFinite(parsedScale) && parsedScale >= 0.5 && parsedScale <= 3) setBackgroundImageScale(parsedScale);
-      if (storedBackgroundRounded === 'off') setBackgroundRounded(false);
+      if (storedBackgroundRounded === 'on') {
+        await AsyncStorage.setItem(STORAGE.backgroundRounded, 'off');
+      }
       if (storedShareBackgroundMode === 'image' || storedShareBackgroundMode === 'color') setShareBackgroundMode(storedShareBackgroundMode);
       if (SHARE_COLORS.some((item) => item.key === storedShareBackgroundColor)) setShareBackgroundColor(storedShareBackgroundColor);
       if (SHARE_FONTS.some((item) => item.key === storedShareFont)) setShareFont(storedShareFont);
@@ -615,7 +617,7 @@ export default function App() {
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
-    setBackgroundRounded(true);
+    setBackgroundRounded(false);
     setShareBackgroundMode('image');
     setImageEditorOpen(true);
     await AsyncStorage.multiSet([
@@ -623,7 +625,7 @@ export default function App() {
       [STORAGE.backgroundImageFit, 'cover'],
       [STORAGE.backgroundImagePosition, JSON.stringify({ x: 0, y: 0 })],
       [STORAGE.backgroundImageScale, '1'],
-      [STORAGE.backgroundRounded, 'on'],
+      [STORAGE.backgroundRounded, 'off'],
       [STORAGE.shareBackgroundMode, 'image']
     ]);
   }
@@ -730,7 +732,7 @@ export default function App() {
     setBackgroundImageFit('cover');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
-    setBackgroundRounded(true);
+    setBackgroundRounded(false);
     await AsyncStorage.multiRemove([STORAGE.backgroundImage, STORAGE.backgroundImageFit, STORAGE.backgroundImagePosition, STORAGE.backgroundImageScale, STORAGE.backgroundRounded]);
     await AsyncStorage.setItem(STORAGE.shareBackgroundMode, 'color');
   }
@@ -1006,7 +1008,7 @@ export default function App() {
             )}
             <View
               collapsable={false}
-              style={[styles.shareCard, cardBackgroundStyle, !backgroundRounded && styles.shareCardSquare]}
+              style={[styles.shareCard, cardBackgroundStyle]}
               onStartShouldSetResponder={() => !editOpen}
               onMoveShouldSetResponder={() => !editOpen}
               onResponderGrant={editOpen ? undefined : startCardGesture}
@@ -1019,7 +1021,7 @@ export default function App() {
                   source={{ uri: backgroundImageUri }}
                   resizeMode={backgroundImageFit}
                   style={styles.shareCardBackground}
-                  imageStyle={[styles.shareCardImage, !backgroundRounded && styles.shareCardImageSquare, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
+                  imageStyle={[styles.shareCardImage, { transform: [{ translateX: backgroundImagePosition.x }, { translateY: backgroundImagePosition.y }, { scale: backgroundImageScale }] }]}
                 >
                   <View style={styles.shareCardOverlay}>
                     {editOpen ? (
@@ -1150,9 +1152,6 @@ export default function App() {
               <Pressable accessibilityRole="button" accessibilityLabel="Show whole image" onPress={() => changeBackgroundImageFit('contain')} style={[styles.imageEditButton, backgroundImageFit === 'contain' && styles.activeImageEditButton]}>
                 <Text style={styles.imageEditButtonText}>See whole image</Text>
               </Pressable>
-              <Pressable accessibilityRole="button" accessibilityLabel="Toggle rounded corners" onPress={toggleBackgroundRounded} style={[styles.imageEditButton, backgroundRounded && styles.activeImageEditButton]}>
-                <Text style={styles.imageEditButtonText}>{backgroundRounded ? 'Rounded corners' : 'Square corners'}</Text>
-              </Pressable>
               <Pressable accessibilityRole="button" accessibilityLabel="Remove image" onPress={clearBackgroundImage} style={styles.imageEditButton}>
                 <Text style={styles.imageEditButtonText}>Remove image</Text>
               </Pressable>
@@ -1161,9 +1160,6 @@ export default function App() {
           </View>
         ) : (
           <View style={styles.actionBar}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Share proverb" onPress={() => setShareOpen((value) => !value)} style={styles.bottomIconButton}>
-              <ActionIcon name="share-2" />
-            </Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
               <ActionIcon name="edit-3" />
             </Pressable>
@@ -1178,12 +1174,15 @@ export default function App() {
             <Pressable accessibilityLabel="Show saved proverbs" onPress={openSavedList} style={styles.bottomIconButton}>
               <ActionIcon name="list" />
             </Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Send proverb" onPress={() => setShareOpen((value) => !value)} style={styles.bottomIconButton}>
+              <ActionIcon name="send" />
+            </Pressable>
           </View>
         )}
 
         {shareOpen && !editOpen && (
           <View style={styles.shareMenu}>
-            <Pressable onPress={shareProverb} style={styles.shareMenuPrimaryItem}><Text style={styles.shareMenuPrimaryText}>Share image</Text></Pressable>
+            <Pressable onPress={shareProverb} style={styles.shareMenuPrimaryItem}><Text style={styles.shareMenuPrimaryText}>Send image</Text></Pressable>
             <Pressable onPress={saveShareImage} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Save image to Photos</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('sms')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>SMS / Messages</Text></Pressable>
             <Pressable onPress={() => shareToNetwork('messenger')} style={styles.shareMenuItem}><Text style={styles.shareMenuText}>Messenger</Text></Pressable>
@@ -1387,7 +1386,7 @@ const styles = StyleSheet.create({
   adArea: { minHeight: 42, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 18 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 9, flexShrink: 1 },
-  logoImage: { width: 30, height: 30, borderRadius: 7 },
+  logoImage: { width: 30, height: 30 },
   brandText: { color: '#ffffff', fontSize: 18, lineHeight: 22, fontWeight: '900', letterSpacing: 0.8 },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   adText: { color: '#555555', letterSpacing: 3, fontSize: 11, textAlign: 'center' },
@@ -1408,11 +1407,9 @@ const styles = StyleSheet.create({
   leftArrowButton: { left: -10 },
   rightArrowButton: { right: -10 },
   sideArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '200', opacity: 0.72 },
-  shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 390, borderRadius: 28, overflow: 'hidden' },
-  shareCardSquare: { borderRadius: 0 },
+  shareCard: { backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', minHeight: 390, overflow: 'hidden' },
   shareCardBackground: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center' },
-  shareCardImage: { borderRadius: 28 },
-  shareCardImageSquare: { borderRadius: 0 },
+  shareCardImage: {},
   shareCardOverlay: { width: '100%', minHeight: 390, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, paddingVertical: 28, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   cardFooter: { marginTop: 12, alignItems: 'flex-start', gap: 10, paddingHorizontal: 4 },
   cardMetaRow: { maxWidth: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-start', gap: 5 },
@@ -1434,7 +1431,7 @@ const styles = StyleSheet.create({
   exportImageOverlay: { backgroundColor: 'rgba(0, 0, 0, 0.42)' },
   exportSaying: { color: '#ffffff', fontSize: 76, lineHeight: 92, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0, 0, 0, 0.65)', textShadowOffset: { width: 0, height: 6 }, textShadowRadius: 18 },
   exportWatermark: { position: 'absolute', left: 58, bottom: 58, flexDirection: 'row', alignItems: 'center', gap: 12, opacity: 0.82 },
-  exportLogo: { width: 38, height: 38, borderRadius: 8 },
+  exportLogo: { width: 38, height: 38 },
   exportBrand: { color: '#ffffff', fontSize: 28, lineHeight: 34, fontWeight: '900' },
   activeIconButton: { borderColor: '#ffffff' },
   infoOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 20, backgroundColor: 'rgba(0, 0, 0, 0.82)', paddingHorizontal: 18, paddingTop: 92, paddingBottom: 116, justifyContent: 'center' },
