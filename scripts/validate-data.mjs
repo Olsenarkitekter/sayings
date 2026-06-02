@@ -22,6 +22,10 @@ if (!duplicateReplacementsMatch) throw new Error('Could not find duplicateMeanin
 const duplicateMeaningReplacements = Function(`return ${duplicateReplacementsMatch[1]}`)();
 const removedDuplicateMeaningIds = new Set(Object.keys(duplicateMeaningReplacements));
 
+const curatedOppositePairsMatch = source.match(/const curatedOppositePairs = (\[[\s\S]*?\n\]);/);
+if (!curatedOppositePairsMatch) throw new Error('Could not find curatedOppositePairs data');
+const curatedOppositePairs = Function(`return ${curatedOppositePairsMatch[1]}`)();
+
 const equivalentsMatch = source.match(/const languageEquivalentsById = ({[\s\S]*?\n});/);
 if (!equivalentsMatch) throw new Error('Could not find languageEquivalentsById data');
 const languageEquivalentsById = Function(`return ${equivalentsMatch[1]}`)();
@@ -57,13 +61,19 @@ for (const removedId of removedDuplicateMeaningIds) {
   if (!bookMetaById[removedId]) throw new Error(`Duplicate removal references unknown id: ${removedId}`);
   if (!activeIds.has(replacementId)) throw new Error(`Duplicate replacement is not active for ${removedId}: ${replacementId}`);
 }
-for (const item of activeProverbs) {
-  const meta = bookMetaById[item.id];
-  const oppositeId = duplicateMeaningReplacements[meta.oppositeId] || meta.oppositeId || null;
-  if (oppositeId && oppositeId !== item.id && !activeIds.has(oppositeId)) {
-    throw new Error(`Dangling opposite for ${item.id}: ${meta.oppositeId} -> ${oppositeId}`);
-  }
+const pairedOppositeIds = new Set();
+for (const pair of curatedOppositePairs) {
+  if (!Array.isArray(pair) || pair.length !== 2) throw new Error(`Invalid curated opposite pair: ${JSON.stringify(pair)}`);
+  const [firstId, secondId] = pair;
+  if (firstId === secondId) throw new Error(`Curated opposite pair points to itself: ${firstId}`);
+  if (!activeIds.has(firstId)) throw new Error(`Curated opposite pair has inactive first id: ${firstId}`);
+  if (!activeIds.has(secondId)) throw new Error(`Curated opposite pair has inactive second id: ${secondId}`);
+  if (pairedOppositeIds.has(firstId)) throw new Error(`Curated opposite id appears in multiple pairs: ${firstId}`);
+  if (pairedOppositeIds.has(secondId)) throw new Error(`Curated opposite id appears in multiple pairs: ${secondId}`);
+  pairedOppositeIds.add(firstId);
+  pairedOppositeIds.add(secondId);
 }
+if (curatedOppositePairs.length < 12) throw new Error(`Expected at least 12 high-confidence opposite pairs, got ${curatedOppositePairs.length}`);
 
 const weakEnglishSayings = new Set([
   'old habits die hard',

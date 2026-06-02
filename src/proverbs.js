@@ -335,6 +335,27 @@ const duplicateMeaningReplacements = {
 
 const removedDuplicateMeaningIds = new Set(Object.keys(duplicateMeaningReplacements));
 
+const curatedOppositePairs = [
+  ['better-late-than-never', 'haste-makes-waste'],
+  ['early-bird', 'slow-steady'],
+  ['practice-perfect', 'perfect-enemy-good'],
+  ['better-one-bird', 'nothing-ventured'],
+  ['truth-will-out', 'turn-blind-eye'],
+  ['beat-around-bush', 'honesty-best-policy'],
+  ['grudge-poison', 'bury-hatchet'],
+  ['hurt-people-hurt-people', 'compassion-self-friend'],
+  ['birds-feather', 'opposites-attract'],
+  ['cold-feet', 'bite-the-bullet'],
+  ['not-my-circus', 'good-samaritan'],
+  ['too-many-cooks', 'many-hands-light-work'],
+  ['old-habits-die-hard', 'you-live-and-learn'],
+  ['let-cat-out-bag', 'walls-have-ears']
+];
+
+const curatedOppositeById = Object.fromEntries(
+  curatedOppositePairs.flatMap(([firstId, secondId]) => [[firstId, secondId], [secondId, firstId]])
+);
+
 function normalizeCategory(category) {
   return removedCategoryFallbacks[category] || category || 'life';
 }
@@ -6270,10 +6291,10 @@ export const proverbs = rawProverbs
   .map((proverb) => {
     const bookMeta = bookMetaById[proverb.id] || {};
     const category = bookMeta.category || normalizeCategory(categoryById[proverb.id]);
-    const replacementOppositeId = duplicateMeaningReplacements[bookMeta.oppositeId] || bookMeta.oppositeId || null;
-    const oppositeId = replacementOppositeId === proverb.id || removedDuplicateMeaningIds.has(replacementOppositeId)
+    const curatedOppositeId = curatedOppositeById[proverb.id] || null;
+    const oppositeId = curatedOppositeId === proverb.id || removedDuplicateMeaningIds.has(curatedOppositeId)
       ? null
-      : replacementOppositeId;
+      : curatedOppositeId;
     const meaning = {
       en: proverb.en?.explanation || '',
       fo: proverb.fo?.explanation || proverb.en?.explanation || ''
