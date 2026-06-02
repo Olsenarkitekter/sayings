@@ -314,6 +314,27 @@ const bookMetaById = {
   'bite-dust': { category: 'experience', kind: 'image', order: 97, dkSaying: 'Bide i støvet', oppositeId: 'you-live-and-learn' }
 };
 
+const duplicateMeaningReplacements = {
+  'better-safe-than-sorry': 'better-one-bird',
+  'patience-virtue': 'slow-steady',
+  'strike-iron-hot': 'make-hay-sun-shines',
+  'only-way-out-through': 'hell-keep-going',
+  'where-theres-will': 'nothing-ventured',
+  'shows-you-believe': 'actions-speak-louder',
+  'dont-judge-book': 'all-that-glitters',
+  'hold-your-horses': 'look-before-leap',
+  'no-brainer': 'look-before-leap',
+  'free-rent-head': 'grudge-poison',
+  'easy-come-easy-go': 'better-one-bird',
+  'blessing-in-disguise': 'silver-lining',
+  'writers-difficult': 'practice-perfect',
+  'necessity-invention': 'opportunity-overalls',
+  'like-father-son': 'birds-feather',
+  'go-belly-up': 'bite-dust'
+};
+
+const removedDuplicateMeaningIds = new Set(Object.keys(duplicateMeaningReplacements));
+
 function normalizeCategory(category) {
   return removedCategoryFallbacks[category] || category || 'life';
 }
@@ -6244,11 +6265,15 @@ export const languages = [
 const languageKeys = languages.map((item) => item.key);
 
 export const proverbs = rawProverbs
-  .filter((proverb) => bookMetaById[proverb.id])
+  .filter((proverb) => bookMetaById[proverb.id] && !removedDuplicateMeaningIds.has(proverb.id))
   .sort((a, b) => bookMetaById[a.id].order - bookMetaById[b.id].order)
   .map((proverb) => {
     const bookMeta = bookMetaById[proverb.id] || {};
     const category = bookMeta.category || normalizeCategory(categoryById[proverb.id]);
+    const replacementOppositeId = duplicateMeaningReplacements[bookMeta.oppositeId] || bookMeta.oppositeId || null;
+    const oppositeId = replacementOppositeId === proverb.id || removedDuplicateMeaningIds.has(replacementOppositeId)
+      ? null
+      : replacementOppositeId;
     const meaning = {
       en: proverb.en?.explanation || '',
       fo: proverb.fo?.explanation || proverb.en?.explanation || ''
@@ -6280,7 +6305,7 @@ export const proverbs = rawProverbs
       dk: bookDanish,
       category,
       kind: bookMeta.kind || 'dilemma',
-      oppositeId: bookMeta.oppositeId || null,
+      oppositeId,
       bookOrder: bookMeta.order,
       meaning,
       variants

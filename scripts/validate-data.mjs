@@ -13,6 +13,15 @@ const languagesMatch = source.match(/export const languages = (\[[\s\S]*?\n\]);/
 if (!languagesMatch) throw new Error('Could not find languages data');
 const languages = Function(`return ${languagesMatch[1]}`)();
 
+const bookMetaMatch = source.match(/const bookMetaById = ({[\s\S]*?\n});/);
+if (!bookMetaMatch) throw new Error('Could not find bookMetaById data');
+const bookMetaById = Function(`return ${bookMetaMatch[1]}`)();
+
+const duplicateReplacementsMatch = source.match(/const duplicateMeaningReplacements = ({[\s\S]*?\n});/);
+if (!duplicateReplacementsMatch) throw new Error('Could not find duplicateMeaningReplacements data');
+const duplicateMeaningReplacements = Function(`return ${duplicateReplacementsMatch[1]}`)();
+const removedDuplicateMeaningIds = new Set(Object.keys(duplicateMeaningReplacements));
+
 const equivalentsMatch = source.match(/const languageEquivalentsById = ({[\s\S]*?\n});/);
 if (!equivalentsMatch) throw new Error('Could not find languageEquivalentsById data');
 const languageEquivalentsById = Function(`return ${equivalentsMatch[1]}`)();
@@ -39,7 +48,22 @@ for (const category of ['all', 'time', 'work-results', 'truth', 'relations', 'ri
   if (!categoryKeys.includes(category)) throw new Error(`Missing category: ${category}`);
 }
 
-if (rawProverbs.length < 40) throw new Error(`Expected at least 40 curated meanings, got ${rawProverbs.length}`);
+const activeProverbs = rawProverbs
+  .filter((item) => bookMetaById[item.id] && !removedDuplicateMeaningIds.has(item.id));
+const activeIds = new Set(activeProverbs.map((item) => item.id));
+if (activeProverbs.length < 70) throw new Error(`Expected at least 70 curated meanings after duplicate pruning, got ${activeProverbs.length}`);
+for (const removedId of removedDuplicateMeaningIds) {
+  const replacementId = duplicateMeaningReplacements[removedId];
+  if (!bookMetaById[removedId]) throw new Error(`Duplicate removal references unknown id: ${removedId}`);
+  if (!activeIds.has(replacementId)) throw new Error(`Duplicate replacement is not active for ${removedId}: ${replacementId}`);
+}
+for (const item of activeProverbs) {
+  const meta = bookMetaById[item.id];
+  const oppositeId = duplicateMeaningReplacements[meta.oppositeId] || meta.oppositeId || null;
+  if (oppositeId && oppositeId !== item.id && !activeIds.has(oppositeId)) {
+    throw new Error(`Dangling opposite for ${item.id}: ${meta.oppositeId} -> ${oppositeId}`);
+  }
+}
 
 const weakEnglishSayings = new Set([
   'old habits die hard',
@@ -137,4 +161,4 @@ for (const [id, requirement] of Object.entries(imagePreservingRequirements)) {
   }
 }
 
-console.log(`OK: ${rawProverbs.length} meaning-first proverbs, ${languages.length} languages, ${categories.length - 1} selectable categories.`);
+console.log(`OK: ${activeProverbs.length} active meaning-first proverbs (${removedDuplicateMeaningIds.size} duplicate-meaning removals), ${languages.length} languages, ${categories.length - 1} selectable categories.`);
