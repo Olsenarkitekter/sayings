@@ -518,6 +518,8 @@ export default function App() {
   const [pageBackgroundColor, setPageBackgroundColor] = useState('#000000');
   const [shareFont, setShareFont] = useState('system');
   const [shareUppercase, setShareUppercase] = useState(false);
+  const [shareBold, setShareBold] = useState(false);
+  const [shareItalic, setShareItalic] = useState(false);
   const [shareTextSize, setShareTextSize] = useState('medium');
   const [shareTextColor, setShareTextColor] = useState('#ffffff');
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
@@ -592,8 +594,8 @@ export default function App() {
   const shareFontStyle = {
     ...(selectedShareFont.family ? { fontFamily: selectedShareFont.family } : {}),
     color: shareTextColor,
-    fontWeight: '400',
-    fontStyle: shareFont === 'script' ? 'italic' : 'normal'
+    fontWeight: shareBold ? '900' : '400',
+    fontStyle: shareItalic || shareFont === 'script' ? 'italic' : 'normal'
   };
   const hasImageBackground = shareBackgroundMode === 'image' && !!backgroundImageUri;
   const cardBackgroundStyle = shareBackgroundMode === 'color' ? { backgroundColor: shareBackgroundColor } : null;
@@ -681,10 +683,10 @@ export default function App() {
       }
       if (SHARE_FONTS.some((item) => item.key === storedShareFont)) setShareFont(storedShareFont);
       if (storedShareUppercase === 'on') setShareUppercase(true);
+      if (storedShareBold === 'on') setShareBold(true);
+      if (storedShareItalic === 'on') setShareItalic(true);
       if (SHARE_TEXT_SIZES.some((item) => item.key === storedShareTextSize)) setShareTextSize(storedShareTextSize);
       if (SHARE_TEXT_COLORS.some((item) => item.key === storedShareTextColor)) setShareTextColor(storedShareTextColor);
-      if (storedShareBold !== 'off') await AsyncStorage.setItem(STORAGE.shareBold, 'off');
-      if (storedShareItalic === 'on') await AsyncStorage.setItem(STORAGE.shareItalic, 'off');
 
       const wantsNotifications = storedNotifications !== 'off';
       setNotificationsEnabled(wantsNotifications);
@@ -991,6 +993,18 @@ export default function App() {
     await AsyncStorage.setItem(STORAGE.shareUppercase, next ? 'on' : 'off');
   }
 
+  async function toggleShareBold() {
+    const next = !shareBold;
+    setShareBold(next);
+    await AsyncStorage.setItem(STORAGE.shareBold, next ? 'on' : 'off');
+  }
+
+  async function toggleShareItalic() {
+    const next = !shareItalic;
+    setShareItalic(next);
+    await AsyncStorage.setItem(STORAGE.shareItalic, next ? 'on' : 'off');
+  }
+
   async function createCurrentShareImage() {
     if (Platform.OS === 'web') {
       return createShareImageFile({
@@ -1003,8 +1017,8 @@ export default function App() {
         backgroundColor: shareBackgroundColor,
         textColor: shareTextColor,
         fontFamily: selectedShareFont.family || 'Arial, Helvetica, sans-serif',
-        fontStyle: shareFont === 'script' ? 'italic' : 'normal',
-        fontWeight: '400',
+        fontStyle: shareItalic || shareFont === 'script' ? 'italic' : 'normal',
+        fontWeight: shareBold ? '900' : '400',
         textSizeMode: shareTextSize,
         logoUri
       });
@@ -1107,6 +1121,12 @@ export default function App() {
     const next = isFavorite
       ? favorites.filter((id) => id !== displayedProverb.id)
       : [...new Set([...favorites, displayedProverb.id])];
+    setFavorites(next);
+    await AsyncStorage.setItem(STORAGE.favorites, JSON.stringify(next));
+  }
+
+  async function removeFavorite(id) {
+    const next = favorites.filter((favoriteId) => favoriteId !== id);
     setFavorites(next);
     await AsyncStorage.setItem(STORAGE.favorites, JSON.stringify(next));
   }
@@ -1312,6 +1332,12 @@ export default function App() {
                     <Pressable accessibilityRole="button" accessibilityLabel="Toggle uppercase text" onPress={toggleShareUppercase} style={[styles.compactImageEditButton, shareUppercase && styles.activeImageEditButton]}>
                       <Text style={styles.imageEditButtonText}>ALL CAPS</Text>
                     </Pressable>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Toggle bold text" onPress={toggleShareBold} style={[styles.compactImageEditButton, shareBold && styles.activeImageEditButton]}>
+                      <Text style={[styles.imageEditButtonText, styles.boldChoiceText]}>Fed</Text>
+                    </Pressable>
+                    <Pressable accessibilityRole="button" accessibilityLabel="Toggle italic text" onPress={toggleShareItalic} style={[styles.compactImageEditButton, shareItalic && styles.activeImageEditButton]}>
+                      <Text style={[styles.imageEditButtonText, styles.italicChoiceText]}>Kursiv</Text>
+                    </Pressable>
                   </View>
                   <View style={styles.editorControlRow}>
                     {SHARE_TEXT_COLORS.map((item) => (
@@ -1436,10 +1462,15 @@ export default function App() {
                   <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
                 ) : (
                   savedProverbs.map((item) => (
-                    <Pressable key={item.id} onPress={() => selectSavedProverb(item)} style={styles.savedOverlayItem}>
-                      <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
-                      <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
-                    </Pressable>
+                    <View key={item.id} style={styles.savedOverlayItem}>
+                      <Pressable onPress={() => selectSavedProverb(item)} style={styles.savedItemContent}>
+                        <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
+                        <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
+                      </Pressable>
+                      <Pressable accessibilityRole="button" accessibilityLabel="Remove saved proverb" onPress={() => removeFavorite(item.id)} hitSlop={8} style={styles.savedRemoveButton}>
+                        <Text style={styles.savedRemoveText}>Remove</Text>
+                      </Pressable>
+                    </View>
                   ))
                 )}
               </ScrollView>
@@ -1495,14 +1526,18 @@ export default function App() {
                         <Text style={styles.muted}>No saved proverbs yet. Tap the star to save one.</Text>
                       ) : (
                         savedProverbs.map((item) => (
-                          <Pressable
-                            key={item.id}
-                            onPress={() => selectSavedProverb(item)}
-                            style={styles.savedItem}
-                          >
-                            <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
-                            <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
-                          </Pressable>
+                          <View key={item.id} style={styles.savedItem}>
+                            <Pressable
+                              onPress={() => selectSavedProverb(item)}
+                              style={styles.savedItemContent}
+                            >
+                              <Text style={styles.savedSaying}>{edits[item.id]?.[language] || getProverbVariant(item, language).saying}</Text>
+                              <Text style={styles.savedExplanation}>{getProverbVariant(item, language).explanation}</Text>
+                            </Pressable>
+                            <Pressable accessibilityRole="button" accessibilityLabel="Remove saved proverb" onPress={() => removeFavorite(item.id)} hitSlop={8} style={styles.savedRemoveButton}>
+                              <Text style={styles.savedRemoveText}>Remove</Text>
+                            </Pressable>
+                          </View>
                         ))
                       )}
                     </View>
@@ -1612,7 +1647,7 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 0, marginBottom: 4 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 0, flexShrink: 1, minWidth: 0 },
   logoImage: { width: 76, height: 76, resizeMode: 'contain' },
-  brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', paddingTop: 5 },
+  brandCopy: { minWidth: 0, flexShrink: 1, flexDirection: 'row', alignItems: 'baseline', gap: 10, flexWrap: 'wrap', paddingTop: 0, transform: [{ translateY: -4 }] },
   brandText: { color: '#ffffff', fontSize: 23, lineHeight: 25, fontWeight: '900', letterSpacing: 0 },
   brandTagline: { color: '#8f8f8f', fontSize: 12, lineHeight: 14, fontWeight: '800' },
   symbolIcon: { fontWeight: '900', textAlign: 'center', textAlignVertical: 'center', includeFontPadding: false },
@@ -1699,7 +1734,7 @@ const styles = StyleSheet.create({
   savedTitle: { color: '#ffffff', fontSize: 20, lineHeight: 24, fontWeight: '900' },
   savedSubtitle: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '800', marginTop: 2 },
   savedOverlayList: { paddingBottom: 18 },
-  savedOverlayItem: { borderTopWidth: 1, borderTopColor: '#171717', paddingVertical: 14 },
+  savedOverlayItem: { borderTopWidth: 1, borderTopColor: '#171717', paddingVertical: 14, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   imageEditorPanel: { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 9, height: 268, maxHeight: '48%', borderWidth: 1, borderColor: '#242424', borderTopLeftRadius: 26, borderTopRightRadius: 26, paddingHorizontal: 10, paddingVertical: 12, backgroundColor: '#050505' },
   imageEditorScrollContent: { minHeight: 244, alignItems: 'stretch', justifyContent: 'center', gap: 5, paddingHorizontal: 2, paddingBottom: 8 },
   editorControlRow: { width: '100%', minHeight: 34, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 6 },
@@ -1723,6 +1758,8 @@ const styles = StyleSheet.create({
   imageEditButton: { minHeight: 42, minWidth: 92, flexGrow: 1, borderRadius: 21, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10 },
   activeImageEditButton: { borderColor: '#ffffff', backgroundColor: '#101010' },
   imageEditButtonText: { color: '#ffffff', fontSize: 10, lineHeight: 13, fontWeight: '900', textAlign: 'center' },
+  boldChoiceText: { fontWeight: '900' },
+  italicChoiceText: { fontStyle: 'italic' },
   fontChoiceText: { fontSize: 9, lineHeight: 12 },
   imageEditCloseButton: { width: 42, height: 42, borderRadius: 21, borderWidth: 1.5, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center' },
   imageEditCloseText: { color: '#ffffff', fontSize: 28, lineHeight: 30, fontWeight: '300' },
@@ -1756,7 +1793,10 @@ const styles = StyleSheet.create({
   timeButton: { paddingVertical: 4, paddingRight: 4 },
   timeText: { color: '#777777', fontSize: 16, fontWeight: '800' },
   savedList: { borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, gap: 12, backgroundColor: '#050505' },
-  savedItem: { paddingVertical: 8 },
+  savedItem: { paddingVertical: 8, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  savedItemContent: { flex: 1, minWidth: 0 },
+  savedRemoveButton: { minHeight: 30, borderRadius: 15, borderWidth: 1, borderColor: '#555555', paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' },
+  savedRemoveText: { color: '#d9d9d9', fontSize: 11, lineHeight: 14, fontWeight: '900' },
   savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
   savedExplanation: { color: '#a6a6a6', fontSize: 14, marginTop: 3, lineHeight: 20 }
 });
