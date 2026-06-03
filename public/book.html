@@ -171,11 +171,48 @@
       font-size: 14px;
       font-weight: 900;
       white-space: nowrap;
+      cursor: pointer;
     }
 
     .button.primary {
       background: var(--charcoal);
       color: var(--white);
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+    }
+
+    .price-list {
+      max-width: 640px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid var(--line);
+    }
+
+    .price-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .price-list strong {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .price-list span {
+      flex: 0 0 auto;
+      color: var(--ink);
+      font-weight: 900;
     }
 
     .hero-asset {
@@ -386,6 +423,195 @@
       font-weight: 800;
     }
 
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(24, 23, 21, 0.48);
+    }
+
+    .modal[aria-hidden="false"] {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: min(720px, 100%);
+      max-height: min(820px, calc(100vh - 32px));
+      overflow: auto;
+      border-radius: 8px;
+      background: var(--cream);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 80px rgba(24, 23, 21, 0.24);
+    }
+
+    .modal-header,
+    .modal-footer {
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-footer {
+      border-top: 1px solid var(--line);
+      border-bottom: 0;
+      position: sticky;
+      bottom: 0;
+      background: var(--cream);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.08;
+      font-weight: 900;
+    }
+
+    .modal-subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      border: 1.5px solid var(--charcoal);
+      background: transparent;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      display: grid;
+      gap: 24px;
+      padding: 18px;
+    }
+
+    .option-list,
+    .payment-list,
+    .bundle-list {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0 0;
+    }
+
+    .choice {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      padding: 13px 0;
+      border-top: 1px solid var(--line);
+      cursor: pointer;
+    }
+
+    .choice:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .choice input {
+      margin-top: 4px;
+      accent-color: var(--charcoal);
+    }
+
+    .choice strong {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 900;
+    }
+
+    .choice small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .choice-price {
+      color: var(--ink);
+      font-size: 14px;
+      line-height: 1.35;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .bundle-list {
+      padding: 0;
+      list-style: none;
+    }
+
+    .bundle-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .bundle-list strong,
+    .bundle-list span {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .total-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .total-row strong {
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .total-row span {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .stripe-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 650;
+    }
+
     @media (max-width: 560px) {
       .button { width: 100%; }
       .page { padding-inline: 16px; }
@@ -442,8 +668,14 @@
           <li><strong>Audiobook</strong> - a minimalist spoken edition for reflection and listening on the go.</li>
           <li><strong>Ebook + premium PDF</strong> - instant digital access for tablets, travel, and gifting.</li>
         </ul>
+        <ul class="price-list" aria-label="Visual Sayings prices">
+          <li><strong>Audiobook</strong><span>79 DKK</span></li>
+          <li><strong>Ebook + premium PDF</strong><span>69 DKK</span></li>
+          <li><strong>Physical book</strong><span>170 DKK</span></li>
+          <li><strong>Ultimate bundle</strong><span>215 DKK</span></li>
+        </ul>
         <div class="actions">
-          <a class="button primary" href="mailto:olsenarkitekter@gmail.com?subject=Visual%20Sayings%20order">Get Your Copy - 170 DKK</a>
+          <button class="button primary" type="button" data-open-checkout>Choose Your Preferred Experience</button>
           <a class="button" href="#inside">Take a Peek Inside</a>
         </div>
       </div>
@@ -585,7 +817,7 @@
         <h3>Choose Your Experience</h3>
         <p class="section-copy">Start with the format that fits your day, or collect the complete Visual Sayings experience.</p>
         <div class="actions">
-          <a class="button primary" href="mailto:olsenarkitekter@gmail.com?subject=Visual%20Sayings%20order">Order Visual Sayings</a>
+          <button class="button primary" type="button" data-open-checkout>Choose Your Preferred Experience</button>
         </div>
       </div>
       <div>
@@ -594,7 +826,7 @@
           <li><strong>The Physical Book - 170 DKK</strong><span>The beautiful, matte-laminated paperback sent straight to your door.</span></li>
           <li><strong>The Ultimate Collector's Bundle - 215 DKK</strong><span>Best value: receive the physical book, the audiobook, and the digital PDF. Experience the sayings in every dimension.</span></li>
           <li><strong>Delivery:</strong><span>Physical orders ship within 2-4 business days across Denmark via GLS or PostNord. Fixed shipping is 39 DKK, with free shipping on orders over 350 DKK.</span></li>
-          <li><strong>Secure checkout:</strong><span>Pay safely via MobilePay, credit card, or Apple Pay.</span></li>
+          <li><strong>Secure checkout:</strong><span>Pay by card, Apple Pay, or Google Pay through Stripe Checkout. MobilePay is not offered on this page.</span></li>
         </ul>
       </div>
     </section>
@@ -604,6 +836,98 @@
       <a href="mailto:olsenarkitekter@gmail.com">olsenarkitekter@gmail.com</a>
     </footer>
   </main>
+
+  <div class="modal" id="checkoutModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="checkoutTitle">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="checkoutTitle">Choose Your Preferred Experience</h3>
+          <p class="modal-subtitle">Select the formats you want. The best matching package price is calculated live.</p>
+        </div>
+        <button class="icon-button" type="button" data-close-checkout aria-label="Close checkout">×</button>
+      </div>
+      <div class="modal-body">
+        <section aria-label="Formats">
+          <p class="eyebrow">Formats</p>
+          <div class="option-list">
+            <label class="choice">
+              <input type="checkbox" name="format" value="audio" checked />
+              <span>
+                <strong>Audiobook</strong>
+                <small>Minimal spoken edition for reflection, commuting, and winding down.</small>
+              </span>
+              <span class="choice-price">79 DKK</span>
+            </label>
+            <label class="choice">
+              <input type="checkbox" name="format" value="ebook" checked />
+              <span>
+                <strong>Ebook + premium PDF</strong>
+                <small>Instant digital access for tablets, travel, and gifting.</small>
+              </span>
+              <span class="choice-price">69 DKK</span>
+            </label>
+            <label class="choice">
+              <input type="checkbox" name="format" value="physical" />
+              <span>
+                <strong>Physical book</strong>
+                <small>Matte-laminated paperback sent straight to your door.</small>
+              </span>
+              <span class="choice-price">170 DKK</span>
+            </label>
+          </div>
+        </section>
+
+        <section aria-label="Package options">
+          <p class="eyebrow">Possibilities</p>
+          <ul class="bundle-list">
+            <li><strong>Audiobook</strong><span>79 DKK</span></li>
+            <li><strong>Ebook + premium PDF</strong><span>69 DKK</span></li>
+            <li><strong>Physical book</strong><span>170 DKK</span></li>
+            <li><strong>Audio & Digital Package</strong><span>99 DKK</span></li>
+            <li><strong>Ultimate Collector's Bundle</strong><span>215 DKK</span></li>
+          </ul>
+        </section>
+
+        <section aria-label="Payment method">
+          <p class="eyebrow">Payment</p>
+          <div class="payment-list">
+            <label class="choice">
+              <input type="radio" name="payment" value="card" checked />
+              <span>
+                <strong>Card via Stripe Checkout</strong>
+                <small>Secure card payment with no extra buyer fee.</small>
+              </span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="payment" value="apple-pay" />
+              <span>
+                <strong>Apple Pay via Stripe Checkout</strong>
+                <small>Available when your device and browser support it.</small>
+              </span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="payment" value="google-pay" />
+              <span>
+                <strong>Google Pay via Stripe Checkout</strong>
+                <small>Available when your device and browser support it.</small>
+              </span>
+            </label>
+          </div>
+          <p class="stripe-note">MobilePay is intentionally not listed. Payment is handled by Stripe Checkout.</p>
+        </section>
+      </div>
+      <div class="modal-footer">
+        <div class="total-row">
+          <strong id="selectionLabel">Audio & Digital Package</strong>
+          <span id="checkoutTotal">99 DKK</span>
+        </div>
+        <div class="actions">
+          <button class="button primary" type="button" id="stripeCheckoutButton">Continue to Stripe Checkout</button>
+        </div>
+        <p class="stripe-note" id="stripeStatus">Stripe checkout is ready for the selected package once the live Stripe Payment Link or Checkout endpoint is connected.</p>
+      </div>
+    </div>
+  </div>
   <script>
     const params = new URLSearchParams(window.location.search);
     const language = (params.get('lang') || 'en').toLowerCase();
@@ -614,6 +938,126 @@
       creatorCite.textContent = creatorCite.dataset.da;
       document.documentElement.lang = 'da';
     }
+
+    const checkoutModal = document.getElementById('checkoutModal');
+    const formatInputs = Array.from(document.querySelectorAll('input[name="format"]'));
+    const paymentInputs = Array.from(document.querySelectorAll('input[name="payment"]'));
+    const selectionLabel = document.getElementById('selectionLabel');
+    const checkoutTotal = document.getElementById('checkoutTotal');
+    const stripeButton = document.getElementById('stripeCheckoutButton');
+    const stripeStatus = document.getElementById('stripeStatus');
+
+    const prices = {
+      audio: 79,
+      ebook: 69,
+      physical: 170,
+      audioDigital: 99,
+      ultimate: 215,
+    };
+
+    const stripeCheckoutUrls = {
+      audio: '',
+      ebook: '',
+      physical: '',
+      audioDigital: '',
+      ultimate: '',
+      custom: '',
+    };
+
+    function selectedFormats() {
+      return formatInputs.filter((input) => input.checked).map((input) => input.value);
+    }
+
+    function getPackage(formats) {
+      const hasAudio = formats.includes('audio');
+      const hasEbook = formats.includes('ebook');
+      const hasPhysical = formats.includes('physical');
+
+      if (hasAudio && hasEbook && hasPhysical) {
+        return { key: 'ultimate', label: "Ultimate Collector's Bundle", total: prices.ultimate };
+      }
+      if (hasAudio && hasEbook) {
+        return { key: 'audioDigital', label: 'Audio & Digital Package', total: prices.audioDigital };
+      }
+      if (formats.length === 1 && hasAudio) {
+        return { key: 'audio', label: 'Audiobook', total: prices.audio };
+      }
+      if (formats.length === 1 && hasEbook) {
+        return { key: 'ebook', label: 'Ebook + premium PDF', total: prices.ebook };
+      }
+      if (formats.length === 1 && hasPhysical) {
+        return { key: 'physical', label: 'Physical book', total: prices.physical };
+      }
+
+      const total = formats.reduce((sum, format) => sum + prices[format], 0);
+      return { key: 'custom', label: formats.length ? 'Custom selection' : 'Choose one or more formats', total };
+    }
+
+    function updateCheckout() {
+      const formats = selectedFormats();
+      const selectedPackage = getPackage(formats);
+      const payment = paymentInputs.find((input) => input.checked)?.value || 'card';
+      const checkoutUrl = stripeCheckoutUrls[selectedPackage.key];
+
+      selectionLabel.textContent = selectedPackage.label;
+      checkoutTotal.textContent = `${selectedPackage.total} DKK`;
+      stripeButton.disabled = selectedPackage.total === 0 || !checkoutUrl;
+      stripeButton.dataset.checkoutUrl = checkoutUrl || '';
+      stripeButton.dataset.payment = payment;
+
+      if (selectedPackage.total === 0) {
+        stripeStatus.textContent = 'Choose at least one format to continue.';
+      } else if (!checkoutUrl) {
+        stripeStatus.textContent = 'Stripe checkout is ready for this selection once the live Stripe Payment Link or Checkout endpoint is connected.';
+      } else {
+        stripeStatus.textContent = 'You will continue to Stripe Checkout. MobilePay is not offered on this page.';
+      }
+    }
+
+    function openCheckout() {
+      checkoutModal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('modal-open');
+      updateCheckout();
+      stripeButton.focus();
+    }
+
+    function closeCheckout() {
+      checkoutModal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('modal-open');
+    }
+
+    document.querySelectorAll('[data-open-checkout]').forEach((button) => {
+      button.addEventListener('click', openCheckout);
+    });
+
+    document.querySelectorAll('[data-close-checkout]').forEach((button) => {
+      button.addEventListener('click', closeCheckout);
+    });
+
+    checkoutModal.addEventListener('click', (event) => {
+      if (event.target === checkoutModal) {
+        closeCheckout();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && checkoutModal.getAttribute('aria-hidden') === 'false') {
+        closeCheckout();
+      }
+    });
+
+    [...formatInputs, ...paymentInputs].forEach((input) => {
+      input.addEventListener('change', updateCheckout);
+    });
+
+    stripeButton.addEventListener('click', () => {
+      const checkoutUrl = stripeButton.dataset.checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      }
+    });
+
+    updateCheckout();
   </script>
 </body>
 </html>
