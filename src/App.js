@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { captureRef } from 'react-native-view-shot';
 import { proverbs, languages, categories, getProverbVariant } from './proverbs';
 
@@ -533,9 +534,12 @@ export default function App() {
   const [shareTextSize, setShareTextSize] = useState('medium');
   const [shareTextColor, setShareTextColor] = useState('#ffffff');
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
-  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraPreviewOpen, setCameraPreviewOpen] = useState(false);
+  const [cameraFacing, setCameraFacing] = useState('back');
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const [detailLineCount, setDetailLineCount] = useState(0);
   const [ready, setReady] = useState(false);
+  const cameraRef = useRef(null);
   const shareCardRef = useRef(null);
   const backgroundGestureRef = useRef(null);
   const cardGestureRef = useRef(null);
@@ -845,7 +849,7 @@ export default function App() {
   }
 
   async function chooseBackgroundImage() {
-    setCameraReady(false);
+    setCameraPreviewOpen(false);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
       Alert.alert('Photo access needed', 'Allow photo access to use a picture as the proverb background.');
@@ -863,30 +867,33 @@ export default function App() {
   }
 
   async function captureCameraBackground() {
-    if (!cameraReady) {
-      setCameraReady(true);
+    if (!cameraPreviewOpen) {
+      const permission = cameraPermission?.granted ? cameraPermission : await requestCameraPermission();
+      if (!permission?.granted) {
+        Alert.alert('Camera access needed', 'Allow camera access to use a live camera background for the proverb.');
+        return;
+      }
+
+      setCameraPreviewOpen(true);
       setShareOpen(false);
       setSettingsOpen(false);
       setSavedListOpen(false);
+      setSearchOpen(false);
+      setImageEditorOpen(false);
       return;
     }
 
-    const permission = await ImagePicker.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      setCameraReady(false);
-      Alert.alert('Camera access needed', 'Allow camera access to take a picture for the proverb background.');
-      return;
+    try {
+      const photo = await cameraRef.current?.takePictureAsync?.({
+        quality: 0.92,
+        skipProcessing: false
+      });
+      if (!photo?.uri) return;
+      setCameraPreviewOpen(false);
+      await applyBackgroundImage(photo.uri);
+    } catch {
+      Alert.alert('Camera unavailable', 'The camera image could not be captured right now.');
     }
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      allowsEditing: false,
-      quality: 0.92
-    });
-
-    setCameraReady(false);
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    await applyBackgroundImage(result.assets[0].uri);
   }
 
   function startCardGesture(evt) {
@@ -1134,7 +1141,7 @@ export default function App() {
   }
 
   function openSavedList() {
-    setCameraReady(false);
+    setCameraPreviewOpen(false);
     setSavedListOpen(true);
     setSettingsOpen(false);
     setSavedOpen(true);
@@ -1237,10 +1244,10 @@ export default function App() {
           <BrandLogo />
 
           <View style={styles.topRightActions}>
-            <Pressable accessibilityLabel="Search sayings" onPress={() => { setCameraReady(false); setSearchOpen((value) => !value); setSettingsOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
+            <Pressable accessibilityLabel="Search sayings" onPress={() => { setCameraPreviewOpen(false); setSearchOpen((value) => !value); setSettingsOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
               <ActionIcon name="search" size={27} />
             </Pressable>
-            <Pressable accessibilityLabel="Settings" onPress={() => { setCameraReady(false); setSettingsOpen((value) => !value); setSearchOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
+            <Pressable accessibilityLabel="Settings" onPress={() => { setCameraPreviewOpen(false); setSettingsOpen((value) => !value); setSearchOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
               <ActionIcon name="menu" size={25} />
             </Pressable>
           </View>
@@ -1295,7 +1302,17 @@ export default function App() {
               onResponderRelease={editOpen ? undefined : finishCardGesture}
               onResponderTerminate={editOpen ? undefined : finishCardGesture}
             >
-              {hasImageBackground ? (
+              {cameraPreviewOpen ? (
+                <CameraView
+                  ref={cameraRef}
+                  facing={cameraFacing}
+                  style={styles.shareCardCamera}
+                >
+                  <View style={styles.shareCardOverlay}>
+                    <Text style={[styles.saying, shareFontStyle, sayingTextStyle]}>{displaySaying}</Text>
+                  </View>
+                </CameraView>
+              ) : hasImageBackground ? (
                 <ImageBackground
                   source={{ uri: backgroundImageUri }}
                   resizeMode={backgroundImageFit}
@@ -1442,33 +1459,45 @@ export default function App() {
         </View>
 
         {editOpen || imageEditorOpen ? null : (
+          <>
+          {cameraPreviewOpen && (
+            <View style={styles.cameraFacingBar}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Use back camera" onPress={() => setCameraFacing('back')} style={[styles.cameraFacingButton, cameraFacing === 'back' && styles.activeCameraFacingButton]}>
+                <Text style={[styles.cameraFacingText, cameraFacing === 'back' && styles.activeCameraFacingText]}>Back</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Use front camera" onPress={() => setCameraFacing('front')} style={[styles.cameraFacingButton, cameraFacing === 'front' && styles.activeCameraFacingButton]}>
+                <Text style={[styles.cameraFacingText, cameraFacing === 'front' && styles.activeCameraFacingText]}>Front</Text>
+              </Pressable>
+            </View>
+          )}
           <View style={styles.actionBar}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setCameraReady(false); setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setCameraPreviewOpen(false); setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
               <ActionIcon name="edit-3" />
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Choose share style"
-              onPress={() => { setCameraReady(false); setImageEditorOpen(true); }}
+              onPress={() => { setCameraPreviewOpen(false); setImageEditorOpen(true); }}
               style={[styles.bottomIconButton, backgroundImageUri && styles.activeIconButton]}
             >
               <ActionIcon name="sliders" />
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={cameraReady ? 'Take a photo for the background' : 'Open camera for background'}
+              accessibilityLabel={cameraPreviewOpen ? 'Commit camera background' : 'Open camera preview'}
               onPress={captureCameraBackground}
-              style={[styles.bottomIconButton, styles.cameraButton, cameraReady && styles.armedCameraButton]}
+              style={[styles.bottomIconButton, styles.cameraButton, cameraPreviewOpen && styles.armedCameraButton]}
             >
-              <CameraIcon active={cameraReady} />
+              <CameraIcon active={cameraPreviewOpen} />
             </Pressable>
             <Pressable accessibilityLabel="Show saved proverbs" onPress={openSavedList} style={styles.bottomIconButton}>
               <ActionIcon name="list" />
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Send proverb" onPress={() => { setCameraReady(false); setShareOpen((value) => !value); }} style={styles.bottomIconButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Send proverb" onPress={() => { setCameraPreviewOpen(false); setShareOpen((value) => !value); }} style={styles.bottomIconButton}>
               <ActionIcon name="send" />
             </Pressable>
           </View>
+          </>
         )}
 
         {shareOpen && !editOpen && (
@@ -1737,6 +1766,7 @@ const styles = StyleSheet.create({
   content: { flex: 1, justifyContent: 'flex-start', paddingBottom: 8 },
   cardShell: { flex: 1, position: 'relative', justifyContent: 'flex-start' },
   shareCard: { width: '100%', aspectRatio: 1, flexGrow: 0, marginTop: 112, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.42)', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  shareCardCamera: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   shareCardBackground: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   shareCardImage: {},
   shareCardOverlay: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 38, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
@@ -1791,6 +1821,11 @@ const styles = StyleSheet.create({
   editSecondaryText: { color: '#d9d9d9', fontSize: 14, fontWeight: '900' },
   editPrimaryButton: { height: 36, minWidth: 88, borderRadius: 18, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   editPrimaryText: { color: '#000000', fontSize: 14, fontWeight: '900' },
+  cameraFacingBar: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 },
+  cameraFacingButton: { height: 32, minWidth: 72, borderRadius: 16, borderWidth: 1.5, borderColor: '#555555', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#050505' },
+  activeCameraFacingButton: { borderColor: '#ffffff', backgroundColor: '#ffffff' },
+  cameraFacingText: { color: '#8f8f8f', fontSize: 12, lineHeight: 15, fontWeight: '800' },
+  activeCameraFacingText: { color: '#000000' },
   actionBar: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, width: '100%' },
   bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
   cameraButton: { borderColor: '#ffffff' },

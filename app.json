@@ -31,11 +31,13 @@
       "edgeToEdgeEnabled": true,
       "versionCode": 1,
       "permissions": [
+        "android.permission.CAMERA",
         "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "plugins": [
       "expo-notifications",
+      "expo-camera",
       "expo-image-picker",
       "expo-media-library"
     ],
