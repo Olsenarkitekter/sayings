@@ -169,6 +169,15 @@ function ActionIcon({ name, active, size = 22 }) {
   );
 }
 
+function CameraIcon({ active = false }) {
+  return (
+    <View style={[styles.cameraGlyph, active && styles.activeCameraGlyph]}>
+      <View style={[styles.cameraTop, active && styles.activeCameraTop]} />
+      <View style={[styles.cameraLens, active && styles.activeCameraLens]} />
+    </View>
+  );
+}
+
 function YinYangIcon() {
   return (
     <View style={styles.yinYangFrame}>
@@ -524,6 +533,7 @@ export default function App() {
   const [shareTextSize, setShareTextSize] = useState('medium');
   const [shareTextColor, setShareTextColor] = useState('#ffffff');
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const [detailLineCount, setDetailLineCount] = useState(0);
   const [ready, setReady] = useState(false);
   const shareCardRef = useRef(null);
@@ -816,21 +826,7 @@ export default function App() {
     await Linking.openURL(mailUrl);
   }
 
-  async function chooseBackgroundImage() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Photo access needed', 'Allow photo access to use a picture as the proverb background.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: false,
-      quality: 0.92
-    });
-
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    const nextUri = result.assets[0].uri;
+  async function applyBackgroundImage(nextUri) {
     setBackgroundImageUri(nextUri);
     setBackgroundImageFit('contain');
     setBackgroundImagePosition({ x: 0, y: 0 });
@@ -846,6 +842,51 @@ export default function App() {
       [STORAGE.backgroundRounded, 'off'],
       [STORAGE.shareBackgroundMode, 'image']
     ]);
+  }
+
+  async function chooseBackgroundImage() {
+    setCameraReady(false);
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Photo access needed', 'Allow photo access to use a picture as the proverb background.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.92
+    });
+
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+    await applyBackgroundImage(result.assets[0].uri);
+  }
+
+  async function captureCameraBackground() {
+    if (!cameraReady) {
+      setCameraReady(true);
+      setShareOpen(false);
+      setSettingsOpen(false);
+      setSavedListOpen(false);
+      return;
+    }
+
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      setCameraReady(false);
+      Alert.alert('Camera access needed', 'Allow camera access to take a picture for the proverb background.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      allowsEditing: false,
+      quality: 0.92
+    });
+
+    setCameraReady(false);
+    if (result.canceled || !result.assets?.[0]?.uri) return;
+    await applyBackgroundImage(result.assets[0].uri);
   }
 
   function startCardGesture(evt) {
@@ -1093,6 +1134,7 @@ export default function App() {
   }
 
   function openSavedList() {
+    setCameraReady(false);
     setSavedListOpen(true);
     setSettingsOpen(false);
     setSavedOpen(true);
@@ -1195,10 +1237,10 @@ export default function App() {
           <BrandLogo />
 
           <View style={styles.topRightActions}>
-            <Pressable accessibilityLabel="Search sayings" onPress={() => { setSearchOpen((value) => !value); setSettingsOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
+            <Pressable accessibilityLabel="Search sayings" onPress={() => { setCameraReady(false); setSearchOpen((value) => !value); setSettingsOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
               <ActionIcon name="search" size={27} />
             </Pressable>
-            <Pressable accessibilityLabel="Settings" onPress={() => { setSettingsOpen((value) => !value); setSearchOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
+            <Pressable accessibilityLabel="Settings" onPress={() => { setCameraReady(false); setSettingsOpen((value) => !value); setSearchOpen(false); setSavedListOpen(false); }} hitSlop={14} style={styles.iconTap}>
               <ActionIcon name="menu" size={25} />
             </Pressable>
           </View>
@@ -1401,21 +1443,29 @@ export default function App() {
 
         {editOpen || imageEditorOpen ? null : (
           <View style={styles.actionBar}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setCameraReady(false); setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
               <ActionIcon name="edit-3" />
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Choose share style"
-              onPress={() => setImageEditorOpen(true)}
+              onPress={() => { setCameraReady(false); setImageEditorOpen(true); }}
               style={[styles.bottomIconButton, backgroundImageUri && styles.activeIconButton]}
             >
               <ActionIcon name="sliders" />
             </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={cameraReady ? 'Take a photo for the background' : 'Open camera for background'}
+              onPress={captureCameraBackground}
+              style={[styles.bottomIconButton, styles.cameraButton, cameraReady && styles.armedCameraButton]}
+            >
+              <CameraIcon active={cameraReady} />
+            </Pressable>
             <Pressable accessibilityLabel="Show saved proverbs" onPress={openSavedList} style={styles.bottomIconButton}>
               <ActionIcon name="list" />
             </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Send proverb" onPress={() => setShareOpen((value) => !value)} style={styles.bottomIconButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Send proverb" onPress={() => { setCameraReady(false); setShareOpen((value) => !value); }} style={styles.bottomIconButton}>
               <ActionIcon name="send" />
             </Pressable>
           </View>
@@ -1493,6 +1543,14 @@ export default function App() {
                   <ActionIcon name="x" size={24} />
                 </Pressable>
               </View>
+
+              <Pressable accessibilityRole="link" accessibilityLabel="Get the book, ebook or audiobook" onPress={openBookLanding} style={styles.bookCtaButton}>
+                <View style={styles.bookCtaTextBlock}>
+                  <Text style={styles.bookCtaTitle}>Get the Book, ebook or audiobook</Text>
+                  <Text style={styles.bookCtaSubtitle}>Opens the Visay book page in your language</Text>
+                </View>
+                <View style={styles.bookCtaIcon}><ActionIcon name="send" size={17} /></View>
+              </Pressable>
 
               <View style={styles.categoryBlock}>
                 <Text style={styles.settingTitle}>Language</Text>
@@ -1596,13 +1654,6 @@ export default function App() {
                   </View>
                 )}
 
-                <Pressable accessibilityRole="button" accessibilityLabel="Open Visay book landing page" onPress={openBookLanding} style={styles.settingMenuButton}>
-                  <View style={styles.settingMenuTextBlock}>
-                    <Text style={styles.settingMenuTitle}>Visay book</Text>
-                    <Text style={styles.settingMenuSubtitle}>Book, ebook and audiobook</Text>
-                  </View>
-                  <View style={styles.toggleIconBox}><ActionIcon name="send" size={18} /></View>
-                </Pressable>
                 </View>
               </View>
 
@@ -1665,6 +1716,12 @@ const styles = StyleSheet.create({
   brandText: { color: '#ffffff', fontSize: 23, lineHeight: 25, fontWeight: '900', letterSpacing: 0 },
   brandTagline: { color: '#8f8f8f', fontSize: 12, lineHeight: 14, fontWeight: '800' },
   symbolIcon: { fontWeight: '900', textAlign: 'center', textAlignVertical: 'center', includeFontPadding: false },
+  cameraGlyph: { width: 25, height: 19, borderRadius: 5, borderWidth: 2, borderColor: '#ffffff', alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  activeCameraGlyph: { borderColor: '#000000', backgroundColor: '#000000' },
+  cameraTop: { position: 'absolute', top: -5, left: 6, width: 11, height: 5, borderTopLeftRadius: 3, borderTopRightRadius: 3, borderWidth: 2, borderBottomWidth: 0, borderColor: '#ffffff' },
+  activeCameraTop: { borderColor: '#000000', backgroundColor: '#000000' },
+  cameraLens: { width: 8, height: 8, borderRadius: 4, borderWidth: 2, borderColor: '#ffffff' },
+  activeCameraLens: { width: 10, height: 10, borderRadius: 5, borderColor: '#ffffff', backgroundColor: '#ffffff' },
   topRightActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   activeText: { color: '#ffffff' },
   iconTap: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
@@ -1736,6 +1793,8 @@ const styles = StyleSheet.create({
   editPrimaryText: { color: '#000000', fontSize: 14, fontWeight: '900' },
   actionBar: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 0, width: '100%' },
   bottomIconButton: { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#777777', alignItems: 'center', justifyContent: 'center' },
+  cameraButton: { borderColor: '#ffffff' },
+  armedCameraButton: { borderColor: '#ffffff', backgroundColor: '#ffffff' },
   shareDismissLayer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 24 },
   shareMenu: { position: 'absolute', left: 18, right: 18, bottom: 72, zIndex: 25, borderWidth: 1, borderColor: '#242424', borderRadius: 18, backgroundColor: '#050505', padding: 8, gap: 4 },
   shareMenuPrimaryItem: { minHeight: 46, borderRadius: 13, justifyContent: 'center', paddingHorizontal: 12, backgroundColor: '#ffffff' },
@@ -1779,38 +1838,43 @@ const styles = StyleSheet.create({
   imageEditCloseText: { color: '#ffffff', fontSize: 28, lineHeight: 30, fontWeight: '300' },
   settingsPanel: { position: 'absolute', top: 56, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: '#000000', paddingHorizontal: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: '#222222' },
   settingsContent: { paddingBottom: 42 },
-  settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
-  sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '900', marginBottom: 12 },
+  settingsHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: '800', marginBottom: 8 },
+  bookCtaButton: { minHeight: 64, borderRadius: 18, backgroundColor: '#ffffff', paddingHorizontal: 14, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 22 },
+  bookCtaTextBlock: { flex: 1, minWidth: 0 },
+  bookCtaTitle: { color: '#000000', fontSize: 15, lineHeight: 19, fontWeight: '800' },
+  bookCtaSubtitle: { color: '#404040', fontSize: 12, lineHeight: 16, fontWeight: '500', marginTop: 2 },
+  bookCtaIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center' },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingTop: 2 },
-  settingTitle: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  categoryBlock: { marginBottom: 26 },
-  settingsStack: { gap: 10, marginTop: 10 },
+  settingTitle: { color: '#ffffff', fontSize: 14, lineHeight: 18, fontWeight: '700' },
+  categoryBlock: { marginBottom: 22 },
+  settingsStack: { gap: 8, marginTop: 8 },
   categorySelect: { marginTop: 10, minHeight: 48, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   stackSelect: { marginTop: 0 },
   categorySelectText: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  settingMenuButton: { minHeight: 58, borderWidth: 1, borderColor: '#242424', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#080808', marginTop: 10 },
+  settingMenuButton: { minHeight: 54, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 13, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#080808', marginTop: 8 },
   settingMenuTextBlock: { flex: 1, paddingRight: 12 },
-  settingMenuTitle: { color: '#ffffff', fontSize: 16, lineHeight: 20, fontWeight: '900' },
-  settingMenuSubtitle: { color: '#8f8f8f', fontSize: 13, lineHeight: 18, fontWeight: '700', marginTop: 2 },
+  settingMenuTitle: { color: '#ffffff', fontSize: 14, lineHeight: 18, fontWeight: '700' },
+  settingMenuSubtitle: { color: '#8f8f8f', fontSize: 12, lineHeight: 16, fontWeight: '500', marginTop: 2 },
   toggleIconBox: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
   categorySelectArrow: { color: '#ffffff', fontSize: 26, lineHeight: 30, fontWeight: '300', textAlign: 'center' },
-  categoryOptions: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingVertical: 6 },
+  categoryOptions: { marginTop: 8, borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingVertical: 6 },
   addSayingPanel: { marginTop: 10, borderWidth: 1, borderColor: '#242424', borderRadius: 14, padding: 10, gap: 10, backgroundColor: '#050505' },
   addSayingInput: { minHeight: 44, borderRadius: 12, borderWidth: 1, borderColor: '#242424', color: '#ffffff', fontSize: 15, lineHeight: 20, fontWeight: '700', paddingHorizontal: 12, paddingVertical: 10, textAlignVertical: 'top' },
   addSayingRequiredInput: { borderColor: '#555555' },
   addSayingSubmitButton: { minHeight: 42, borderRadius: 21, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
   addSayingSubmitText: { color: '#000000', fontSize: 14, fontWeight: '900' },
   categoryOption: { minHeight: 42, justifyContent: 'center', paddingHorizontal: 16 },
-  categoryOptionText: { color: '#777777', fontSize: 16, fontWeight: '800' },
-  muted: { color: '#8f8f8f', fontSize: 14, lineHeight: 20 },
+  categoryOptionText: { color: '#777777', fontSize: 14, fontWeight: '600' },
+  muted: { color: '#8f8f8f', fontSize: 13, lineHeight: 19, fontWeight: '500' },
   timeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginBottom: 24 },
   timeButton: { paddingVertical: 4, paddingRight: 4 },
-  timeText: { color: '#777777', fontSize: 16, fontWeight: '800' },
+  timeText: { color: '#777777', fontSize: 14, fontWeight: '700' },
   savedList: { borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, gap: 12, backgroundColor: '#050505' },
   savedItem: { paddingVertical: 8, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   savedItemContent: { flex: 1, minWidth: 0 },
   savedRemoveButton: { minHeight: 30, borderRadius: 15, borderWidth: 1, borderColor: '#555555', paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' },
   savedRemoveText: { color: '#d9d9d9', fontSize: 11, lineHeight: 14, fontWeight: '900' },
-  savedSaying: { color: '#ffffff', fontSize: 16, fontWeight: '800' },
-  savedExplanation: { color: '#a6a6a6', fontSize: 14, marginTop: 3, lineHeight: 20 }
+  savedSaying: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
+  savedExplanation: { color: '#a6a6a6', fontSize: 13, marginTop: 3, lineHeight: 19, fontWeight: '500' }
 });
