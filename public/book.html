@@ -18,7 +18,7 @@
       --muted: #6b665f;
       --line: #d8d0c4;
       --charcoal: #24211f;
-      --accent: #8a5a43;
+      --accent: #3d3934;
       --white: #ffffff;
     }
 
@@ -61,6 +61,7 @@
       height: 62px;
       object-fit: contain;
       flex: 0 0 auto;
+      filter: brightness(0);
     }
 
     .wordmark {
@@ -99,7 +100,7 @@
 
     .eyebrow {
       margin: 0 0 12px;
-      color: var(--accent);
+      color: var(--muted);
       font-size: 12px;
       line-height: 16px;
       font-weight: 900;
@@ -109,8 +110,8 @@
 
     h2 {
       margin: 0;
-      font-size: clamp(54px, 16vw, 92px);
-      line-height: 0.92;
+      font-size: clamp(48px, 15vw, 82px);
+      line-height: 0.96;
       font-weight: 900;
       letter-spacing: 0;
     }
@@ -118,8 +119,8 @@
     .hero-subhead {
       margin: 18px 0 0;
       color: var(--charcoal);
-      font-size: clamp(24px, 7vw, 38px);
-      line-height: 1.04;
+      font-size: clamp(23px, 6.4vw, 34px);
+      line-height: 1.1;
       font-weight: 900;
     }
 
@@ -129,7 +130,7 @@
       color: var(--muted);
       font-size: 17px;
       line-height: 1.6;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .actions {
@@ -185,8 +186,8 @@
     h3 {
       max-width: 720px;
       margin: 0;
-      font-size: clamp(31px, 9vw, 58px);
-      line-height: 1;
+      font-size: clamp(28px, 7.5vw, 42px);
+      line-height: 1.08;
       font-weight: 900;
       letter-spacing: 0;
     }
@@ -197,7 +198,7 @@
       color: var(--charcoal);
       font-size: 18px;
       line-height: 1.6;
-      font-weight: 800;
+      font-weight: 650;
     }
 
     .muted-copy {
@@ -206,60 +207,52 @@
       color: var(--muted);
       font-size: 16px;
       line-height: 1.62;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .simple-list {
       max-width: 760px;
       margin: 22px 0 0;
-      padding: 0;
-      list-style: none;
+      padding: 0 0 0 1.15em;
+      list-style: disc;
     }
 
     .simple-list li {
-      display: grid;
-      grid-template-columns: 9px 86px minmax(0, 1fr);
-      gap: 14px;
-      padding: 18px 0;
-      border-top: 1px solid var(--line);
-    }
-
-    .simple-list li:first-child {
-      border-top: 0;
-    }
-
-    .simple-list li::before {
-      content: "";
-      width: 5px;
-      height: 5px;
-      margin-top: 9px;
-      border-radius: 50%;
-      background: var(--ink);
+      padding: 7px 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      font-weight: 600;
     }
 
     .simple-list strong {
-      font-size: 17px;
-      line-height: 1.25;
+      color: var(--ink);
+      font-size: inherit;
+      line-height: inherit;
       font-weight: 900;
+    }
+
+    .simple-list strong::after {
+      content: ": ";
     }
 
     .simple-list span {
       color: var(--muted);
-      font-size: 15px;
-      line-height: 1.55;
-      font-weight: 700;
+      font-size: inherit;
+      line-height: inherit;
+      font-weight: 500;
     }
 
     .spec-list strong {
-      color: var(--accent);
-      font-size: 31px;
-      line-height: 1;
+      color: var(--ink);
+      font-size: inherit;
+      line-height: inherit;
     }
 
     .inside-note {
       max-width: 780px;
       margin-top: 24px;
-      padding: 24px 0 0;
+      padding: 22px 0 0;
       border-top: 1px solid var(--line);
     }
 
@@ -267,9 +260,9 @@
       margin: 0;
       max-width: 620px;
       color: var(--charcoal);
-      font-size: 20px;
-      line-height: 1.45;
-      font-weight: 900;
+      font-size: 18px;
+      line-height: 1.55;
+      font-weight: 700;
     }
 
     .inside-note span {
@@ -278,7 +271,7 @@
       color: var(--muted);
       font-size: 15px;
       line-height: 1.6;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     .quote {
@@ -290,9 +283,9 @@
 
     blockquote {
       margin: 0;
-      font-size: clamp(24px, 7vw, 42px);
-      line-height: 1.12;
-      font-weight: 900;
+      font-size: clamp(22px, 6vw, 34px);
+      line-height: 1.2;
+      font-weight: 800;
     }
 
     cite {
@@ -354,26 +347,6 @@
 
     @media (max-width: 560px) {
       .button { width: 100%; }
-      .simple-list li {
-        grid-template-columns: 9px minmax(0, 1fr);
-        gap: 6px;
-      }
-      .simple-list li::before {
-        grid-row: 1 / span 2;
-      }
-      .simple-list span {
-        grid-column: 2;
-      }
-      .spec-list li {
-        grid-template-columns: 9px 72px minmax(0, 1fr);
-        gap: 14px;
-      }
-      .spec-list li::before {
-        grid-row: 1;
-      }
-      .spec-list span {
-        grid-column: 3;
-      }
       .page { padding-inline: 16px; }
     }
 
@@ -388,19 +361,11 @@
       }
       .hero-asset { order: 2; }
       .section {
-        padding-top: 76px;
-        display: grid;
-        grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.25fr);
-        gap: clamp(34px, 6vw, 78px);
-        align-items: start;
+        max-width: 820px;
+        padding-top: 72px;
       }
-      .section > h3 { grid-column: 1; }
-      .section > .section-body { grid-column: 2; }
       .final {
-        display: grid;
-        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-        gap: clamp(34px, 6vw, 78px);
-        align-items: start;
+        max-width: 820px;
         padding-top: 76px;
       }
     }
