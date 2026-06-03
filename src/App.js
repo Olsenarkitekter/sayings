@@ -1303,15 +1303,16 @@ export default function App() {
               onResponderTerminate={editOpen ? undefined : finishCardGesture}
             >
               {cameraPreviewOpen ? (
-                <CameraView
-                  ref={cameraRef}
-                  facing={cameraFacing}
-                  style={styles.shareCardCamera}
-                >
-                  <View style={styles.shareCardOverlay}>
+                <View style={styles.shareCardCamera}>
+                  <CameraView
+                    ref={cameraRef}
+                    facing={cameraFacing}
+                    style={styles.cameraPreviewFill}
+                  />
+                  <View style={[styles.shareCardOverlay, styles.cameraPreviewOverlay]}>
                     <Text style={[styles.saying, shareFontStyle, sayingTextStyle]}>{displaySaying}</Text>
                   </View>
-                </CameraView>
+                </View>
               ) : hasImageBackground ? (
                 <ImageBackground
                   source={{ uri: backgroundImageUri }}
@@ -1767,6 +1768,8 @@ const styles = StyleSheet.create({
   cardShell: { flex: 1, position: 'relative', justifyContent: 'flex-start' },
   shareCard: { width: '100%', aspectRatio: 1, flexGrow: 0, marginTop: 112, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.42)', backgroundColor: '#000000', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   shareCardCamera: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
+  cameraPreviewFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  cameraPreviewOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   shareCardBackground: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   shareCardImage: {},
   shareCardOverlay: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 34, paddingVertical: 38, backgroundColor: 'rgba(0, 0, 0, 0.42)' },
