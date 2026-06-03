@@ -3,6 +3,7 @@ import { Alert, Image, ImageBackground, Keyboard, Linking, Platform, Pressable, 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -884,6 +885,7 @@ export default function App() {
     }
 
     try {
+      const capturedFacing = cameraFacing;
       const photo = await cameraRef.current?.takePictureAsync?.({
         quality: 0.92,
         skipProcessing: false,
@@ -891,8 +893,19 @@ export default function App() {
         isImageMirror: false
       });
       if (!photo?.uri) return;
+      let committedPhotoUri = photo.uri;
+      if (capturedFacing === 'front') {
+        const context = ImageManipulator.manipulate(photo.uri);
+        context.flip(ImageManipulator.FlipType.Horizontal);
+        const renderedImage = await context.renderAsync();
+        const result = await renderedImage.saveAsync({
+          compress: 0.92,
+          format: ImageManipulator.SaveFormat.JPEG
+        });
+        committedPhotoUri = result.uri || photo.uri;
+      }
       setCameraPreviewOpen(false);
-      await applyBackgroundImage(photo.uri, { openEditor: false });
+      await applyBackgroundImage(committedPhotoUri, { openEditor: false });
     } catch {
       Alert.alert('Camera unavailable', 'The camera image could not be captured right now.');
     }
