@@ -133,6 +133,25 @@
       font-weight: 600;
     }
 
+    .hero-formats {
+      max-width: 620px;
+      margin: 18px 0 0;
+      padding: 0 0 0 1.15em;
+      color: var(--muted);
+    }
+
+    .hero-formats li {
+      padding: 4px 0;
+      font-size: 15px;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .hero-formats strong {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
     .actions {
       display: flex;
       flex-wrap: wrap;
@@ -303,13 +322,6 @@
       margin-top: 8px;
     }
 
-    .price {
-      margin: 14px 0 0;
-      font-size: clamp(44px, 14vw, 76px);
-      line-height: 0.95;
-      font-weight: 900;
-    }
-
     .checkout-list {
       max-width: 760px;
       margin: 28px 0 0;
@@ -326,9 +338,21 @@
       font-weight: 700;
     }
 
+    .checkout-list li:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
     .checkout-list strong {
       color: var(--ink);
       font-weight: 900;
+    }
+
+    .checkout-list span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-weight: 600;
     }
 
     .footer {
@@ -389,6 +413,11 @@
         <h2>Visual Sayings</h2>
         <p class="hero-subhead">Sayings that spark imagination.</p>
         <p class="lead">A quiet collection of words and minimalist art designed to make familiar phrases feel new again.</p>
+        <ul class="hero-formats" aria-label="Available formats">
+          <li><strong>Physical book</strong> - a matte-laminated paperback made for slow flipping.</li>
+          <li><strong>Audiobook</strong> - a minimalist spoken edition for reflection and listening on the go.</li>
+          <li><strong>Ebook + premium PDF</strong> - instant digital access for tablets, travel, and gifting.</li>
+        </ul>
         <div class="actions">
           <a class="button primary" href="mailto:olsenarkitekter@gmail.com?subject=Visual%20Sayings%20order">Get Your Copy - 170 DKK</a>
           <a class="button" href="#inside">Take a Peek Inside</a>
@@ -493,6 +522,28 @@
     </section>
 
     <section class="section">
+      <h3>The Audio Edition: A Journey for Your Mind's Eye</h3>
+      <div class="section-body">
+        <p class="section-copy">Can you see a phrase just by hearing it?</p>
+        <p class="muted-copy">The audio edition of Visual Sayings is designed as a minimalist audio journey. When you hear timeless phrases like "a bird in the hand is worth more than ten on a branch," your brain instantly begins to sculpt the image.</p>
+        <ul class="simple-list">
+          <li>
+            <strong>Perfect for reflection</strong>
+            <span>Ideal for morning routines, mindful commuting, or winding down at night.</span>
+          </li>
+          <li>
+            <strong>Pure and uncluttered</strong>
+            <span>Beautifully spoken words with intentional pacing, allowing your own imagination to sketch the scenery before you open the physical pages.</span>
+          </li>
+          <li>
+            <strong>Standalone value</strong>
+            <span>The audiobook stands confidently on its own at 69-79 DKK, while the bundles make it even easier to experience the sayings in more than one way.</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section">
       <h3>A Note From the Creator</h3>
       <div class="section-body">
         <div class="quote">
@@ -504,17 +555,19 @@
 
     <section class="final" id="order">
       <div>
-        <h3>Bring Inspiration to Your Space.</h3>
-        <p class="price">170 DKK</p>
+        <h3>Choose Your Experience</h3>
+        <p class="section-copy">Start with the format that fits your day, or collect the complete Visual Sayings experience.</p>
         <div class="actions">
-          <a class="button primary" href="mailto:olsenarkitekter@gmail.com?subject=Visual%20Sayings%20order">Order Your Copy Today</a>
+          <a class="button primary" href="mailto:olsenarkitekter@gmail.com?subject=Visual%20Sayings%20order">Order Visual Sayings</a>
         </div>
       </div>
       <div>
-        <ul class="checkout-list" aria-label="Shipping and checkout information">
-          <li><strong>Fast delivery:</strong> Ships within 2-4 business days across Denmark via GLS or PostNord.</li>
-          <li><strong>Shipping:</strong> Fixed rate of 39 DKK. Free shipping on orders over 350 DKK.</li>
-          <li><strong>Secure checkout:</strong> Pay safely via MobilePay, credit card, or Apple Pay.</li>
+        <ul class="checkout-list" aria-label="Visual Sayings buying options">
+          <li><strong>The Audio & Digital Package - 99 DKK</strong><span>Instant download of the audiobook + premium PDF. Perfect for tablets and listening on the go.</span></li>
+          <li><strong>The Physical Book - 170 DKK</strong><span>The beautiful, matte-laminated paperback sent straight to your door.</span></li>
+          <li><strong>The Ultimate Collector's Bundle - 215 DKK</strong><span>Best value: receive the physical book, the audiobook, and the digital PDF. Experience the sayings in every dimension.</span></li>
+          <li><strong>Delivery:</strong><span>Physical orders ship within 2-4 business days across Denmark via GLS or PostNord. Fixed shipping is 39 DKK, with free shipping on orders over 350 DKK.</span></li>
+          <li><strong>Secure checkout:</strong><span>Pay safely via MobilePay, credit card, or Apple Pay.</span></li>
         </ul>
       </div>
     </section>
