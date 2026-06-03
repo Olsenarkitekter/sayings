@@ -8,7 +8,8 @@ import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { captureRef } from 'react-native-view-shot';
-import { proverbs, languages, categories, getProverbVariant } from './proverbs';
+import { proverbs as localProverbs, languages, categories, getProverbVariant } from './proverbs';
+import { adjustSupabaseFavoriteCount, fetchSupabaseProverbs, loadCachedSupabaseProverbs } from './supabaseProverbs';
 
 const STORAGE = {
   language: 'daily-sayings:language',
@@ -382,7 +383,7 @@ function todayIndex(offset = 0) {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   const day = Math.floor((now - start) / 86400000) + offset;
-  return day % proverbs.length;
+  return day % localProverbs.length;
 }
 
 function nextNotificationDate(offsetDays, time) {
@@ -417,7 +418,7 @@ function normalizeFavoriteIds(value) {
     return [...new Set(
       list
         .map((item) => (typeof item === 'string' ? item : item?.id))
-        .filter((id) => proverbs.some((proverb) => proverb.id === id))
+        .filter(Boolean)
     )];
   } catch {
     return [];
@@ -462,7 +463,7 @@ async function ensureInstallId() {
   return id;
 }
 
-async function scheduleDailyProverbs(language, time = '10:00') {
+async function scheduleDailyProverbs(language, time = '10:00', proverbSource = localProverbs) {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('daily-proverbs', {
       name: 'Daily proverb',
@@ -479,13 +480,13 @@ async function scheduleDailyProverbs(language, time = '10:00') {
   await Notifications.cancelAllScheduledNotificationsAsync();
 
   for (let day = 0; day < 30; day += 1) {
-    const proverbIndex = todayIndex(day);
-    const item = getProverbVariant(proverbs[proverbIndex], language);
+    const proverbIndex = todayIndex(day) % proverbSource.length;
+    const item = getProverbVariant(proverbSource[proverbIndex], language);
     await Notifications.scheduleNotificationAsync({
       content: {
         title: item.saying,
         body: item.explanation,
-        data: { proverbId: proverbs[proverbIndex].id }
+        data: { proverbId: proverbSource[proverbIndex].id }
       },
       trigger: { type: 'date', date: nextNotificationDate(day, time), channelId: 'daily-proverbs' }
     });
@@ -498,6 +499,7 @@ async function scheduleDailyProverbs(language, time = '10:00') {
 export default function App() {
   const [language, setLanguage] = useState('en');
   const [index, setIndex] = useState(todayIndex());
+  const [proverbList, setProverbList] = useState(localProverbs);
   const [favorites, setFavorites] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationTime, setNotificationTime] = useState('10:00');
@@ -546,11 +548,11 @@ export default function App() {
   const cardGestureRef = useRef(null);
 
   const filteredProverbs = useMemo(
-    () => proverbs.filter((item) => selectedCategories.length === 0 || selectedCategories.includes(item.category)),
-    [selectedCategories]
+    () => proverbList.filter((item) => selectedCategories.length === 0 || selectedCategories.includes(item.category)),
+    [proverbList, selectedCategories]
   );
-  const current = filteredProverbs[index % filteredProverbs.length] || proverbs[0];
-  const opposite = current.oppositeId ? proverbs.find((item) => item.id === current.oppositeId) : null;
+  const current = filteredProverbs[index % filteredProverbs.length] || proverbList[0] || localProverbs[0];
+  const opposite = current.oppositeId ? proverbList.find((item) => item.id === current.oppositeId) : null;
   const displayedProverb = oppositeOpen && opposite ? opposite : current;
   const currentEdit = edits[displayedProverb.id]?.[language];
   const selectedVariant = getProverbVariant(displayedProverb, language);
@@ -579,7 +581,7 @@ export default function App() {
   }
 
   const searchResults = normalizedSearchQuery
-    ? proverbs
+    ? proverbList
         .map((item) => ({ item, variant: getProverbVariant(item, language) }))
         .filter(({ item, variant }) => {
           const english = getProverbVariant(item, 'en');
@@ -599,6 +601,7 @@ export default function App() {
   const sayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'screen');
   const exportSayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'export');
   const isFavorite = favorites.includes(displayedProverb.id);
+  const currentFavoriteCount = displayedProverb.favoriteCountsByLanguage?.[language] ?? displayedProverb.favorite_count ?? 0;
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
     : selectedCategories
@@ -618,8 +621,8 @@ export default function App() {
   const logoUri = getBrandLogoUri();
 
   const savedProverbs = useMemo(
-    () => favorites.map((id) => proverbs.find((item) => item.id === id)).filter(Boolean),
-    [favorites]
+    () => favorites.map((id) => proverbList.find((item) => item.id === id)).filter(Boolean),
+    [favorites, proverbList]
   );
 
   useEffect(() => {
@@ -708,7 +711,21 @@ export default function App() {
       setNotificationsEnabled(wantsNotifications);
       setReady(true);
 
-      if (wantsNotifications) scheduleDailyProverbs(lang, time).catch(() => {});
+      loadCachedSupabaseProverbs(localProverbs)
+        .then((cachedProverbs) => {
+          setProverbList(cachedProverbs);
+          if (wantsNotifications) scheduleDailyProverbs(lang, time, cachedProverbs).catch(() => {});
+        })
+        .catch(() => {
+          if (wantsNotifications) scheduleDailyProverbs(lang, time, localProverbs).catch(() => {});
+        });
+
+      fetchSupabaseProverbs(localProverbs)
+        .then((remoteProverbs) => {
+          setProverbList(remoteProverbs);
+          if (wantsNotifications) scheduleDailyProverbs(lang, time, remoteProverbs).catch(() => {});
+        })
+        .catch(() => {});
     })();
   }, []);
 
@@ -735,7 +752,7 @@ export default function App() {
   async function changeLanguage(nextLanguage) {
     setLanguage(nextLanguage);
     await AsyncStorage.setItem(STORAGE.language, nextLanguage);
-    if (notificationsEnabled) scheduleDailyProverbs(nextLanguage, notificationTime).catch(() => {});
+    if (notificationsEnabled) scheduleDailyProverbs(nextLanguage, notificationTime, proverbList).catch(() => {});
   }
 
   async function rotateProverbBackground() {
@@ -752,6 +769,7 @@ export default function App() {
   }
 
   async function setCurrentIndex(next) {
+    if (!filteredProverbs.length) return;
     const normalized = ((next % filteredProverbs.length) + filteredProverbs.length) % filteredProverbs.length;
     setIndex(normalized);
     await Promise.all([
@@ -762,7 +780,7 @@ export default function App() {
 
   async function showProverbById(proverbId) {
     if (!proverbId) return;
-    const globalIndex = proverbs.findIndex((item) => item.id === proverbId);
+    const globalIndex = proverbList.findIndex((item) => item.id === proverbId);
     if (globalIndex < 0) return;
 
     setSelectedCategories([]);
@@ -996,7 +1014,7 @@ export default function App() {
     } else {
       setSelectedCategories([]);
       await persistSelectedCategories([]);
-      const globalIndex = proverbs.findIndex((proverb) => proverb.id === item.id);
+      const globalIndex = proverbList.findIndex((proverb) => proverb.id === item.id);
       setIndex(globalIndex);
       await Promise.all([
         rotateProverbBackground(),
@@ -1167,12 +1185,39 @@ export default function App() {
     setImageEditorOpen(false);
   }
 
+  function getRemoteProverbId(item, itemLanguage = language) {
+    return item?.remoteIdsByLanguage?.[itemLanguage] || item?.variants?.[itemLanguage]?.remoteId || item?.remoteId || null;
+  }
+
+  function updateFavoriteCount(proverbId, itemLanguage, amount, absoluteCount = null) {
+    setProverbList((items) => items.map((item) => {
+      if (item.id !== proverbId) return item;
+      const currentCount = item.favoriteCountsByLanguage?.[itemLanguage] ?? item.favorite_count ?? 0;
+      const nextCount = absoluteCount === null ? Math.max(0, currentCount + amount) : Math.max(0, absoluteCount);
+      return {
+        ...item,
+        favorite_count: itemLanguage === 'en' || item.favorite_count === currentCount ? nextCount : item.favorite_count,
+        favoriteCountsByLanguage: {
+          ...(item.favoriteCountsByLanguage || {}),
+          [itemLanguage]: nextCount
+        },
+        variants: {
+          ...(item.variants || {}),
+          [itemLanguage]: {
+            ...(item.variants?.[itemLanguage] || {}),
+            favoriteCount: nextCount
+          }
+        }
+      };
+    }));
+  }
+
   function selectSavedProverb(item) {
     const savedIndex = filteredProverbs.findIndex((p) => p.id === item.id);
     if (savedIndex >= 0) {
       setCurrentIndex(savedIndex);
     } else {
-      const allIndex = proverbs.findIndex((p) => p.id === item.id);
+      const allIndex = proverbList.findIndex((p) => p.id === item.id);
       setSelectedCategories([]);
       setCategoryOpen(false);
       setIndex(allIndex);
@@ -1185,23 +1230,56 @@ export default function App() {
   }
 
   async function toggleFavorite() {
+    const wasFavorite = isFavorite;
+    const remoteId = getRemoteProverbId(displayedProverb, language);
+    const amount = wasFavorite ? -1 : 1;
     const next = isFavorite
       ? favorites.filter((id) => id !== displayedProverb.id)
       : [...new Set([...favorites, displayedProverb.id])];
     setFavorites(next);
+    updateFavoriteCount(displayedProverb.id, language, amount);
     await AsyncStorage.setItem(STORAGE.favorites, JSON.stringify(next));
+
+    if (!remoteId) return;
+    try {
+      const nextCount = await adjustSupabaseFavoriteCount(remoteId, amount);
+      if (Number.isFinite(nextCount)) updateFavoriteCount(displayedProverb.id, language, 0, nextCount);
+    } catch {
+      const rollback = wasFavorite
+        ? [...new Set([...next, displayedProverb.id])]
+        : next.filter((id) => id !== displayedProverb.id);
+      setFavorites(rollback);
+      updateFavoriteCount(displayedProverb.id, language, -amount);
+      await AsyncStorage.setItem(STORAGE.favorites, JSON.stringify(rollback));
+      Alert.alert('Favorite was not saved', 'Try again when you are online.');
+    }
   }
 
   async function removeFavorite(id) {
+    const item = proverbList.find((proverb) => proverb.id === id);
+    const remoteId = getRemoteProverbId(item, language);
     const next = favorites.filter((favoriteId) => favoriteId !== id);
     setFavorites(next);
+    if (item) updateFavoriteCount(id, language, -1);
     await AsyncStorage.setItem(STORAGE.favorites, JSON.stringify(next));
+
+    if (!remoteId || !item) return;
+    try {
+      const nextCount = await adjustSupabaseFavoriteCount(remoteId, -1);
+      if (Number.isFinite(nextCount)) updateFavoriteCount(id, language, 0, nextCount);
+    } catch {
+      const rollback = [...new Set([...next, id])];
+      setFavorites(rollback);
+      updateFavoriteCount(id, language, 1);
+      await AsyncStorage.setItem(STORAGE.favorites, JSON.stringify(rollback));
+      Alert.alert('Favorite was not removed', 'Try again when you are online.');
+    }
   }
 
   async function toggleNotifications(value) {
     setNotificationsEnabled(value);
     if (value) {
-      const ok = await scheduleDailyProverbs(language, notificationTime);
+      const ok = await scheduleDailyProverbs(language, notificationTime, proverbList);
       if (!ok) Alert.alert('Notifications are off', 'Turn on notifications in settings to receive the daily proverb.');
     } else {
       await Notifications.cancelAllScheduledNotificationsAsync();
@@ -1212,7 +1290,7 @@ export default function App() {
   async function changeNotificationTime(time) {
     setNotificationTime(time);
     await AsyncStorage.setItem(STORAGE.notificationTime, time);
-    if (notificationsEnabled) scheduleDailyProverbs(language, time).catch(() => {});
+    if (notificationsEnabled) scheduleDailyProverbs(language, time, proverbList).catch(() => {});
   }
 
   function closeEditMode() {
@@ -1377,6 +1455,7 @@ export default function App() {
                     <Pressable accessibilityRole="button" accessibilityLabel={isFavorite ? 'Remove saved proverb' : 'Save proverb'} onPress={toggleFavorite} style={[styles.inlineInfoButton, isFavorite && styles.activeInlineIconButton]}>
                       <ActionIcon name="star" size={16} active={isFavorite} />
                     </Pressable>
+                    <Text style={styles.favoriteCountText}>{currentFavoriteCount}</Text>
                   </View>
                   <Pressable accessibilityRole="button" accessibilityLabel="Next saying" onPress={() => setCurrentIndex(index + 1)} style={styles.navArrowButton}>
                     <Text style={styles.navArrowText}>›</Text>
@@ -1798,6 +1877,7 @@ const styles = StyleSheet.create({
   cardMetaDot: { color: '#777777', fontSize: 13, lineHeight: 16, fontWeight: '900' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
   originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
+  favoriteCountText: { minWidth: 18, color: '#bcbcbc', fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'left' },
   cardReadMoreButton: { alignSelf: 'center', marginTop: 8 },
   cardNavControlRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   navArrowButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
