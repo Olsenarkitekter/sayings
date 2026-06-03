@@ -15,12 +15,10 @@
       --paper: #f4f0e8;
       --cream: #fbf8f1;
       --ink: #181715;
-      --muted: #68635b;
+      --muted: #6b665f;
       --line: #d8d0c4;
       --charcoal: #24211f;
-      --clay: #a76345;
-      --sage: #6e7764;
-      --blue: #536a78;
+      --accent: #8a5a43;
       --white: #ffffff;
     }
 
@@ -33,24 +31,22 @@
       font-family: Helvetica, Arial, sans-serif;
       background: var(--paper);
       color: var(--ink);
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     img { max-width: 100%; display: block; }
     a { color: inherit; }
 
     .page {
-      width: min(1180px, 100%);
+      width: min(1040px, 100%);
       margin: 0 auto;
-      padding: 20px 18px 54px;
+      padding: 14px 18px 46px;
     }
 
     .topbar {
-      min-height: 64px;
+      min-height: 58px;
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      gap: 16px;
     }
 
     .brand {
@@ -61,8 +57,8 @@
     }
 
     .logo {
-      width: 70px;
-      height: 70px;
+      width: 62px;
+      height: 62px;
       object-fit: contain;
       flex: 0 0 auto;
     }
@@ -70,15 +66,15 @@
     .wordmark {
       display: flex;
       align-items: baseline;
-      gap: 10px;
+      gap: 9px;
       flex-wrap: wrap;
       transform: translateY(-4px);
     }
 
     .name {
       margin: 0;
-      font-size: 23px;
-      line-height: 25px;
+      font-size: 22px;
+      line-height: 24px;
       font-weight: 900;
       letter-spacing: 0;
     }
@@ -92,38 +88,38 @@
     }
 
     .hero {
-      min-height: calc(100vh - 84px);
       display: grid;
-      grid-template-columns: minmax(0, 0.95fr) minmax(340px, 1.05fr);
-      gap: clamp(24px, 5vw, 70px);
-      align-items: center;
-      padding: 26px 0 54px;
+      gap: 28px;
+      padding: 18px 0 52px;
+    }
+
+    .hero-copy {
+      max-width: 660px;
     }
 
     .eyebrow {
-      margin: 0 0 14px;
-      color: var(--clay);
+      margin: 0 0 12px;
+      color: var(--accent);
       font-size: 12px;
       line-height: 16px;
       font-weight: 900;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.11em;
       text-transform: uppercase;
     }
 
     h2 {
       margin: 0;
-      font-size: clamp(48px, 8vw, 104px);
-      line-height: 0.9;
+      font-size: clamp(54px, 16vw, 92px);
+      line-height: 0.92;
       font-weight: 900;
       letter-spacing: 0;
     }
 
     .hero-subhead {
       margin: 18px 0 0;
-      max-width: 560px;
       color: var(--charcoal);
-      font-size: clamp(22px, 3vw, 34px);
-      line-height: 1.06;
+      font-size: clamp(24px, 7vw, 38px);
+      line-height: 1.04;
       font-weight: 900;
     }
 
@@ -131,8 +127,8 @@
       max-width: 620px;
       margin: 18px 0 0;
       color: var(--muted);
-      font-size: clamp(16px, 2vw, 19px);
-      line-height: 1.48;
+      font-size: 17px;
+      line-height: 1.6;
       font-weight: 700;
     }
 
@@ -163,175 +159,138 @@
     }
 
     .hero-asset {
-      position: relative;
-      min-height: 620px;
-      overflow: hidden;
-      border-radius: 8px;
-      background: var(--charcoal);
-      box-shadow: 0 28px 80px rgba(37, 32, 26, 0.28);
+      margin: 0;
+      width: 100%;
+      background: transparent;
     }
 
     .hero-asset img {
       width: 100%;
-      height: 100%;
-      min-height: 620px;
-      object-fit: cover;
+      height: auto;
+      object-fit: contain;
       object-position: center;
-      filter: saturate(0.92) contrast(1.03);
-    }
-
-    .hero-asset::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(24, 23, 21, 0.08), rgba(24, 23, 21, 0.18));
-      pointer-events: none;
+      border-radius: 0;
+      filter: none;
     }
 
     .section {
-      padding: clamp(44px, 8vw, 84px) 0 0;
-    }
-
-    .section.intro {
-      display: grid;
-      grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-      gap: clamp(22px, 5vw, 62px);
-      align-items: start;
+      padding: 48px 0 0;
       border-top: 1px solid var(--line);
     }
 
+    .section + .section {
+      margin-top: 8px;
+    }
+
     h3 {
+      max-width: 720px;
       margin: 0;
-      font-size: clamp(28px, 4vw, 52px);
+      font-size: clamp(31px, 9vw, 58px);
       line-height: 1;
       font-weight: 900;
       letter-spacing: 0;
     }
 
     .section-copy {
-      margin: 0;
+      max-width: 740px;
+      margin: 18px 0 0;
       color: var(--charcoal);
-      font-size: clamp(17px, 2vw, 21px);
-      line-height: 1.5;
+      font-size: 18px;
+      line-height: 1.6;
       font-weight: 800;
     }
 
     .muted-copy {
+      max-width: 720px;
       margin: 16px 0 0;
       color: var(--muted);
       font-size: 16px;
-      line-height: 1.5;
+      line-height: 1.62;
       font-weight: 700;
     }
 
-    .preview {
+    .simple-list {
+      max-width: 760px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .simple-list li {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 12px;
-      margin-top: 22px;
+      grid-template-columns: 9px 86px minmax(0, 1fr);
+      gap: 14px;
+      padding: 18px 0;
+      border-top: 1px solid var(--line);
     }
 
-    .spread {
-      min-height: 270px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--cream);
-      padding: 30px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 18px 44px rgba(37, 32, 26, 0.08);
+    .simple-list li:first-child {
+      border-top: 0;
     }
 
-    .line-art {
-      height: 92px;
-      border: 2px solid var(--charcoal);
-      border-left: 0;
-      border-right: 0;
-      opacity: 0.88;
+    .simple-list li::before {
+      content: "";
+      width: 5px;
+      height: 5px;
+      margin-top: 9px;
+      border-radius: 50%;
+      background: var(--ink);
     }
 
-    .spread strong {
-      max-width: 240px;
-      font-size: 26px;
-      line-height: 1.05;
+    .simple-list strong {
+      font-size: 17px;
+      line-height: 1.25;
       font-weight: 900;
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 22px;
-    }
-
-    .card {
-      min-height: 178px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--cream);
-      padding: 20px;
-    }
-
-    .card.dark {
-      background: var(--charcoal);
-      border-color: var(--charcoal);
-      color: var(--white);
-    }
-
-    .card.accent {
-      background: #e8ded1;
-    }
-
-    .card h4 {
-      margin: 0;
-      font-size: 19px;
-      line-height: 1.12;
-      font-weight: 900;
-    }
-
-    .card p {
-      margin: 10px 0 0;
+    .simple-list span {
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.45;
+      font-size: 15px;
+      line-height: 1.55;
       font-weight: 700;
     }
 
-    .card.dark p { color: #d8d0c4; }
-
-    .spec-number {
-      display: block;
-      margin-bottom: 14px;
-      color: var(--clay);
-      font-size: 40px;
+    .spec-list strong {
+      color: var(--accent);
+      font-size: 31px;
       line-height: 1;
+    }
+
+    .inside-note {
+      max-width: 780px;
+      margin-top: 24px;
+      padding: 24px 0 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .inside-note p {
+      margin: 0;
+      max-width: 620px;
+      color: var(--charcoal);
+      font-size: 20px;
+      line-height: 1.45;
       font-weight: 900;
     }
 
-    .audience .card {
-      min-height: 210px;
-    }
-
-    .materials {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 12px;
-      margin-top: 22px;
+    .inside-note span {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+      font-weight: 700;
     }
 
     .quote {
+      max-width: 820px;
       margin: 22px 0 0;
-      padding: clamp(28px, 5vw, 50px);
-      border-radius: 8px;
-      background: var(--charcoal);
-      color: var(--white);
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
     }
 
     blockquote {
       margin: 0;
-      max-width: 840px;
-      font-size: clamp(23px, 4vw, 44px);
+      font-size: clamp(24px, 7vw, 42px);
       line-height: 1.12;
       font-weight: 900;
     }
@@ -339,58 +298,44 @@
     cite {
       display: block;
       margin-top: 18px;
-      color: #d8d0c4;
+      color: var(--muted);
       font-style: normal;
       font-size: 14px;
       font-weight: 900;
     }
 
     .final {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
-      gap: clamp(22px, 5vw, 62px);
-      align-items: start;
-      padding: clamp(44px, 8vw, 84px) 0 0;
+      padding: 54px 0 0;
+      border-top: 1px solid var(--line);
+      margin-top: 8px;
     }
 
     .price {
-      margin: 12px 0 0;
-      font-size: clamp(42px, 7vw, 78px);
+      margin: 14px 0 0;
+      font-size: clamp(44px, 14vw, 76px);
       line-height: 0.95;
       font-weight: 900;
     }
 
-    .checkout {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--cream);
-      padding: 20px;
+    .checkout-list {
+      max-width: 760px;
+      margin: 28px 0 0;
+      padding: 0;
+      list-style: none;
     }
 
-    .checkout-row {
-      padding: 15px 0;
+    .checkout-list li {
+      padding: 14px 0;
       border-top: 1px solid var(--line);
-    }
-
-    .checkout-row:first-child {
-      border-top: 0;
-      padding-top: 0;
-    }
-
-    .checkout-row strong {
-      display: block;
-      font-size: 15px;
-      line-height: 1.2;
-      font-weight: 900;
-    }
-
-    .checkout-row span {
-      display: block;
-      margin-top: 4px;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
+      font-size: 15px;
+      line-height: 1.55;
       font-weight: 700;
+    }
+
+    .checkout-list strong {
+      color: var(--ink);
+      font-weight: 900;
     }
 
     .footer {
@@ -407,20 +352,57 @@
       font-weight: 800;
     }
 
-    @media (max-width: 880px) {
-      .page { padding: 14px 12px 42px; }
-      .hero {
-        min-height: auto;
-        grid-template-columns: 1fr;
-        padding-top: 22px;
-      }
-      .hero-asset { min-height: 460px; order: -1; }
-      .hero-asset img { min-height: 460px; }
-      .section.intro, .preview, .grid, .materials, .final {
-        grid-template-columns: 1fr;
-      }
-      .card, .audience .card { min-height: 0; }
+    @media (max-width: 560px) {
       .button { width: 100%; }
+      .simple-list li {
+        grid-template-columns: 9px minmax(0, 1fr);
+        gap: 6px;
+      }
+      .simple-list li::before {
+        grid-row: 1 / span 2;
+      }
+      .simple-list span {
+        grid-column: 2;
+      }
+      .spec-list li {
+        grid-template-columns: 9px 72px minmax(0, 1fr);
+        gap: 14px;
+      }
+      .spec-list li::before {
+        grid-row: 1;
+      }
+      .spec-list span {
+        grid-column: 3;
+      }
+      .page { padding-inline: 16px; }
+    }
+
+    @media (min-width: 840px) {
+      .page { padding: 20px 28px 58px; }
+      .hero {
+        min-height: calc(100vh - 78px);
+        grid-template-columns: minmax(0, 0.86fr) minmax(380px, 0.9fr);
+        gap: clamp(42px, 7vw, 92px);
+        align-items: center;
+        padding: 30px 0 70px;
+      }
+      .hero-asset { order: 2; }
+      .section {
+        padding-top: 76px;
+        display: grid;
+        grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.25fr);
+        gap: clamp(34px, 6vw, 78px);
+        align-items: start;
+      }
+      .section > h3 { grid-column: 1; }
+      .section > .section-body { grid-column: 2; }
+      .final {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        gap: clamp(34px, 6vw, 78px);
+        align-items: start;
+        padding-top: 76px;
+      }
     }
   </style>
 </head>
@@ -437,11 +419,11 @@
     </header>
 
     <section class="hero">
-      <div>
+      <div class="hero-copy">
         <p class="eyebrow">Visual Sayings</p>
         <h2>Visual Sayings</h2>
         <p class="hero-subhead">Sayings that spark imagination.</p>
-        <p class="lead">A beautifully curated collection of words and minimalist art designed to make you think, smile, and look at familiar phrases in a completely new light.</p>
+        <p class="lead">A quiet collection of words and minimalist art designed to make familiar phrases feel new again.</p>
         <div class="actions">
           <a class="button primary" href="mailto:olsenarkitekter@gmail.com?subject=Visual%20Sayings%20order">Get Your Copy - 170 DKK</a>
           <a class="button" href="#inside">Take a Peek Inside</a>
@@ -452,88 +434,106 @@
       </figure>
     </section>
 
-    <section class="section intro" id="concept">
+    <section class="section" id="concept">
       <h3>Words have power. Art gives them shape.</h3>
-      <div>
-        <p class="section-copy">Visual Sayings takes 120 of the world's most thought-provoking idioms, phrases, and ideas and strips them down to their absolute essence. Paired with elegant, single-line black and white sketches, this book bridges the gap between language and visual design.</p>
-        <p class="muted-copy">It is the perfect companion for your coffee table, creative studio, or bedside nightstand.</p>
+      <div class="section-body">
+        <p class="section-copy">Visual Sayings takes 120 thought-provoking idioms, phrases, and ideas and strips them down to their essence.</p>
+        <ul class="simple-list">
+          <li>
+            <strong>Line art</strong>
+            <span>Each saying is paired with an elegant black and white sketch.</span>
+          </li>
+          <li>
+            <strong>White space</strong>
+            <span>The layouts are intentionally calm, with room for the eye to rest.</span>
+          </li>
+          <li>
+            <strong>Daily spark</strong>
+            <span>Made for a coffee table, studio desk, bedside table, or thoughtful gift.</span>
+          </li>
+        </ul>
       </div>
     </section>
 
     <section class="section" id="inside">
       <h3>Take a Peek Inside</h3>
-      <p class="muted-copy">A masterclass in white space. Each page turn brings a clean, single-line sketch perfectly balanced with a short, impactful phrase. No clutter. No unnecessary text. Just pure visual storytelling.</p>
-      <div class="preview" aria-label="Interior page preview">
-        <article class="spread">
-          <div class="line-art"></div>
-          <strong>Pick your brain.</strong>
-        </article>
-        <article class="spread">
-          <strong>Read between the lines.</strong>
-          <div class="line-art"></div>
-        </article>
+      <div class="section-body">
+        <p class="section-copy">A masterclass in white space. No clutter. No unnecessary text. Just visual storytelling.</p>
+        <div class="inside-note">
+          <p>Each page turn pairs one short phrase with one precise line drawing.</p>
+          <span>The result feels closer to a small art object than a conventional quote book.</span>
+        </div>
       </div>
     </section>
 
     <section class="section">
       <h3>Crafted for Mindful Flipping</h3>
-      <div class="grid">
-        <article class="card">
-          <span class="spec-number">180</span>
-          <h4>Pages</h4>
-          <p>Minimal, intentional layouts built for slow, quiet browsing.</p>
-        </article>
-        <article class="card dark">
-          <span class="spec-number">120</span>
-          <h4>Visual Sayings</h4>
-          <p>Each phrase is paired with a custom line-art sketch.</p>
-        </article>
-        <article class="card accent">
-          <span class="spec-number">0</span>
-          <h4>Noise</h4>
-          <p>No heavy blocks of text. Just a continuous flow of creative inspiration.</p>
-        </article>
+      <div class="section-body">
+        <ul class="simple-list spec-list">
+          <li>
+            <strong>180</strong>
+            <span>Pages of minimal, intentional layout.</span>
+          </li>
+          <li>
+            <strong>120</strong>
+            <span>Visual sayings, each married to a custom line-art sketch.</span>
+          </li>
+          <li>
+            <strong>0</strong>
+            <span>Noise. No heavy blocks of text, just a continuous flow of creative inspiration.</span>
+          </li>
+        </ul>
       </div>
     </section>
 
-    <section class="section audience">
+    <section class="section">
       <h3>Designed For Curious Minds</h3>
-      <div class="grid">
-        <article class="card">
-          <h4>The Creatives</h4>
-          <p>Architects, designers, copywriters, and artists looking for a quick daily spark of lateral thinking.</p>
-        </article>
-        <article class="card">
-          <h4>The Minimalists</h4>
-          <p>Lovers of slow living, clean lines, and intentional spaces who want a book that looks beautiful on display.</p>
-        </article>
-        <article class="card">
-          <h4>The Thoughtful Gift Givers</h4>
-          <p>A sophisticated present for someone who already has everything, but deeply appreciates art and ideas.</p>
-        </article>
+      <div class="section-body">
+        <ul class="simple-list">
+          <li>
+            <strong>Creatives</strong>
+            <span>Architects, designers, copywriters, and artists looking for a quick daily spark.</span>
+          </li>
+          <li>
+            <strong>Minimalists</strong>
+            <span>Lovers of clean lines, slow living, and intentional spaces.</span>
+          </li>
+          <li>
+            <strong>Gift givers</strong>
+            <span>A refined present for someone who appreciates art, ideas, and beautiful objects.</span>
+          </li>
+        </ul>
       </div>
     </section>
 
     <section class="section">
       <h3>Designed to Feel Like Art</h3>
-      <p class="muted-copy">A book should not just look good on a screen. It should feel incredible in your hands.</p>
-      <div class="materials">
-        <article class="card">
-          <h4>The Cover</h4>
-          <p>Printed on sturdy 300 gsm cover stock with a velvety matte lamination that reduces reflections, resists fingerprints, and gives the book a smooth, modern texture.</p>
-        </article>
-        <article class="card">
-          <h4>The Interior Pages</h4>
-          <p>Warm cream-tone paper replaces harsh clinical white. Heavy 90-105 gsm uncoated text paper keeps sketches from ghosting through the page.</p>
-        </article>
+      <div class="section-body">
+        <p class="section-copy">The book should feel as considered in your hands as it looks on the page.</p>
+        <ul class="simple-list">
+          <li>
+            <strong>Cover</strong>
+            <span>Sturdy 300 gsm cover stock with a smooth matte lamination.</span>
+          </li>
+          <li>
+            <strong>Paper</strong>
+            <span>Warm cream-tone pages on substantial 90-105 gsm uncoated text paper.</span>
+          </li>
+          <li>
+            <strong>Finish</strong>
+            <span>Soft, low-reflection, tactile, and made to sit beautifully in a room.</span>
+          </li>
+        </ul>
       </div>
     </section>
 
     <section class="section">
       <h3>A Note From the Creator</h3>
-      <div class="quote">
-        <blockquote>I wanted to create something that forces us to slow down. In a world full of digital noise, Visual Sayings is an invitation to pause, appreciate the simplicity of a single line, and let your mind wander through the space between words and images.</blockquote>
-        <cite>- Visay</cite>
+      <div class="section-body">
+        <div class="quote">
+          <blockquote>I wanted to create something that forces us to slow down. Visual Sayings is an invitation to pause, appreciate the simplicity of a single line, and let your mind wander through the space between words and images.</blockquote>
+          <cite>- Visay</cite>
+        </div>
       </div>
     </section>
 
@@ -545,20 +545,13 @@
           <a class="button primary" href="mailto:olsenarkitekter@gmail.com?subject=Visual%20Sayings%20order">Order Your Copy Today</a>
         </div>
       </div>
-      <aside class="checkout" aria-label="Shipping and checkout information">
-        <div class="checkout-row">
-          <strong>Fast Delivery</strong>
-          <span>Ships within 2-4 business days across Denmark via GLS or PostNord.</span>
-        </div>
-        <div class="checkout-row">
-          <strong>Shipping Rate</strong>
-          <span>Fixed rate of 39 DKK. Free shipping on orders over 350 DKK.</span>
-        </div>
-        <div class="checkout-row">
-          <strong>Secure Checkout</strong>
-          <span>Pay safely via MobilePay, credit card, or Apple Pay.</span>
-        </div>
-      </aside>
+      <div>
+        <ul class="checkout-list" aria-label="Shipping and checkout information">
+          <li><strong>Fast delivery:</strong> Ships within 2-4 business days across Denmark via GLS or PostNord.</li>
+          <li><strong>Shipping:</strong> Fixed rate of 39 DKK. Free shipping on orders over 350 DKK.</li>
+          <li><strong>Secure checkout:</strong> Pay safely via MobilePay, credit card, or Apple Pay.</li>
+        </ul>
+      </div>
     </section>
 
     <footer class="footer">
@@ -566,6 +559,5 @@
       <a href="mailto:olsenarkitekter@gmail.com">olsenarkitekter@gmail.com</a>
     </footer>
   </main>
-
 </body>
 </html>
