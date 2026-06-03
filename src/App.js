@@ -37,6 +37,7 @@ const STORAGE = {
 };
 
 const NOTIFICATION_TIMES = ['08:00', '10:00', '12:00', '18:00', '21:00'];
+const DEFAULT_NOTIFICATION_TIMES = ['10:00'];
 
 const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
 const BRAND_NAME = 'Visay';
@@ -440,6 +441,26 @@ function normalizeSelectedCategories(value) {
   return categories.some((item) => item.key === value && value !== 'all') ? [value] : [];
 }
 
+function normalizeNotificationTimes(value) {
+  if (!value) return DEFAULT_NOTIFICATION_TIMES;
+
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) {
+      const times = parsed.filter((time) => NOTIFICATION_TIMES.includes(time));
+      return times.length ? [...new Set(times)] : DEFAULT_NOTIFICATION_TIMES;
+    }
+  } catch {
+    // Older versions stored one notification time as plain text.
+  }
+
+  return NOTIFICATION_TIMES.includes(value) ? [value] : DEFAULT_NOTIFICATION_TIMES;
+}
+
+function formatNotificationTimes(times) {
+  return times.length ? times.join(', ') : 'Off';
+}
+
 async function persistSelectedCategories(nextCategories) {
   await AsyncStorage.setItem(STORAGE.category, nextCategories.length ? JSON.stringify(nextCategories) : 'all');
 }
@@ -452,7 +473,7 @@ async function ensureInstallId() {
   return id;
 }
 
-async function scheduleDailyProverbs(language, time = '10:00', proverbSource = localProverbs) {
+async function scheduleDailyProverbs(language, times = DEFAULT_NOTIFICATION_TIMES, proverbSource = localProverbs) {
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('daily-proverbs', {
       name: 'Daily proverb',
@@ -468,17 +489,26 @@ async function scheduleDailyProverbs(language, time = '10:00', proverbSource = l
 
   await Notifications.cancelAllScheduledNotificationsAsync();
 
+  const selectedTimes = (Array.isArray(times) ? times : normalizeNotificationTimes(times))
+    .filter((time) => NOTIFICATION_TIMES.includes(time));
+  if (!selectedTimes.length) {
+    await AsyncStorage.setItem(STORAGE.notifications, 'off');
+    return false;
+  }
+
   for (let day = 0; day < 30; day += 1) {
-    const proverbIndex = todayIndex(day) % proverbSource.length;
-    const item = getProverbVariant(proverbSource[proverbIndex], language);
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: item.saying,
-        body: item.explanation,
-        data: { proverbId: proverbSource[proverbIndex].id }
-      },
-      trigger: { type: 'date', date: nextNotificationDate(day, time), channelId: 'daily-proverbs' }
-    });
+    await Promise.all(selectedTimes.map((time, timeIndex) => {
+      const proverbIndex = todayIndex((day * selectedTimes.length) + timeIndex) % proverbSource.length;
+      const item = getProverbVariant(proverbSource[proverbIndex], language);
+      return Notifications.scheduleNotificationAsync({
+        content: {
+          title: item.saying,
+          body: item.explanation,
+          data: { proverbId: proverbSource[proverbIndex].id }
+        },
+        trigger: { type: 'date', date: nextNotificationDate(day, time), channelId: 'daily-proverbs' }
+      });
+    }));
   }
 
   await AsyncStorage.setItem(STORAGE.notifications, 'on');
@@ -491,7 +521,7 @@ export default function App() {
   const [proverbList, setProverbList] = useState(localProverbs);
   const [favorites, setFavorites] = useState([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [notificationTime, setNotificationTime] = useState('10:00');
+  const [notificationTimes, setNotificationTimes] = useState(DEFAULT_NOTIFICATION_TIMES);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -586,7 +616,6 @@ export default function App() {
   const sayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'screen');
   const exportSayingTextStyle = getShareTextStyle(displaySaying, shareTextSize, 'export');
   const isFavorite = favorites.includes(displayedProverb.id);
-  const currentFavoriteCount = displayedProverb.favoriteCountsByLanguage?.[language] ?? displayedProverb.favorite_count ?? 0;
   const selectedCategoryLabel = selectedCategories.length === 0
     ? categories[0].label
     : selectedCategories
@@ -594,6 +623,7 @@ export default function App() {
       .filter(Boolean)
       .join(', ');
   const selectedLanguageLabel = languages.find((item) => item.key === language)?.name || 'English';
+  const selectedNotificationTimesLabel = formatNotificationTimes(notificationTimes);
   const selectedShareFont = SHARE_FONTS.find((item) => item.key === shareFont) || SHARE_FONTS[0];
   const shareFontStyle = {
     ...(selectedShareFont.family ? { fontFamily: selectedShareFont.family } : {}),
@@ -653,7 +683,7 @@ export default function App() {
       ]);
 
       const lang = storedLanguage || detectPreferredLanguage();
-      const time = storedTime || '10:00';
+      const times = normalizeNotificationTimes(storedTime);
       const owner = isOwnerUrl() || storedOwnerMode === 'on';
       if (owner) await AsyncStorage.setItem(STORAGE.ownerMode, 'on');
 
@@ -663,7 +693,7 @@ export default function App() {
       setFavorites(normalizeFavoriteIds(storedFavorites));
       setEdits(normalizeEdits(storedEdits));
       setOwnerMode(owner);
-      setNotificationTime(time);
+      setNotificationTimes(times);
       if (storedBackgroundImage) setBackgroundImageUri(storedBackgroundImage);
       if (storedBackgroundImage) await AsyncStorage.setItem(STORAGE.backgroundImageFit, 'contain');
       try {
@@ -698,16 +728,16 @@ export default function App() {
       loadCachedSupabaseProverbs(localProverbs)
         .then((cachedProverbs) => {
           setProverbList(cachedProverbs);
-          if (wantsNotifications) scheduleDailyProverbs(lang, time, cachedProverbs).catch(() => {});
+          if (wantsNotifications) scheduleDailyProverbs(lang, times, cachedProverbs).catch(() => {});
         })
         .catch(() => {
-          if (wantsNotifications) scheduleDailyProverbs(lang, time, localProverbs).catch(() => {});
+          if (wantsNotifications) scheduleDailyProverbs(lang, times, localProverbs).catch(() => {});
         });
 
       fetchSupabaseProverbs(localProverbs)
         .then((remoteProverbs) => {
           setProverbList(remoteProverbs);
-          if (wantsNotifications) scheduleDailyProverbs(lang, time, remoteProverbs).catch(() => {});
+          if (wantsNotifications) scheduleDailyProverbs(lang, times, remoteProverbs).catch(() => {});
         })
         .catch(() => {});
     })();
@@ -736,7 +766,7 @@ export default function App() {
   async function changeLanguage(nextLanguage) {
     setLanguage(nextLanguage);
     await AsyncStorage.setItem(STORAGE.language, nextLanguage);
-    if (notificationsEnabled) scheduleDailyProverbs(nextLanguage, notificationTime, proverbList).catch(() => {});
+    if (notificationsEnabled) scheduleDailyProverbs(nextLanguage, notificationTimes, proverbList).catch(() => {});
   }
 
   async function rotateProverbBackground() {
@@ -1262,18 +1292,22 @@ export default function App() {
   async function toggleNotifications(value) {
     setNotificationsEnabled(value);
     if (value) {
-      const ok = await scheduleDailyProverbs(language, notificationTime, proverbList);
-      if (!ok) Alert.alert('Notifications are off', 'Turn on notifications in settings to receive the daily proverb.');
+      const ok = await scheduleDailyProverbs(language, notificationTimes, proverbList);
+      if (!ok) Alert.alert('Notifications are off', 'Choose at least one time and turn on notifications to receive quotes.');
     } else {
       await Notifications.cancelAllScheduledNotificationsAsync();
       await AsyncStorage.setItem(STORAGE.notifications, 'off');
     }
   }
 
-  async function changeNotificationTime(time) {
-    setNotificationTime(time);
-    await AsyncStorage.setItem(STORAGE.notificationTime, time);
-    if (notificationsEnabled) scheduleDailyProverbs(language, time, proverbList).catch(() => {});
+  async function toggleNotificationTime(time) {
+    const nextTimes = notificationTimes.includes(time)
+      ? notificationTimes.filter((item) => item !== time)
+      : [...notificationTimes, time].sort((a, b) => NOTIFICATION_TIMES.indexOf(a) - NOTIFICATION_TIMES.indexOf(b));
+    const normalizedTimes = nextTimes.length ? nextTimes : DEFAULT_NOTIFICATION_TIMES;
+    setNotificationTimes(normalizedTimes);
+    await AsyncStorage.setItem(STORAGE.notificationTime, JSON.stringify(normalizedTimes));
+    if (notificationsEnabled) scheduleDailyProverbs(language, normalizedTimes, proverbList).catch(() => {});
   }
 
   function closeEditMode() {
@@ -1433,7 +1467,6 @@ export default function App() {
                     <Pressable accessibilityRole="button" accessibilityLabel={isFavorite ? 'Remove saved proverb' : 'Save proverb'} onPress={toggleFavorite} style={[styles.inlineInfoButton, isFavorite && styles.activeInlineIconButton]}>
                       <ActionIcon name="star" size={16} active={isFavorite} />
                     </Pressable>
-                    <Text style={styles.favoriteCountText}>{currentFavoriteCount}</Text>
                   </View>
                   <Pressable accessibilityRole="button" accessibilityLabel="Next saying" onPress={() => setCurrentIndex(index + 1)} style={styles.navArrowButton}>
                     <Text style={styles.navArrowText}>›</Text>
@@ -1788,18 +1821,22 @@ export default function App() {
 
               <View style={styles.settingRow}>
                 <View>
-                  <Text style={styles.settingTitle}>Daily notification</Text>
-                  <Text style={styles.muted}>Current time: {notificationTime}</Text>
+                  <Text style={styles.settingTitle}>Daily quote notifications</Text>
+                  <Text style={styles.muted}>Choose one or more times. You get a quote at each selected time.</Text>
+                  <Text style={styles.settingMenuSubtitle}>Selected: {selectedNotificationTimesLabel}</Text>
                 </View>
                 <Switch value={notificationsEnabled} onValueChange={toggleNotifications} />
               </View>
 
               <View style={styles.timeRow}>
-                {NOTIFICATION_TIMES.map((time) => (
-                  <Pressable key={time} onPress={() => changeNotificationTime(time)} style={styles.timeButton}>
-                    <Text style={[styles.timeText, notificationTime === time && styles.activeText]}>{time}</Text>
-                  </Pressable>
-                ))}
+                {NOTIFICATION_TIMES.map((time) => {
+                  const selected = notificationTimes.includes(time);
+                  return (
+                    <Pressable key={time} onPress={() => toggleNotificationTime(time)} style={[styles.timeButton, selected && styles.activeTimeButton]}>
+                      <Text style={[styles.timeText, selected && styles.activeText]}>{selected ? '✓ ' : ''}{time}</Text>
+                    </Pressable>
+                  );
+                })}
               </View>
             </ScrollView>
           </View>
@@ -1855,7 +1892,6 @@ const styles = StyleSheet.create({
   cardMetaDot: { color: '#777777', fontSize: 13, lineHeight: 16, fontWeight: '900' },
   saying: { fontSize: 42, lineHeight: 48, fontWeight: '900', textAlign: 'center', color: '#ffffff' },
   originLine: { marginTop: 22, color: '#8f8f8f', fontSize: 13, lineHeight: 18, textAlign: 'center', fontWeight: '700', paddingHorizontal: 8 },
-  favoriteCountText: { minWidth: 18, color: '#bcbcbc', fontSize: 12, lineHeight: 18, fontWeight: '900', textAlign: 'left' },
   cardReadMoreButton: { alignSelf: 'center', marginTop: 8 },
   cardNavControlRow: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   navArrowButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
@@ -1974,6 +2010,7 @@ const styles = StyleSheet.create({
   muted: { color: '#8f8f8f', fontSize: 13, lineHeight: 19, fontWeight: '500' },
   timeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 18, marginBottom: 24 },
   timeButton: { paddingVertical: 4, paddingRight: 4 },
+  activeTimeButton: { borderBottomWidth: 1, borderBottomColor: '#ffd166' },
   timeText: { color: '#777777', fontSize: 14, fontWeight: '700' },
   savedList: { borderWidth: 1, borderColor: '#242424', borderRadius: 14, paddingHorizontal: 12, paddingVertical: 10, gap: 12, backgroundColor: '#050505' },
   savedItem: { paddingVertical: 8, flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
