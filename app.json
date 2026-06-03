@@ -18,7 +18,8 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Choose a photo to use as the proverb background when sharing.",
-        "NSPhotoLibraryAddUsageDescription": "Save proverb images to your photo library."
+        "NSPhotoLibraryAddUsageDescription": "Save proverb images to your photo library.",
+        "NSCameraUsageDescription": "Take a photo to use as the proverb background when sharing."
       }
     },
     "android": {
