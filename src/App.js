@@ -181,17 +181,6 @@ function CameraIcon({ active = false }) {
   );
 }
 
-function YinYangIcon() {
-  return (
-    <View style={styles.yinYangFrame}>
-      <View style={[styles.yinYangHalf, styles.yinYangLeft]} />
-      <View style={[styles.yinYangHalf, styles.yinYangRight]} />
-      <View style={[styles.yinYangDot, styles.yinYangTopDot]} />
-      <View style={[styles.yinYangDot, styles.yinYangBottomDot]} />
-    </View>
-  );
-}
-
 function wrapCanvasText(context, text, maxWidth) {
   const lines = [];
   const words = text.split(/\s+/).filter(Boolean);
@@ -514,7 +503,6 @@ export default function App() {
   const [shareOpen, setShareOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [savedListOpen, setSavedListOpen] = useState(false);
-  const [oppositeOpen, setOppositeOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [addSayingOpen, setAddSayingOpen] = useState(false);
   const [newSaying, setNewSaying] = useState('');
@@ -552,14 +540,11 @@ export default function App() {
     [proverbList, selectedCategories]
   );
   const current = filteredProverbs[index % filteredProverbs.length] || proverbList[0] || localProverbs[0];
-  const opposite = current.oppositeId ? proverbList.find((item) => item.id === current.oppositeId) : null;
-  const displayedProverb = oppositeOpen && opposite ? opposite : current;
+  const displayedProverb = current;
   const currentEdit = edits[displayedProverb.id]?.[language];
   const selectedVariant = getProverbVariant(displayedProverb, language);
   const copy = currentEdit ? { ...selectedVariant, saying: currentEdit } : selectedVariant;
   const currentCategory = categories.find((item) => item.key === displayedProverb.category);
-  const currentKindLabel = displayedProverb.kind === 'image' ? 'Billede' : 'Dilemma';
-  const oppositeCopy = opposite ? getProverbVariant(opposite, language) : null;
   const englishCopy = getProverbVariant(displayedProverb, 'en');
   const meaningText = englishCopy.explanation || copy.explanation;
   const rawOrigin = englishCopy.origin || copy.origin || '';
@@ -630,7 +615,6 @@ export default function App() {
     setEditOpen(false);
     setLanguageOpen(false);
     setShareOpen(false);
-    setOppositeOpen(false);
     setSavedListOpen(false);
   }, [index, language]);
 
@@ -792,7 +776,6 @@ export default function App() {
     setImageEditorOpen(false);
     setEditOpen(false);
     setInfoOpen(false);
-    setOppositeOpen(false);
     setIndex(globalIndex);
     await Promise.all([
       rotateProverbBackground(),
@@ -1444,11 +1427,6 @@ export default function App() {
                     <Text style={styles.navArrowText}>‹</Text>
                   </Pressable>
                   <View style={styles.cardControlRow}>
-                    {oppositeCopy && (
-                      <Pressable accessibilityRole="button" accessibilityLabel="Toggle opposite proverb" onPress={() => setOppositeOpen((value) => !value)} style={[styles.oppositeButton, oppositeOpen && styles.activeOppositeButton]}>
-                        <YinYangIcon active={oppositeOpen} />
-                      </Pressable>
-                    )}
                     <Pressable accessibilityRole="button" accessibilityLabel="Show proverb information" onPress={() => setInfoOpen(true)} style={styles.inlineInfoButton}>
                       <ActionIcon name="info" size={16} />
                     </Pressable>
@@ -1569,7 +1547,7 @@ export default function App() {
             </View>
           )}
           <View style={styles.actionBar}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setCameraPreviewOpen(false); setOppositeOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Edit proverb" onPress={() => { setCameraPreviewOpen(false); setEditOpen(true); }} style={styles.bottomIconButton}>
               <ActionIcon name="edit-3" />
             </Pressable>
             <Pressable
@@ -1883,15 +1861,6 @@ const styles = StyleSheet.create({
   navArrowButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
   navArrowText: { color: '#ffffff', fontSize: 34, lineHeight: 36, fontWeight: '300', opacity: 0.9 },
   cardControlRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  oppositeButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.55)', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
-  activeOppositeButton: { borderColor: '#ffffff', borderWidth: 2.5, backgroundColor: 'transparent' },
-  yinYangFrame: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#ffffff', overflow: 'hidden', position: 'relative', backgroundColor: '#080808' },
-  yinYangHalf: { position: 'absolute', top: 0, bottom: 0, width: 11 },
-  yinYangLeft: { left: 0, backgroundColor: '#ffffff' },
-  yinYangRight: { right: 0, backgroundColor: '#080808' },
-  yinYangDot: { position: 'absolute', left: 6, width: 8, height: 8, borderRadius: 4 },
-  yinYangTopDot: { top: 2, backgroundColor: '#080808' },
-  yinYangBottomDot: { bottom: 2, backgroundColor: '#ffffff' },
   inlineInfoButton: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.55)', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
   activeInlineIconButton: { borderColor: '#ffd166', backgroundColor: 'transparent' },
   inlineInfoText: { color: '#ffffff', fontSize: 15, lineHeight: 18, fontWeight: '900', fontStyle: 'italic' },

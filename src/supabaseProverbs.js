@@ -3,15 +3,19 @@ import { getProverbVariant, languages, proverbs as localProverbs } from './prove
 
 const SUPABASE_URL = 'https://piccvnrbwqlxnhkgfklc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpY2N2bnJid3FseG5oa2dma2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0OTY0MjAsImV4cCI6MjA3OTA3MjQyMH0.YyD5VeiIQd0Apz8WQCsAuqWPog_NtBB6Sw0uuaFPb34';
-const PROVERBS_CACHE_KEY = 'daily-sayings:supabaseProverbs';
+const PROVERBS_CACHE_KEY = 'daily-sayings:supabaseProverbs:v2';
 
-function normalizeText(value) {
-  return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
-}
-
-function rowKey(row) {
-  return `${row.language || 'da'}:${normalizeText(row.quote)}`;
-}
+const languageColumns = {
+  en: 'en',
+  dk: 'da',
+  de: 'de',
+  es: 'es',
+  no: 'no',
+  la: 'la',
+  it: 'it',
+  fr: 'fr',
+  fo: 'fo'
+};
 
 function makeHeaders() {
   return {
@@ -22,86 +26,80 @@ function makeHeaders() {
   };
 }
 
+function rowQuote(row, language) {
+  return row?.[`quote_${languageColumns[language] || language}`] || '';
+}
+
+function rowDescription(row, language) {
+  return row?.[`description_${languageColumns[language] || language}`] || '';
+}
+
+function rowToVariants(row, fallbackProverb = null) {
+  return Object.fromEntries(languages.map(({ key: language }) => {
+    const fallback = fallbackProverb ? getProverbVariant(fallbackProverb, language) : null;
+    const englishFallback = fallbackProverb ? getProverbVariant(fallbackProverb, 'en') : null;
+    const saying = rowQuote(row, language) || fallback?.saying || rowQuote(row, 'en') || '';
+    const explanation = rowDescription(row, language) || fallback?.explanation || rowDescription(row, 'en') || '';
+    const origin = fallback?.origin || englishFallback?.origin || '';
+    return [language, {
+      ...(fallback || {}),
+      saying,
+      explanation,
+      origin,
+      imageUrl: row.image_url || fallback?.imageUrl || null,
+      remoteId: row.id,
+      favoriteCount: row.favorite_count || 0
+    }];
+  }));
+}
+
 function mergeRowsWithLocalProverbs(rows, baseProverbs = localProverbs) {
-  const byLanguageAndQuote = new Map();
+  const rowsById = new Map();
   rows.forEach((row) => {
-    if (row?.quote) byLanguageAndQuote.set(rowKey(row), row);
+    if (row?.id) rowsById.set(row.id, row);
   });
 
   const usedRowIds = new Set();
   const merged = baseProverbs.map((proverb) => {
-    const variants = { ...(proverb.variants || {}) };
-    const remoteIdsByLanguage = { ...(proverb.remoteIdsByLanguage || {}) };
-    const favoriteCountsByLanguage = { ...(proverb.favoriteCountsByLanguage || {}) };
-    const imageUrlsByLanguage = { ...(proverb.imageUrlsByLanguage || {}) };
+    const row = rowsById.get(proverb.id);
+    if (!row) return proverb;
 
-    languages.forEach(({ key: language }) => {
-      const variant = getProverbVariant(proverb, language);
-      const row = byLanguageAndQuote.get(`${language}:${normalizeText(variant.saying)}`);
-      if (!row) return;
-
-      usedRowIds.add(row.id);
-      variants[language] = {
-        ...variant,
-        saying: row.quote,
-        imageUrl: row.image_url || variant.imageUrl || null,
-        remoteId: row.id,
-        favoriteCount: row.favorite_count || 0
-      };
-      remoteIdsByLanguage[language] = row.id;
-      favoriteCountsByLanguage[language] = row.favorite_count || 0;
-      if (row.image_url) imageUrlsByLanguage[language] = row.image_url;
-    });
+    usedRowIds.add(row.id);
+    const variants = rowToVariants(row, proverb);
+    const favoriteCountsByLanguage = Object.fromEntries(languages.map(({ key }) => [key, row.favorite_count || 0]));
+    const remoteIdsByLanguage = Object.fromEntries(languages.map(({ key }) => [key, row.id]));
+    const imageUrlsByLanguage = row.image_url
+      ? Object.fromEntries(languages.map(({ key }) => [key, row.image_url]))
+      : {};
 
     return {
       ...proverb,
+      category: row.category || proverb.category,
       variants,
       remoteIdsByLanguage,
       favoriteCountsByLanguage,
       imageUrlsByLanguage,
-      favorite_count: favoriteCountsByLanguage.en ?? favoriteCountsByLanguage.dk ?? proverb.favorite_count ?? 0
+      favorite_count: row.favorite_count || 0
     };
   });
 
-  const localQuoteKeys = new Set();
-  baseProverbs.forEach((proverb) => {
-    languages.forEach(({ key: language }) => {
-      localQuoteKeys.add(`${language}:${normalizeText(getProverbVariant(proverb, language).saying)}`);
-    });
-  });
-
   const newRows = rows
-    .filter((row) => row?.id && row?.quote && !usedRowIds.has(row.id) && !localQuoteKeys.has(rowKey(row)))
+    .filter((row) => row?.id && !usedRowIds.has(row.id))
     .map((row) => ({
       id: row.id,
       category: row.category || 'life',
       kind: row.image_url ? 'image' : 'dilemma',
       oppositeId: null,
-      remoteIdsByLanguage: { [row.language || 'da']: row.id },
-      favoriteCountsByLanguage: { [row.language || 'da']: row.favorite_count || 0 },
-      imageUrlsByLanguage: row.image_url ? { [row.language || 'da']: row.image_url } : {},
+      remoteIdsByLanguage: Object.fromEntries(languages.map(({ key }) => [key, row.id])),
+      favoriteCountsByLanguage: Object.fromEntries(languages.map(({ key }) => [key, row.favorite_count || 0])),
+      imageUrlsByLanguage: row.image_url
+        ? Object.fromEntries(languages.map(({ key }) => [key, row.image_url]))
+        : {},
       favorite_count: row.favorite_count || 0,
-      variants: {
-        [row.language || 'da']: {
-          saying: row.quote,
-          explanation: '',
-          origin: '',
-          imageUrl: row.image_url || null,
-          remoteId: row.id,
-          favoriteCount: row.favorite_count || 0
-        },
-        en: {
-          saying: row.quote,
-          explanation: '',
-          origin: '',
-          imageUrl: row.image_url || null,
-          remoteId: row.id,
-          favoriteCount: row.favorite_count || 0
-        }
-      }
+      variants: rowToVariants(row)
     }));
 
-  return [...merged, ...newRows];
+  return [...newRows, ...merged];
 }
 
 export async function loadCachedSupabaseProverbs(baseProverbs = localProverbs) {
