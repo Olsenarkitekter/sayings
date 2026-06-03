@@ -346,11 +346,16 @@
     .creator-photo {
       margin: 22px 0 0;
       max-width: 420px;
+      aspect-ratio: 1.24 / 1;
+      overflow: hidden;
+      background: var(--cream);
     }
 
     .creator-photo img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
       border-radius: 6px;
     }
 
@@ -669,10 +674,9 @@
           <li><strong>Ebook + premium PDF</strong> - instant digital access for tablets, travel, and gifting.</li>
         </ul>
         <ul class="price-list" aria-label="Visual Sayings prices">
-          <li><strong>Audiobook</strong><span>79 DKK</span></li>
-          <li><strong>Ebook + premium PDF</strong><span>69 DKK</span></li>
-          <li><strong>Physical book</strong><span>170 DKK</span></li>
-          <li><strong>Ultimate bundle</strong><span>215 DKK</span></li>
+          <li><strong>Audio &amp; Digital Package</strong><span>99 DKK</span></li>
+          <li><strong>Physical Book</strong><span>170 DKK</span></li>
+          <li><strong>Ultimate Collector's Bundle</strong><span>215 DKK</span></li>
         </ul>
         <div class="actions">
           <button class="button primary" type="button" data-open-checkout>Choose Your Preferred Experience</button>
@@ -793,7 +797,7 @@
           </li>
           <li>
             <strong>Standalone value</strong>
-            <span>The audiobook stands confidently on its own at 69-79 DKK, while the bundles make it even easier to experience the sayings in more than one way.</span>
+            <span>The audiobook stands confidently on its own at 79 DKK, while the bundles make it even easier to experience the sayings in more than one way.</span>
           </li>
         </ul>
       </div>
