@@ -830,14 +830,14 @@ export default function App() {
     await Linking.openURL(mailUrl);
   }
 
-  async function applyBackgroundImage(nextUri) {
+  async function applyBackgroundImage(nextUri, { openEditor = true } = {}) {
     setBackgroundImageUri(nextUri);
     setBackgroundImageFit('contain');
     setBackgroundImagePosition({ x: 0, y: 0 });
     setBackgroundImageScale(1);
     setShareBackgroundMode('image');
     setPageBackgroundColor('#000000');
-    setImageEditorOpen(true);
+    setImageEditorOpen(openEditor);
     await AsyncStorage.multiSet([
       [STORAGE.backgroundImage, nextUri],
       [STORAGE.backgroundImageFit, 'contain'],
@@ -886,11 +886,13 @@ export default function App() {
     try {
       const photo = await cameraRef.current?.takePictureAsync?.({
         quality: 0.92,
-        skipProcessing: false
+        skipProcessing: false,
+        mirror: false,
+        isImageMirror: false
       });
       if (!photo?.uri) return;
       setCameraPreviewOpen(false);
-      await applyBackgroundImage(photo.uri);
+      await applyBackgroundImage(photo.uri, { openEditor: false });
     } catch {
       Alert.alert('Camera unavailable', 'The camera image could not be captured right now.');
     }
@@ -1307,6 +1309,7 @@ export default function App() {
                   <CameraView
                     ref={cameraRef}
                     facing={cameraFacing}
+                    mirror={false}
                     style={styles.cameraPreviewFill}
                   />
                   <View style={[styles.shareCardOverlay, styles.cameraPreviewOverlay]}>
