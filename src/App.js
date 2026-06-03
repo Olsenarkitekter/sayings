@@ -895,14 +895,16 @@ export default function App() {
       if (!photo?.uri) return;
       let committedPhotoUri = photo.uri;
       if (capturedFacing === 'front') {
-        const context = ImageManipulator.manipulate(photo.uri);
-        context.flip(ImageManipulator.FlipType.Horizontal);
-        const renderedImage = await context.renderAsync();
-        const result = await renderedImage.saveAsync({
-          compress: 0.92,
-          format: ImageManipulator.SaveFormat.JPEG
-        });
-        committedPhotoUri = result.uri || photo.uri;
+        try {
+          const result = await ImageManipulator.manipulateAsync(
+            photo.uri,
+            [{ flip: ImageManipulator.FlipType.Horizontal }],
+            { compress: 0.92, format: ImageManipulator.SaveFormat.JPEG }
+          );
+          committedPhotoUri = result.uri || photo.uri;
+        } catch (error) {
+          console.warn('Front camera mirror correction failed', error);
+        }
       }
       setCameraPreviewOpen(false);
       await applyBackgroundImage(committedPhotoUri, { openEditor: false });
