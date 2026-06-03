@@ -39,6 +39,7 @@ const EDIT_EMAIL = 'olsenarkitekter@gmail.com';
 const BRAND_NAME = 'Visay';
 const BRAND_TAGLINE = 'Visual sayings.';
 const BRAND_LOGO_SOURCE = require('../assets/logo.png');
+const BOOK_LANDING_URL = 'https://olsenarkitekter.github.io/sayings/book.html';
 const ICON_SYMBOLS = {
   search: '⌕',
   menu: '☰',
@@ -1172,6 +1173,11 @@ export default function App() {
     setAddSayingOpen(false);
   }
 
+  async function openBookLanding() {
+    const url = `${BOOK_LANDING_URL}?lang=${encodeURIComponent(language)}`;
+    await Linking.openURL(url);
+  }
+
   if (!ready) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -1589,6 +1595,14 @@ export default function App() {
                     </Pressable>
                   </View>
                 )}
+
+                <Pressable accessibilityRole="button" accessibilityLabel="Open Visay book landing page" onPress={openBookLanding} style={styles.settingMenuButton}>
+                  <View style={styles.settingMenuTextBlock}>
+                    <Text style={styles.settingMenuTitle}>Visay book</Text>
+                    <Text style={styles.settingMenuSubtitle}>Book, ebook and audiobook</Text>
+                  </View>
+                  <View style={styles.toggleIconBox}><ActionIcon name="send" size={18} /></View>
+                </Pressable>
                 </View>
               </View>
 
