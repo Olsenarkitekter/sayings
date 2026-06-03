@@ -300,6 +300,23 @@
       border-top: 1px solid var(--line);
     }
 
+    .creator-note {
+      display: grid;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .creator-photo {
+      margin: 22px 0 0;
+      max-width: 420px;
+    }
+
+    .creator-photo img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+    }
+
     blockquote {
       margin: 0;
       font-size: clamp(22px, 6vw, 34px);
@@ -391,6 +408,13 @@
       .final {
         max-width: 820px;
         padding-top: 76px;
+      }
+      .creator-note {
+        grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+        gap: 36px;
+      }
+      .creator-photo {
+        margin-top: 22px;
       }
     }
   </style>
@@ -543,12 +567,15 @@
       </div>
     </section>
 
-    <section class="section">
+    <section class="section" id="creator">
       <h3>A Note From the Creator</h3>
-      <div class="section-body">
+      <div class="section-body creator-note">
+        <figure class="creator-photo">
+          <img src="./visual-sayings-creator.jpg" alt="Portrait of Havardur Olsen, creator of Visual Sayings" />
+        </figure>
         <div class="quote">
-          <blockquote>I wanted to create something that forces us to slow down. Visual Sayings is an invitation to pause, appreciate the simplicity of a single line, and let your mind wander through the space between words and images.</blockquote>
-          <cite>- Visay</cite>
+          <blockquote id="creatorQuote" data-en="Visual sayings are small images of great wisdom &mdash; funny, compact, and created to bring us closer to the essence." data-da="Visuelle ordsprog er små billeder af stor visdom &mdash; sjove, kompakte og skabt til at bringe os tættere på kernen.">Visual sayings are small images of great wisdom &mdash; funny, compact, and created to bring us closer to the essence.</blockquote>
+          <cite id="creatorCite" data-en="- Havardur Olsen, creator of Visual Sayings" data-da="- Hávarður Olsen, skaberen af Visual Sayings">- Havardur Olsen, creator of Visual Sayings</cite>
         </div>
       </div>
     </section>
@@ -577,5 +604,16 @@
       <a href="mailto:olsenarkitekter@gmail.com">olsenarkitekter@gmail.com</a>
     </footer>
   </main>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const language = (params.get('lang') || 'en').toLowerCase();
+    const creatorQuote = document.getElementById('creatorQuote');
+    const creatorCite = document.getElementById('creatorCite');
+    if (language.startsWith('da')) {
+      creatorQuote.innerHTML = creatorQuote.dataset.da;
+      creatorCite.textContent = creatorCite.dataset.da;
+      document.documentElement.lang = 'da';
+    }
+  </script>
 </body>
 </html>
