@@ -694,13 +694,38 @@
       font-weight: 900;
     }
 
+    .summary-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .summary-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 750;
+    }
+
+    .summary-row span:last-child {
+      color: var(--ink);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
     .total-row {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
       gap: 18px;
-      margin-top: 8px;
-      padding-top: 16px;
+      margin-top: 12px;
+      padding-top: 14px;
       border-top: 1px solid var(--line);
     }
 
@@ -1040,6 +1065,16 @@
         </section>
       </div>
       <div class="modal-footer">
+        <div class="summary-list" aria-label="Checkout summary">
+          <div class="summary-row">
+            <span>Package</span>
+            <span id="packageSubtotal">99 DKK</span>
+          </div>
+          <div class="summary-row">
+            <span id="shippingLabel">Shipping</span>
+            <span id="shippingTotal">0 DKK</span>
+          </div>
+        </div>
         <div class="total-row">
           <strong id="selectionLabel">Audio & Digital Package</strong>
           <span id="checkoutTotal">99 DKK</span>
@@ -1066,6 +1101,9 @@
     const formatInputs = Array.from(document.querySelectorAll('input[name="format"]'));
     const paymentInputs = Array.from(document.querySelectorAll('input[name="payment"]'));
     const selectionLabel = document.getElementById('selectionLabel');
+    const packageSubtotal = document.getElementById('packageSubtotal');
+    const shippingLabel = document.getElementById('shippingLabel');
+    const shippingTotal = document.getElementById('shippingTotal');
     const checkoutTotal = document.getElementById('checkoutTotal');
     const stripeButton = document.getElementById('stripeCheckoutButton');
     const stripeStatus = document.getElementById('stripeStatus');
@@ -1076,6 +1114,7 @@
       physical: 170,
       audioDigital: 99,
       ultimate: 215,
+      shipping: 39,
     };
 
     const stripeCheckoutUrls = {
@@ -1119,19 +1158,27 @@
     function updateCheckout() {
       const formats = selectedFormats();
       const selectedPackage = getPackage(formats);
+      const hasPhysical = formats.includes('physical');
+      const shipping = hasPhysical && selectedPackage.total > 0 && selectedPackage.total < 350 ? prices.shipping : 0;
+      const total = selectedPackage.total + shipping;
       const payment = paymentInputs.find((input) => input.checked)?.value || 'card';
       const checkoutUrl = stripeCheckoutUrls[selectedPackage.key];
 
       selectionLabel.textContent = selectedPackage.label;
-      checkoutTotal.textContent = `${selectedPackage.total} DKK`;
-      stripeButton.disabled = selectedPackage.total === 0 || !checkoutUrl;
+      packageSubtotal.textContent = `${selectedPackage.total} DKK`;
+      shippingLabel.textContent = hasPhysical ? 'Shipping in Denmark via GLS or PostNord' : 'Shipping';
+      shippingTotal.textContent = hasPhysical ? `${shipping} DKK` : '0 DKK';
+      checkoutTotal.textContent = `${total} DKK`;
+      stripeButton.disabled = total === 0 || !checkoutUrl;
       stripeButton.dataset.checkoutUrl = checkoutUrl || '';
       stripeButton.dataset.payment = payment;
 
-      if (selectedPackage.total === 0) {
+      if (total === 0) {
         stripeStatus.textContent = 'Choose at least one format to continue.';
       } else if (!checkoutUrl) {
-        stripeStatus.textContent = 'Stripe checkout is ready for this selection once the live Stripe Payment Link or Checkout endpoint is connected.';
+        stripeStatus.textContent = hasPhysical
+          ? 'Stripe checkout is ready for this selection once the live Stripe Payment Link or Checkout endpoint is connected. Shipping is included in the total.'
+          : 'Stripe checkout is ready for this selection once the live Stripe Payment Link or Checkout endpoint is connected.';
       } else {
         stripeStatus.textContent = 'You will continue to Stripe Checkout. MobilePay is not offered on this page.';
       }
