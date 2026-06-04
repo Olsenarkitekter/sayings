@@ -15,6 +15,7 @@ import {
 const SUPABASE_URL = 'https://tgndxvfmkolmibtoeuti.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_gkpLsDT2NuNziAV8WWGgJw_GgMOjLeH';
 const OUTPUT_DIR = path.resolve('outputs/word-books');
+const LOCAL_PROVERBS_PATH = path.resolve('src/proverbs.js');
 
 const CM_TO_TWIPS = 567;
 const pageWidth = Math.round(15 * CM_TO_TWIPS);
@@ -23,26 +24,106 @@ const bodyMargin = Math.round(1.75 * CM_TO_TWIPS);
 const entryTopSpace = Math.round(1.25 * CM_TO_TWIPS);
 
 const languages = [
-  { key: 'en', label: 'English', file: 'english', title: 'Visual Sayings' },
-  { key: 'da', label: 'Dansk', file: 'dansk', title: 'Visual Sayings' },
-  { key: 'de', label: 'Deutsch', file: 'deutsch', title: 'Visual Sayings' },
-  { key: 'es', label: 'Español', file: 'espanol', title: 'Visual Sayings' },
-  { key: 'no', label: 'Norsk', file: 'norsk', title: 'Visual Sayings' },
-  { key: 'la', label: 'Latina', file: 'latin', title: 'Visual Sayings' },
-  { key: 'it', label: 'Italiano', file: 'italiano', title: 'Visual Sayings' },
-  { key: 'fr', label: 'Français', file: 'francais', title: 'Visual Sayings' },
-  { key: 'fo', label: 'Føroyskt', file: 'foroyskt', title: 'Visual Sayings' }
+  { key: 'en', appKey: 'en', label: 'English', file: 'english', title: 'Visual Sayings' },
+  { key: 'da', appKey: 'dk', label: 'Dansk', file: 'dansk', title: 'Visual Sayings' },
+  { key: 'de', appKey: 'de', label: 'Deutsch', file: 'deutsch', title: 'Visual Sayings' },
+  { key: 'es', appKey: 'es', label: 'Español', file: 'espanol', title: 'Visual Sayings' },
+  { key: 'no', appKey: 'no', label: 'Norsk', file: 'norsk', title: 'Visual Sayings' },
+  { key: 'la', appKey: 'la', label: 'Latina', file: 'latin', title: 'Visual Sayings' },
+  { key: 'it', appKey: 'it', label: 'Italiano', file: 'italiano', title: 'Visual Sayings' },
+  { key: 'fr', appKey: 'fr', label: 'Français', file: 'francais', title: 'Visual Sayings' },
+  { key: 'fo', appKey: 'fo', label: 'Føroyskt', file: 'foroyskt', title: 'Visual Sayings' }
 ];
 
 const categoryLabels = {
-  biblical: 'Biblical',
-  experience: 'Experience',
-  humour: 'Humour',
-  life: 'Life',
-  love: 'Love',
-  slang: 'Slang',
-  time: 'Time',
-  work: 'Work'
+  time: {
+    en: 'Time, Patience and Timing',
+    da: 'Tid, tålmodighed og timing',
+    de: 'Zeit, Geduld und Timing',
+    es: 'Tiempo, paciencia y momento oportuno',
+    no: 'Tid, tålmodighet og timing',
+    la: 'Tempus, patientia et momentum',
+    it: 'Tempo, pazienza e tempismo',
+    fr: 'Temps, patience et moment juste',
+    fo: 'Tíð, tol og røtt løta'
+  },
+  'work-results': {
+    en: 'Action, Work and Results',
+    da: 'Handling, arbejde og resultater',
+    de: 'Handlung, Arbeit und Ergebnisse',
+    es: 'Acción, trabajo y resultados',
+    no: 'Handling, arbeid og resultater',
+    la: 'Actio, labor et eventus',
+    it: 'Azione, lavoro e risultati',
+    fr: 'Action, travail et résultats',
+    fo: 'Gerðir, arbeiði og úrslit'
+  },
+  truth: {
+    en: 'Truth, Clarity and Direct Speech',
+    da: 'Sandhed, klarhed og direkte tale',
+    de: 'Wahrheit, Klarheit und direkte Rede',
+    es: 'Verdad, claridad y habla directa',
+    no: 'Sannhet, klarhet og direkte tale',
+    la: 'Veritas, claritas et oratio directa',
+    it: 'Verità, chiarezza e parole dirette',
+    fr: 'Vérité, clarté et parole directe',
+    fo: 'Sannleiki, greiðleiki og beinleiðis tala'
+  },
+  relations: {
+    en: 'People, Boundaries and Relations',
+    da: 'Mennesker, grænser og relationer',
+    de: 'Menschen, Grenzen und Beziehungen',
+    es: 'Personas, límites y relaciones',
+    no: 'Mennesker, grenser og relasjoner',
+    la: 'Homines, fines et relationes',
+    it: 'Persone, confini e relazioni',
+    fr: 'Personnes, limites et relations',
+    fo: 'Fólk, mørk og sambond'
+  },
+  risk: {
+    en: 'Courage, Risk and Decisions',
+    da: 'Mod, risiko og beslutninger',
+    de: 'Mut, Risiko und Entscheidungen',
+    es: 'Coraje, riesgo y decisiones',
+    no: 'Mot, risiko og beslutninger',
+    la: 'Fortitudo, periculum et consilia',
+    it: 'Coraggio, rischio e decisioni',
+    fr: 'Courage, risque et décisions',
+    fo: 'Dirvi, váði og avgerðir'
+  },
+  'images-humour': {
+    en: 'Body, Humour and Sharp Images',
+    da: 'Krop, humor og skarpe billeder',
+    de: 'Körper, Humor und scharfe Bilder',
+    es: 'Cuerpo, humor e imágenes precisas',
+    no: 'Kropp, humor og skarpe bilder',
+    la: 'Corpus, iocus et imagines acres',
+    it: 'Corpo, umorismo e immagini taglienti',
+    fr: 'Corps, humour et images fortes',
+    fo: 'Kroppur, skemt og hvassar myndir'
+  },
+  'origin-stories': {
+    en: 'The Stories Behind the Words',
+    da: 'Historierne bag ordene',
+    de: 'Die Geschichten hinter den Worten',
+    es: 'Las historias detrás de las palabras',
+    no: 'Historiene bak ordene',
+    la: 'Fabulae post verba',
+    it: 'Le storie dietro le parole',
+    fr: 'Les histoires derrière les mots',
+    fo: 'Søgurnar handan orðini'
+  },
+  experience: {
+    en: 'Experience, Adversity and Reflection',
+    da: 'Erfaring, modgang og eftertanke',
+    de: 'Erfahrung, Widerstand und Nachdenken',
+    es: 'Experiencia, adversidad y reflexión',
+    no: 'Erfaring, motgang og ettertanke',
+    la: 'Experientia, adversitas et meditatio',
+    it: 'Esperienza, avversità e riflessione',
+    fr: 'Expérience, adversité et réflexion',
+    fo: 'Royndir, mótburður og umhugsan'
+  }
 };
 
 function text(value) {
@@ -51,6 +132,26 @@ function text(value) {
 
 function titleCaseCategory(category) {
   return categoryLabels[category] || text(category).replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function categoryForLanguage(row, language) {
+  const translatedCategory = text(row[`category_${language.key}`]);
+  if (translatedCategory) return translatedCategory;
+  return categoryLabels[row.category]?.[language.key] || titleCaseCategory(row.category);
+}
+
+async function loadLocalProverbData() {
+  const source = await fs.readFile(LOCAL_PROVERBS_PATH, 'utf8');
+  const transformed = source
+    .replace(/export const categories = /, 'const categories = ')
+    .replace(/export const languages = /, 'const languages = ')
+    .replace(/export const proverbs = /, 'const proverbs = ')
+    .replace(/export function getProverbVariant/g, 'function getProverbVariant')
+    .replace(/export function getLanguageLabel/g, 'function getLanguageLabel')
+    .replace(/export function getLanguageName/g, 'function getLanguageName');
+  const moduleUrl = `data:text/javascript;base64,${Buffer.from(`${transformed}\nexport { proverbs };`).toString('base64')}`;
+  const { proverbs } = await import(moduleUrl);
+  return new Map(proverbs.map((proverb) => [proverb.id, proverb]));
 }
 
 function paragraph(children, options = {}) {
@@ -155,7 +256,7 @@ function introPages(language, rowCount) {
 
 function chapterPage(category) {
   return [
-    paragraph([run(titleCaseCategory(category), { size: 44, bold: true })], {
+    paragraph([run(category, { size: 44, bold: true })], {
       heading: HeadingLevel.HEADING_1,
       alignment: AlignmentType.LEFT,
       spacing: { before: 980, after: 500 }
@@ -163,9 +264,12 @@ function chapterPage(category) {
   ];
 }
 
-function quotePage(row, language) {
+function quotePage(row, language, localById) {
+  const local = localById.get(row.id);
+  const localVariant = local?.variants?.[language.appKey] || local?.variants?.en;
   const quote = text(row[`quote_${language.key}`]);
   const description = text(row[`description_${language.key}`]);
+  const story = text(row[`story_${language.key}`]) || text(localVariant?.origin);
   const title = quote || text(row.quote_en) || text(row.id);
 
   return [
@@ -174,10 +278,14 @@ function quotePage(row, language) {
       alignment: AlignmentType.CENTER,
       spacing: { before: entryTopSpace, after: 260 }
     }),
-    paragraph([run(description, { size: 21 })], {
+    paragraph([run(description, { size: 21, italics: true })], {
+      alignment: AlignmentType.CENTER,
+      spacing: { after: story ? 220 : 420 }
+    }),
+    ...(story ? [paragraph([run(story, { size: 21 })], {
       alignment: AlignmentType.LEFT,
-      spacing: { after: 360 }
-    })
+      spacing: { after: 420 }
+    })] : [])
   ];
 }
 
@@ -202,17 +310,17 @@ function closingPages(language) {
   ];
 }
 
-function buildDocument(rows, language) {
+function buildDocument(rows, language, localById) {
   const children = introPages(language, rows.length);
   let currentCategory = null;
 
   for (const row of rows) {
-    const category = text(row.category) || 'Uncategorized';
+    const category = categoryForLanguage(row, language) || 'Uncategorized';
     if (category !== currentCategory) {
       currentCategory = category;
       children.push(...chapterPage(category));
     }
-    children.push(...quotePage(row, language));
+    children.push(...quotePage(row, language, localById));
   }
 
   children.push(...closingPages(language));
@@ -280,11 +388,12 @@ function buildDocument(rows, language) {
 
 async function main() {
   const rows = sortRows(await fetchProverbs());
+  const localById = await loadLocalProverbData();
   await fs.mkdir(OUTPUT_DIR, { recursive: true });
 
   const outputs = [];
   for (const language of languages) {
-    const doc = buildDocument(rows, language);
+    const doc = buildDocument(rows, language, localById);
     const buffer = await Packer.toBuffer(doc);
     const filePath = path.join(OUTPUT_DIR, `visual-sayings-${language.file}.docx`);
     await fs.writeFile(filePath, buffer);
