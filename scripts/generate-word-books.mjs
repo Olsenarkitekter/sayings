@@ -20,7 +20,7 @@ const CM_TO_TWIPS = 567;
 const pageWidth = Math.round(15 * CM_TO_TWIPS);
 const pageHeight = Math.round(21 * CM_TO_TWIPS);
 const bodyMargin = Math.round(1.75 * CM_TO_TWIPS);
-const quoteTopSpace = Math.round(5 * CM_TO_TWIPS);
+const entryTopSpace = Math.round(1.25 * CM_TO_TWIPS);
 
 const languages = [
   { key: 'en', label: 'English', file: 'english', title: 'Visual Sayings' },
@@ -73,7 +73,7 @@ function pageBreak() {
   return paragraph([new PageBreak()]);
 }
 
-function footer() {
+function footer(alignment) {
   return new Footer({
     children: [
       paragraph([
@@ -84,7 +84,7 @@ function footer() {
           size: 18
         })
       ], {
-        alignment: AlignmentType.CENTER,
+        alignment,
         spacing: { before: 0, after: 0 }
       })
     ]
@@ -139,7 +139,7 @@ function introPages(language, rowCount) {
       spacing: { before: 900, after: 260 }
     }),
     paragraph([
-      run(`This Word draft contains ${rowCount} sayings from the Visay proverb database. Categories are used as chapters, each saying is set as a heading, and the quote itself is centered with generous white space above it.`, { size: 21 })
+      run(`This Word draft contains ${rowCount} sayings from the Visay proverb database. Categories are used as chapters, and the sayings flow as continuous text inside each chapter.`, { size: 21 })
     ], {
       alignment: AlignmentType.LEFT,
       spacing: { after: 260 }
@@ -155,12 +155,11 @@ function introPages(language, rowCount) {
 
 function chapterPage(category) {
   return [
-    paragraph([run(titleCaseCategory(category), { size: 34, bold: true })], {
+    paragraph([run(titleCaseCategory(category), { size: 44, bold: true })], {
       heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 3600, after: 260 }
-    }),
-    pageBreak()
+      alignment: AlignmentType.LEFT,
+      spacing: { before: 980, after: 500 }
+    })
   ];
 }
 
@@ -170,20 +169,15 @@ function quotePage(row, language) {
   const title = quote || text(row.quote_en) || text(row.id);
 
   return [
-    paragraph([run(title, { size: 24, bold: true })], {
+    paragraph([run(title, { size: 28, bold: true })], {
       heading: HeadingLevel.HEADING_2,
-      alignment: AlignmentType.LEFT,
-      spacing: { before: 0, after: quoteTopSpace }
-    }),
-    paragraph([run(quote, { size: 28, italics: true })], {
       alignment: AlignmentType.CENTER,
-      spacing: { after: 340 },
+      spacing: { before: entryTopSpace, after: 260 }
     }),
     paragraph([run(description, { size: 21 })], {
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 0 }
-    }),
-    pageBreak()
+      alignment: AlignmentType.LEFT,
+      spacing: { after: 360 }
+    })
   ];
 }
 
@@ -224,6 +218,7 @@ function buildDocument(rows, language) {
   children.push(...closingPages(language));
 
   return new Document({
+    evenAndOddHeaderAndFooters: true,
     styles: {
       default: {
         document: {
@@ -243,7 +238,7 @@ function buildDocument(rows, language) {
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,
-          run: { font: 'Helvetica', size: 34, bold: true },
+          run: { font: 'Helvetica', size: 44, bold: true },
           paragraph: { spacing: { before: 720, after: 280 } }
         },
         {
@@ -252,8 +247,8 @@ function buildDocument(rows, language) {
           basedOn: 'Normal',
           next: 'Normal',
           quickFormat: true,
-          run: { font: 'Helvetica', size: 24, bold: true },
-          paragraph: { spacing: { before: 0, after: quoteTopSpace } }
+          run: { font: 'Helvetica', size: 28, bold: true },
+          paragraph: { spacing: { before: entryTopSpace, after: 260 } }
         }
       ]
     },
@@ -274,7 +269,8 @@ function buildDocument(rows, language) {
           }
         },
         footers: {
-          default: footer()
+          default: footer(AlignmentType.RIGHT),
+          even: footer(AlignmentType.LEFT)
         },
         children
       }
