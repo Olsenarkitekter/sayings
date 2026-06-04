@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getProverbVariant, languages, proverbs as localProverbs } from './proverbs';
 
-const SUPABASE_URL = 'https://piccvnrbwqlxnhkgfklc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpY2N2bnJid3FseG5oa2dma2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM0OTY0MjAsImV4cCI6MjA3OTA3MjQyMH0.YyD5VeiIQd0Apz8WQCsAuqWPog_NtBB6Sw0uuaFPb34';
-const PROVERBS_CACHE_KEY = 'daily-sayings:supabaseProverbs:v2';
+const SUPABASE_URL = 'https://tgndxvfmkolmibtoeuti.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gkpLsDT2NuNziAV8WWGgJw_GgMOjLeH';
+const PROVERBS_CACHE_KEY = 'daily-sayings:supabaseProverbs:v3';
 
 const languageColumns = {
   en: 'en',

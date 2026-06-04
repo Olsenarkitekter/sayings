@@ -4,7 +4,7 @@ Small native iOS prototype for showing visual proverbs from Supabase.
 
 ## Backend
 
-- Supabase project: `piccvnrbwqlxnhkgfklc`
+- Supabase project: `tgndxvfmkolmibtoeuti`
 - Table: `public.proverbs`
 - Storage bucket: `proverb-images`
 - Public read is enabled for proverbs and images.
@@ -22,10 +22,11 @@ The app uses the Supabase REST API directly, so it does not need the Supabase Sw
 1. Upload the image to the `proverb-images` bucket in Supabase Storage.
 2. Copy the public image URL.
 3. Insert a row in `public.proverbs` with:
-   - `quote`
+   - stable text `id`
+   - `quote_en`, `quote_da`, `quote_fo`, etc.
+   - `description_en`, `description_da`, `description_fo`, etc.
    - `image_url`
    - `category`
-   - `language`
 4. Leave `favorite_count` and `created_at` blank unless you need to override them.
 
 New rows are visible automatically the next time the app refreshes or starts.
