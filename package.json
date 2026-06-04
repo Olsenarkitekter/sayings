@@ -5,6 +5,7 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "test": "node scripts/validate-data.mjs",
+    "build:word-books": "node scripts/generate-word-books.mjs",
     "build:web": "expo export --platform web --output-dir dist && node scripts/fix-gh-pages-paths.mjs",
     "build:android:preview": "npx eas-cli build --platform android --profile preview",
     "build:ios:preview": "npx eas-cli build --platform ios --profile preview",
@@ -31,7 +32,8 @@
     "react-native-web": "^0.21.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2"
+    "@babel/core": "^7.25.2",
+    "docx": "^9.7.1"
   },
   "private": true
 }
